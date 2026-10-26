@@ -29,7 +29,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
     <p>{mode === 'registro'
       ? 'Te enviamos un enlace para confirmar tu correo. Al confirmarlo entrarás directamente a tu Portal del Alumno.'
       : 'Si el correo está registrado, recibirás un enlace para crear una nueva contraseña.'}</p>
-    <Link className="btn btn-green btn-block" href={mode === 'registro' ? '/portal' : '/ingresar'}>{mode === 'registro' ? 'Ir al portal (vista previa)' : 'Volver a iniciar sesión'}</Link>
+    <Link className="btn btn-green btn-block" href={mode === 'registro' ? '/portal' : '/ingresar'}>{mode === 'registro' ? 'Ir al portal' : 'Volver a iniciar sesión'}</Link>
   </div>;
 
   return <form className="auth-form" onSubmit={submit}>
@@ -61,6 +61,5 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       {mode === 'ingresar' && <>¿Aún no tienes cuenta? <Link href="/registro">Regístrate gratis</Link></>}
       {mode === 'recuperar' && <><Link href="/ingresar">Volver a iniciar sesión</Link></>}
     </p>
-    <p className="preview-note">Vista previa del diseño: el registro todavía no está conectado.</p>
   </form>;
 }

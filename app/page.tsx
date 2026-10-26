@@ -44,15 +44,17 @@ export default function HomePage() {
             <h2 id="beneficios-title">¿Qué encontrarás en la academia?</h2>
             <p>Todo organizado en un solo lugar para que aprendas a tu ritmo.</p>
           </div>
-          <ul className="benefit-grid">
-            {beneficios.map(({ icon: Icon, title, text, premium }, i) => <li key={title} className={`benefit ${premium ? 'benefit-premium' : ''}`} data-reveal style={{ '--i': i } as React.CSSProperties}>
-              <div className="benefit-top">
-                <span className="benefit-icon"><Icon size={24} aria-hidden="true" /></span>
-                {premium ? <span className="benefit-badge">De pago · opcional</span> : <span className="benefit-num">{String(i + 1).padStart(2, '0')}</span>}
+          <ul className="stair">
+            {beneficios.map(({ icon: Icon, title, text, premium }, i) => <li key={title} className={`stair-step ${premium ? 'is-premium' : ''}`} data-reveal style={{ '--i': i } as React.CSSProperties}>
+              <div className="stair-text">
+                <span className="stair-num">{String(i + 1).padStart(2, '0')}</span>
+                <h3>{title}</h3>
+                <p>{text}</p>
               </div>
-              <h3>{title}</h3>
-              <p>{text}</p>
+              <div className="stair-candle" aria-hidden="true"><span className="stair-body"><Icon size={22} /></span></div>
             </li>)}
+            <li className="stair-group stair-group-free"><span>Gratis con tu registro</span></li>
+            <li className="stair-group stair-group-paid"><span>Con Diana · de pago</span></li>
           </ul>
         </div>
       </section>
