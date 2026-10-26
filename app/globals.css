@@ -327,3 +327,54 @@ button{font:inherit;cursor:pointer}
 .lab-panel p{margin-top:10px}
 .lab-question{padding:12px 16px;border-radius:10px;background:rgba(201,162,39,.14);color:var(--gold-light)}
 @media (min-width:900px){.lab{padding:28px}.lab-tabs{grid-template-columns:repeat(4,1fr)}.lab-body{grid-template-columns:1.6fr 1fr;align-items:center}}
+
+/* ---------- Movimiento: suave y discreto ---------- */
+:root{--ease:cubic-bezier(.22,.61,.36,1)}
+
+/* Transición entre páginas */
+.page-transition{animation:page-in .55s var(--ease) backwards}
+@keyframes page-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* Aparición al hacer scroll (solo si JavaScript está activo) */
+.js-reveal [data-reveal]{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease);transition-delay:calc(var(--i,0) * 90ms)}
+.js-reveal [data-reveal].is-visible{opacity:1;transform:none}
+
+/* Entrada del inicio y del portal */
+.hero-copy>*,.portal-hero-grid>div:first-child>*{animation:rise .8s var(--ease) backwards}
+.hero-copy>:nth-child(2),.portal-hero-grid>div:first-child>:nth-child(2){animation-delay:.1s}
+.hero-copy>:nth-child(3),.portal-hero-grid>div:first-child>:nth-child(3){animation-delay:.2s}
+.hero-copy>:nth-child(4){animation-delay:.3s}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.hero-photo img,.portal-hero-photo img,.auth-visual img{animation:photo-in 1.2s var(--ease) backwards}
+@keyframes photo-in{from{opacity:0;transform:scale(1.04)}to{opacity:1;transform:none}}
+.auth-box{animation:rise .7s var(--ease) backwards .1s}
+
+/* Encabezado con sombra al desplazarse */
+.site-header,.portal-header{transition:box-shadow .3s,background .3s}
+.is-scrolled .site-header,.is-scrolled .portal-header{box-shadow:0 6px 24px rgba(15,65,49,.1)}
+
+/* Menú móvil */
+.mobile-nav.is-open{animation:menu-in .3s var(--ease)}
+@keyframes menu-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+
+/* Detalles al pasar el cursor */
+.btn svg,.route-cta svg,.lesson-nav svg,.invite-yt svg{transition:transform .25s var(--ease)}
+.btn:hover svg,.route-card:hover .route-cta svg,.lesson-nav a:hover svg{transform:translateX(4px)}
+.lesson-nav a:first-child:hover svg{transform:translateX(-4px)}
+.back-link svg{transition:transform .25s var(--ease)}
+.back-link:hover svg{transform:translateX(-4px)}
+.btn{transition:background .2s,border-color .2s,transform .25s var(--ease),box-shadow .25s}
+.btn-gold:hover,.btn-green:hover{box-shadow:0 8px 22px rgba(15,65,49,.18)}
+.benefit,.premium-card,.resource,.schedule-row{transition:transform .3s var(--ease),box-shadow .3s,border-color .3s}
+.benefit:hover,.resource:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#C9D6CF}
+.premium-card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.25)}
+.route-card{transition:border-color .3s,transform .3s var(--ease),box-shadow .3s}
+.route-card:hover{box-shadow:0 14px 34px rgba(15,65,49,.12)}
+.route-icon,.benefit-icon{transition:background .3s,color .3s}
+.route-card:hover .route-icon,.benefit:hover .benefit-icon{background:var(--green-900);color:var(--gold)}
+.lab-panel{animation:rise .45s var(--ease)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .js-reveal [data-reveal]{opacity:1;transform:none}
+}

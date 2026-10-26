@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
+import HeaderShadow from '@/components/HeaderShadow';
 
 /* Tipografías del manual de marca, servidas desde el propio sitio. */
 const centuryGothic = localFont({
@@ -33,5 +34,5 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#0B3D2E' };
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="es" className={`${centuryGothic.variable} ${meshitara.variable}`}><body>{children}</body></html>;
+  return <html lang="es" className={`${centuryGothic.variable} ${meshitara.variable}`}><body><HeaderShadow />{children}</body></html>;
 }

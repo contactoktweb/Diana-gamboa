@@ -22,13 +22,13 @@ export default function PortalPage() {
 
     <section className="section" aria-labelledby="ruta-title">
       <div className="wrap">
-        <div className="section-head section-head-left">
+        <div className="section-head section-head-left" data-reveal>
           <p className="eyebrow">Gratis para alumnos</p>
           <h2 id="ruta-title">Tu ruta de aprendizaje gratuita</h2>
           <p>Comienza por la tarjeta 01 y sigue el orden. Cada sección tiene sus videos y recursos.</p>
         </div>
         <ol className="route-grid">
-          {ruta.map(s => <li key={s.slug}>
+          {ruta.map((s, i) => <li key={s.slug} data-reveal style={{ '--i': i } as React.CSSProperties}>
             <Link href={`/portal/${s.slug}`} className="route-card">
               <span className="route-top"><span className="route-num">{s.number}</span><span className="route-icon"><RouteIcon name={s.icon} /></span></span>
               <h3>{s.title}</h3>
@@ -38,7 +38,7 @@ export default function PortalPage() {
           </li>)}
         </ol>
 
-        <aside className="welcome-gift">
+        <aside className="welcome-gift" data-reveal>
           <Download size={28} aria-hidden="true" />
           <div><h2>Tu regalo de bienvenida</h2><p>Descarga la Hoja del Proceso de Análisis y tenla a mano mientras estudias.</p></div>
           <Link href="/portal/biblioteca" className="btn btn-green">Ir a la biblioteca</Link>
@@ -48,13 +48,13 @@ export default function PortalPage() {
 
     <section className="section section-green" aria-labelledby="formacion-title">
       <div className="wrap">
-        <div className="section-head section-head-left">
+        <div className="section-head section-head-left" data-reveal>
           <p className="eyebrow eyebrow-gold">Siguiente nivel</p>
           <h2 id="formacion-title">Continúa tu formación con Diana</h2>
           <p>Espacios adicionales para practicar y profundizar.</p>
         </div>
         <div className="premium-grid">
-          {formacion.map(f => <article key={f.key} className="premium-card">
+          {formacion.map((f, i) => <article key={f.key} className="premium-card" data-reveal style={{ '--i': i } as React.CSSProperties}>
             <span className="premium-icon">{f.key === 'salon' ? <Users size={28} aria-hidden="true" /> : <GraduationCap size={28} aria-hidden="true" />}</span>
             <span className="tag tag-gold">{f.tag}</span>
             <h3>{f.title}</h3>

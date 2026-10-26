@@ -41,7 +41,7 @@ export default function ChartLab() {
         </svg>
         <p className="lab-note">Gráfico ilustrativo · no son cotizaciones reales</p>
       </div>
-      <div className="lab-panel" id="lab-panel" role="tabpanel" aria-labelledby={`lab-tab-${active}`}>
+      <div className="lab-panel" key={active} id="lab-panel" role="tabpanel" aria-labelledby={`lab-tab-${active}`}>
         <h3>{c.headline}</h3>
         <p>{c.detail}</p>
         <p className="lab-question">Pregúntate: <strong>{c.question}</strong></p>

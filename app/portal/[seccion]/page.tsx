@@ -38,14 +38,14 @@ export default async function SeccionPage({ params }: Props) {
     </section>
 
     <div className="wrap lesson-body">
-      {s.schedule && <section className="lesson-block" aria-labelledby="prog-title">
+      {s.schedule && <section className="lesson-block" data-reveal aria-labelledby="prog-title">
         <h2 id="prog-title">Programación de lives</h2>
         <LiveSchedule />
       </section>}
 
       {s.series.map((serie, i) => {
         const { videoId, listId } = parseYouTube(serie.url);
-        return <section className="lesson-block" key={serie.title} aria-labelledby={`serie-${i}`}>
+        return <section className="lesson-block" data-reveal key={serie.title} aria-labelledby={`serie-${i}`}>
           <div className="serie-head">
             <div><h2 id={`serie-${i}`}>{serie.title}</h2><p>{serie.description}</p></div>
             <a href={serie.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">Ver en YouTube <ExternalLink size={16} aria-hidden="true" /></a>
@@ -55,13 +55,13 @@ export default async function SeccionPage({ params }: Props) {
         </section>;
       })}
 
-      {s.lab && <section className="lesson-block" aria-labelledby="lab-title">
+      {s.lab && <section className="lesson-block" data-reveal aria-labelledby="lab-title">
         <h2 id="lab-title">Laboratorio: practica la lectura de una gráfica</h2>
         <p>Selecciona un concepto y observa qué cambia en el gráfico.</p>
         <ChartLab />
       </section>}
 
-      {s.resources && <section className="lesson-block" aria-labelledby="rec-title">
+      {s.resources && <section className="lesson-block" data-reveal aria-labelledby="rec-title">
         <h2 id="rec-title">Tus materiales</h2>
         <ul className="resource-list">
           {recursos.map(r => <li key={r.title} className="resource">
@@ -74,7 +74,7 @@ export default async function SeccionPage({ params }: Props) {
         </ul>
       </section>}
 
-      <nav className="lesson-nav" aria-label="Navegación de la ruta">
+      <nav className="lesson-nav" data-reveal aria-label="Navegación de la ruta">
         {prev ? <Link href={`/portal/${prev.slug}`}><small>Anterior</small><span><ArrowLeft size={18} aria-hidden="true" /> {prev.number}. {prev.title}</span></Link> : <span />}
         {next ? <Link href={`/portal/${next.slug}`} className="lesson-nav-next"><small>Siguiente</small><span>{next.number}. {next.title} <ArrowRight size={18} aria-hidden="true" /></span></Link>
           : <Link href="/portal" className="lesson-nav-next"><small>Terminaste la ruta</small><span>Volver al portal <ArrowRight size={18} aria-hidden="true" /></span></Link>}

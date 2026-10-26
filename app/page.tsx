@@ -39,13 +39,13 @@ export default function HomePage() {
 
       <section className="section" aria-labelledby="beneficios-title">
         <div className="wrap">
-          <div className="section-head">
+          <div className="section-head" data-reveal>
             <p className="eyebrow">Tu academia</p>
             <h2 id="beneficios-title">¿Qué encontrarás en la academia?</h2>
             <p>Todo organizado en un solo lugar para que aprendas a tu ritmo.</p>
           </div>
           <ul className="benefit-grid">
-            {beneficios.map(({ icon: Icon, title, text, premium }) => <li key={title} className={`benefit ${premium ? 'benefit-premium' : ''}`}>
+            {beneficios.map(({ icon: Icon, title, text, premium }, i) => <li key={title} className={`benefit ${premium ? 'benefit-premium' : ''}`} data-reveal style={{ '--i': i } as React.CSSProperties}>
               <span className="benefit-icon"><Icon size={26} aria-hidden="true" /></span>
               <div><h3>{title}</h3><p>{text}</p>{premium && <span className="tag">Opcional · de pago</span>}</div>
             </li>)}
@@ -55,10 +55,10 @@ export default function HomePage() {
 
       <section className="section section-cream" id="sobre-diana" aria-labelledby="sobre-title">
         <div className="wrap about-grid">
-          <div className="about-photo">
+          <div className="about-photo" data-reveal>
             <Image src="/diana-gesto.webp" alt="Diana Gamboa sonriendo" fill sizes="(max-width: 860px) 100vw, 40vw" />
           </div>
-          <div className="about-copy">
+          <div className="about-copy" data-reveal style={{ '--i': 1 } as React.CSSProperties}>
             <p className="eyebrow">Sobre Diana</p>
             <h2 id="sobre-title">Hola, soy Diana Gamboa</h2>
             <p className="lead-sm">Soy analista de mercados bursátiles y especialista en acciones y opciones. Mi propósito es que entiendas lo que estás viendo en una gráfica y construyas tu propio criterio.</p>
@@ -73,7 +73,7 @@ export default function HomePage() {
       </section>
 
       <section className="section invite" aria-labelledby="invite-title">
-        <div className="wrap invite-inner">
+        <div className="wrap invite-inner" data-reveal>
           <h2 id="invite-title">Tu formación empieza con un primer paso</h2>
           <p>Regístrate gratis y accede a tu ruta de aprendizaje, los lives y la biblioteca de recursos.</p>
           <Link href="/registro" className="btn btn-gold btn-lg">Comienza tu formación gratis <ArrowRight size={20} aria-hidden="true" /></Link>

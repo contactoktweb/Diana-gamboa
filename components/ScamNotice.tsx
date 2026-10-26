@@ -3,7 +3,7 @@ import { INSTAGRAM, YOUTUBE } from '@/data/academia';
 
 export default function ScamNotice() {
   return <section className="section scam" aria-labelledby="scam-title">
-    <div className="wrap scam-card">
+    <div className="wrap scam-card" data-reveal>
       <div className="scam-icon"><ShieldAlert size={34} aria-hidden="true" /></div>
       <div className="scam-copy">
         <p className="eyebrow eyebrow-alert">Prevención de estafas</p>
