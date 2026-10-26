@@ -5,7 +5,7 @@ import Brand from './Brand';
 export default function PortalHeader() {
   return <header className="portal-header">
     <div className="wrap header-inner">
-      <Brand href="/portal" />
+      <Brand href="/portal" tagline />
       <nav className="portal-nav" aria-label="Navegación del portal">
         <Link href="/portal" className="portal-nav-home"><Home size={20} aria-hidden="true" /> <span>Inicio del portal</span></Link>
         <Link href="/portal/biblioteca" className="portal-nav-hide">Recursos</Link>

@@ -27,8 +27,16 @@ pnpm build
 ## Dónde editar
 
 - `data/academia.ts`: series, asignación a cada sección, horarios (hora de Nueva York), recursos, membresía y cursos.
-- `app/globals.css`: colores y fuentes en `:root` (listo para los códigos definitivos de marca).
-- `components/Brand.tsx`: logotipo provisional en texto; reemplazar por el logo final.
+- `app/globals.css`: paleta y tipografía oficiales en `:root`.
+- `components/Brand.tsx` y `public/brand/`: logotipo oficial (versión color y negativo) y patrón de velas.
+
+## Identidad de marca
+
+Según el manual *Diana Gamboa Definitivo*:
+
+- **Colores:** `#0F4131` verde profundo, `#176244` verde, `#CBA52F` dorado, `#000000` y `#FFFFFF`.
+- **Tipografía:** Century Gothic (regular, negrita e itálica). Si el dispositivo no la tiene instalada se usa Poppins, también presente en el manual. Para mostrar Century Gothic a todos los visitantes hace falta comprar su licencia web.
+- **Logo:** versión bicolor (DG verde + velas doradas) sobre fondos claros y versión negativa (DG blanco + velas doradas) sobre fondos verdes.
 
 Los horarios se escriben en hora de Nueva York y se muestran para EE. UU., Colombia, México y la hora local del visitante, respetando el horario de verano.
 
