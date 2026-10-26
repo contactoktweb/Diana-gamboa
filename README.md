@@ -35,7 +35,7 @@ pnpm build
 Según el manual *Diana Gamboa Definitivo*:
 
 - **Colores:** `#0F4131` verde profundo, `#176244` verde, `#CBA52F` dorado, `#000000` y `#FFFFFF`.
-- **Tipografía:** Century Gothic (regular, negrita e itálica). Si el dispositivo no la tiene instalada se usa Poppins, también presente en el manual. Para mostrar Century Gothic a todos los visitantes hace falta comprar su licencia web.
+- **Tipografía:** Century Gothic (regular y negrita) para títulos y textos, y Meshitara Sans (la del logotipo) para etiquetas en mayúsculas. Los archivos están en `app/fonts/` en formato WOFF2 y se cargan con `next/font/local` en `app/layout.tsx`, así que se ven igual en cualquier dispositivo.
 - **Logo:** versión bicolor (DG verde + velas doradas) sobre fondos claros y versión negativa (DG blanco + velas doradas) sobre fondos verdes.
 
 Los horarios se escriben en hora de Nueva York y se muestran para EE. UU., Colombia, México y la hora local del visitante, respetando el horario de verano.
