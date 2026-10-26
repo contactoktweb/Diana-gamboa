@@ -46,8 +46,12 @@ export default function HomePage() {
           </div>
           <ul className="benefit-grid">
             {beneficios.map(({ icon: Icon, title, text, premium }, i) => <li key={title} className={`benefit ${premium ? 'benefit-premium' : ''}`} data-reveal style={{ '--i': i } as React.CSSProperties}>
-              <span className="benefit-icon"><Icon size={26} aria-hidden="true" /></span>
-              <div><h3>{title}</h3><p>{text}</p>{premium && <span className="tag">Opcional · de pago</span>}</div>
+              <div className="benefit-top">
+                <span className="benefit-icon"><Icon size={24} aria-hidden="true" /></span>
+                {premium ? <span className="benefit-badge">De pago · opcional</span> : <span className="benefit-num">{String(i + 1).padStart(2, '0')}</span>}
+              </div>
+              <h3>{title}</h3>
+              <p>{text}</p>
             </li>)}
           </ul>
         </div>

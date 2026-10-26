@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Eye, EyeOff, MailCheck } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, MailCheck } from 'lucide-react';
 
 type Mode = 'registro' | 'ingresar' | 'recuperar';
 
@@ -54,7 +54,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       <label className="check"><input type="checkbox" name="novedades" /> <span>Quiero recibir novedades por correo (opcional).</span></label>
     </>}
     <button type="submit" className="btn btn-green btn-lg btn-block">
-      {mode === 'registro' ? 'Crear mi cuenta gratis' : mode === 'ingresar' ? 'Iniciar sesión' : 'Enviar enlace'}
+      {mode === 'registro' ? 'Crear mi cuenta gratis' : mode === 'ingresar' ? 'Iniciar sesión' : 'Enviar enlace'} <ArrowRight aria-hidden="true" />
     </button>
     <p className="auth-switch">
       {mode === 'registro' && <>¿Ya eres alumno? <Link href="/ingresar">Iniciar sesión</Link></>}

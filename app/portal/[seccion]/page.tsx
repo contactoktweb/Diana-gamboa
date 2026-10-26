@@ -65,7 +65,7 @@ export default async function SeccionPage({ params }: Props) {
         <h2 id="rec-title">Tus materiales</h2>
         <ul className="resource-list">
           {recursos.map(r => <li key={r.title} className="resource">
-            <FileText size={28} aria-hidden="true" />
+            <span className="resource-icon"><FileText size={24} aria-hidden="true" /><small>{r.format}</small></span>
             <div><h3>{r.title}</h3><p>{r.description}</p></div>
             {r.file
               ? <a className="btn btn-green btn-sm" href={r.file} download>Descargar {r.format}</a>

@@ -42,20 +42,26 @@ button{font:inherit;cursor:pointer}
 .tag-gold{background:rgba(201,162,39,.16);color:var(--gold-light);margin:0 0 12px}
 
 /* ---------- Botones: grandes y fáciles de identificar ---------- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:12px 24px;border-radius:12px;border:2px solid transparent;font-weight:700;font-size:1rem;text-decoration:none;text-align:center;transition:background .2s,border-color .2s,transform .2s}
-.btn:hover{transform:translateY(-1px)}
-.btn-lg{min-height:60px;padding:14px 30px;font-size:1.1rem}
-.btn-sm{min-height:44px;padding:8px 18px;font-size:.95rem}
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:54px;padding:10px 26px;border-radius:999px;border:1.5px solid transparent;font-weight:700;font-size:1rem;letter-spacing:.01em;text-decoration:none;text-align:center;transition:background .25s,border-color .25s,color .25s,transform .25s var(--ease),box-shadow .25s}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(0)}
+.btn-lg{min-height:62px;padding:10px 30px;font-size:1.08rem}
+.btn-sm{min-height:46px;padding:6px 20px;font-size:.95rem}
 .btn-block{width:100%}
-.btn-gold{background:var(--gold);color:var(--green-900)}
-.btn-gold:hover{background:var(--gold-light)}
-.btn-green{background:var(--green-900);color:var(--white)}
-.btn-green:hover{background:var(--green-700)}
-.btn-outline{border-color:var(--green-900);color:var(--green-900);background:transparent}
-.btn-outline:hover{background:var(--green-50)}
+/* Botón principal: verde profundo, texto blanco y flecha en círculo dorado */
+.btn-gold,.btn-green{background:linear-gradient(180deg,var(--green-700),var(--green-900));color:var(--white);box-shadow:0 0 0 1px rgba(203,165,47,.45) inset,0 10px 24px -10px rgba(15,65,49,.55)}
+.btn-gold:hover,.btn-green:hover{background:linear-gradient(180deg,#1C7350,var(--green-700));box-shadow:0 0 0 1px rgba(203,165,47,.7) inset,0 16px 30px -12px rgba(15,65,49,.6)}
+.btn-gold:has(svg),.btn-green:has(svg){padding-right:8px}
+.btn-gold svg,.btn-green svg{box-sizing:content-box;flex:none;width:18px;height:18px;padding:10px;border-radius:50%;background:var(--gold);color:var(--green-900)}
+.btn-sm.btn-gold svg,.btn-sm.btn-green svg{width:16px;height:16px;padding:7px}
+/* Sobre fondos verdes: botón claro */
+.invite .btn-gold,.section-green .btn-gold,.premium-card .btn-gold,.welcome-gift .btn-green{background:var(--white);color:var(--green-900);box-shadow:0 0 0 1px rgba(255,255,255,.6) inset,0 12px 28px -12px rgba(0,0,0,.45)}
+.invite .btn-gold:hover,.section-green .btn-gold:hover,.premium-card .btn-gold:hover,.welcome-gift .btn-green:hover{background:#F3EFE2}
+.btn-outline{border-color:rgba(15,65,49,.35);color:var(--green-900);background:var(--white)}
+.btn-outline:hover{border-color:var(--green-900);background:var(--green-50)}
 .btn-google{background:var(--white);border-color:var(--line);color:var(--ink)}
 .btn-google:hover{border-color:var(--muted)}
-.btn-disabled{background:#ECE8DC;color:#6B746F;cursor:default}
+.btn-disabled{background:#ECEFED;color:#66736C;cursor:default}
 .btn-disabled:hover{transform:none}
 
 /* ---------- Logotipo provisional ---------- */
@@ -113,14 +119,6 @@ button{font:inherit;cursor:pointer}
 }
 
 /* ---------- Inicio: beneficios ---------- */
-.benefit-grid{list-style:none;margin:0;padding:0;display:grid;gap:16px}
-.benefit{display:flex;gap:18px;align-items:flex-start;padding:24px;background:var(--white);border:1px solid var(--line);border-radius:var(--radius)}
-.benefit h3{font-size:1.2rem}
-.benefit p{color:var(--muted);margin-top:6px;font-size:1rem}
-.benefit-icon{display:grid;place-items:center;width:52px;height:52px;flex:none;border-radius:14px;background:var(--green-50);color:var(--green-900)}
-.benefit-premium .benefit-icon{background:var(--green-900);color:var(--gold-light)}
-@media (min-width:640px){.benefit-grid{grid-template-columns:1fr 1fr}}
-@media (min-width:1000px){.benefit-grid{grid-template-columns:repeat(3,1fr)}}
 
 /* ---------- Inicio: sobre Diana ---------- */
 .about-grid{display:grid;gap:36px;align-items:center}
@@ -223,31 +221,7 @@ button{font:inherit;cursor:pointer}
 .portal-hero-photo img{object-fit:cover;object-position:50% 8%}
 @media (min-width:860px){.portal-hero-grid{grid-template-columns:1fr 340px;padding-top:48px}.portal-hero-grid>div:first-child{padding-bottom:56px}.portal-hero-photo{min-height:300px}}
 
-.route-grid{list-style:none;margin:0;padding:0;display:grid;gap:16px}
-.route-card{display:flex;flex-direction:column;height:100%;padding:24px;background:var(--white);border:1.5px solid var(--line);border-radius:var(--radius);text-decoration:none;box-shadow:var(--shadow);transition:border-color .2s,transform .2s}
-.route-card:hover{border-color:var(--gold);transform:translateY(-2px)}
-.route-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.route-num{font-size:2rem;font-weight:700;color:var(--gold);line-height:1}
-.route-icon{display:grid;place-items:center;width:52px;height:52px;border-radius:14px;background:var(--green-50);color:var(--green-900);flex:none}
-.route-icon-lg{width:64px;height:64px}
-.route-card h3{font-size:1.35rem}
-.route-card p{color:var(--muted);margin-top:8px;font-size:1rem;flex:1}
-.route-cta{display:inline-flex;align-items:center;gap:8px;margin-top:20px;font-weight:700;color:var(--green-900)}
-@media (min-width:640px){.route-grid{grid-template-columns:1fr 1fr}}
-@media (min-width:1000px){.route-grid{grid-template-columns:repeat(3,1fr)}}
 
-.welcome-gift{display:grid;gap:16px;align-items:center;margin-top:28px;padding:24px;border-radius:var(--radius);background:var(--cream);border:1.5px dashed #D8CBA2;color:var(--gold-text)}
-.welcome-gift h2{font-size:1.35rem}
-.welcome-gift p{color:var(--muted);margin-top:4px;font-size:1rem}
-@media (min-width:800px){.welcome-gift{grid-template-columns:auto 1fr auto;padding:24px 32px}}
-
-.premium-grid{display:grid;gap:20px}
-.premium-card{display:flex;flex-direction:column;align-items:flex-start;padding:28px;border-radius:20px;background:linear-gradient(160deg,var(--green-700),var(--green-900));border:1px solid rgba(226,197,107,.35)}
-.premium-icon{display:grid;place-items:center;width:56px;height:56px;border-radius:14px;background:rgba(201,162,39,.14);color:var(--gold-light);margin-bottom:18px}
-.premium-card h3{font-size:1.6rem}
-.premium-card p{margin:10px 0 24px;color:#C5D5CC;flex:1}
-.premium-card .btn-disabled{background:rgba(255,255,255,.1);color:#C5D5CC}
-@media (min-width:800px){.premium-grid{grid-template-columns:1fr 1fr}}
 
 .portal-footer{background:var(--cream);border-top:1px solid var(--line);padding:36px 0;text-align:center;font-size:.95rem;color:var(--muted)}
 .portal-motto{font-weight:700;font-size:clamp(1.2rem,2.4vw,1.6rem);color:var(--green-900);margin-bottom:8px}
@@ -273,28 +247,16 @@ button{font:inherit;cursor:pointer}
 .video-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:84px;height:84px;border-radius:50%;background:var(--gold);color:var(--green-900);box-shadow:0 8px 30px rgba(0,0,0,.35);transition:transform .2s}
 .video-poster:hover .video-play{transform:translate(-50%,-50%) scale(1.06)}
 
-.resource-list{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:14px}
-.resource{display:grid;grid-template-columns:auto 1fr;gap:12px 16px;align-items:center;padding:20px;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);color:var(--green-700)}
-.resource h3{font-size:1.15rem}
-.resource p{color:var(--muted);font-size:1rem;margin-top:2px}
-.resource .btn{grid-column:1/-1}
-@media (min-width:700px){.resource{grid-template-columns:auto 1fr auto}.resource .btn{grid-column:auto}}
 
-.lesson-nav{display:grid;gap:12px;border-top:1px solid var(--line);padding-top:28px}
-.lesson-nav a{display:grid;gap:4px;padding:18px 20px;border:1.5px solid var(--line);border-radius:14px;background:var(--white);text-decoration:none;color:var(--green-900);font-weight:700}
-.lesson-nav a:hover{border-color:var(--gold)}
-.lesson-nav small{font-weight:600;color:var(--muted);font-size:.85rem;text-transform:uppercase;letter-spacing:.06em}
-.lesson-nav a span{display:inline-flex;align-items:center;gap:8px}
-.lesson-nav-next{text-align:right;justify-items:end}
 @media (min-width:700px){.lesson-nav{grid-template-columns:1fr 1fr}}
 
 /* ---------- Programación de lives ---------- */
 .schedule ul{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:14px}
-.schedule-row{display:grid;gap:16px;padding:22px;background:var(--white);border:1px solid var(--line);border-radius:var(--radius)}
+.schedule-row{display:grid;gap:16px;padding:22px}
 .schedule-row h3{font-size:1.2rem}
 .schedule-row>div>p{color:var(--gold-text);font-weight:600;margin-top:4px}
 .schedule-row dl{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.schedule-row dl div{padding:10px 12px;border-radius:10px;background:var(--paper)}
+.schedule-row dl div{padding:10px 12px;border-radius:12px;background:var(--cream)}
 .schedule-row dt{font-size:.82rem;color:var(--muted)}
 .schedule-row dd{margin:0;font-weight:700;font-size:1.1rem;color:var(--green-900)}
 .schedule-row .schedule-local{background:var(--green-50)}
@@ -328,6 +290,104 @@ button{font:inherit;cursor:pointer}
 .lab-question{padding:12px 16px;border-radius:10px;background:rgba(201,162,39,.14);color:var(--gold-light)}
 @media (min-width:900px){.lab{padding:28px}.lab-tabs{grid-template-columns:repeat(4,1fr)}.lab-body{grid-template-columns:1.6fr 1fr;align-items:center}}
 
+/* ---------- Tarjetas: lenguaje común ---------- */
+/* Borde con degradado dorado-verde, esquinas amplias y sombra en capas. */
+.card-surface,.benefit,.route-card,.resource,.schedule-row,.lesson-nav a{
+  --card-bg:var(--white);
+  background:linear-gradient(var(--card-bg),var(--card-bg)) padding-box,linear-gradient(140deg,rgba(203,165,47,.55),rgba(23,98,68,.12) 45%,rgba(23,98,68,.12) 70%,rgba(203,165,47,.35)) border-box;
+  border:1px solid transparent;border-radius:24px;
+  box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 2px 4px rgba(15,65,49,.04),0 12px 32px -12px rgba(15,65,49,.14);
+  transition:transform .35s var(--ease),box-shadow .35s var(--ease)
+}
+.benefit:hover,.route-card:hover,.resource:hover,.lesson-nav a:hover{transform:translateY(-4px);box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 4px 8px rgba(15,65,49,.05),0 24px 48px -16px rgba(15,65,49,.28)}
+
+/* Inicio: beneficios */
+.benefit-grid{list-style:none;margin:0;padding:0;display:grid;gap:18px}
+.benefit{position:relative;display:flex;flex-direction:column;padding:26px 26px 28px;overflow:hidden}
+.benefit::after{content:'';position:absolute;left:26px;right:26px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:linear-gradient(90deg,var(--gold),var(--green-700));transform:scaleX(0);transform-origin:left;transition:transform .45s var(--ease)}
+.benefit:hover::after{transform:scaleX(1)}
+.benefit-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.benefit-icon{display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:var(--green-50);color:var(--green-900);box-shadow:0 0 0 6px rgba(15,65,49,.04);transition:background .3s,color .3s}
+.benefit:hover .benefit-icon{background:var(--green-900);color:var(--gold)}
+.benefit-num{font-family:var(--font-accent);font-size:.9rem;letter-spacing:.2em;color:var(--gold-text)}
+.benefit h3{font-size:1.2rem}
+.benefit p{color:var(--muted);margin-top:8px;font-size:1rem}
+.benefit-premium{--card-bg:var(--green-900);background:linear-gradient(160deg,rgba(23,98,68,.92),rgba(15,65,49,.97)) padding-box,var(--pattern) center/420px padding-box,linear-gradient(140deg,rgba(203,165,47,.8),rgba(203,165,47,.15) 50%,rgba(203,165,47,.6)) border-box}
+.benefit-premium h3{color:var(--white)}
+.benefit-premium p{color:#C9D8D0}
+.benefit-premium .benefit-icon{background:rgba(203,165,47,.16);color:var(--gold);box-shadow:0 0 0 6px rgba(203,165,47,.08)}
+.benefit-badge{font-family:var(--font-accent);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);padding:6px 12px;border:1px solid rgba(203,165,47,.5);border-radius:99px}
+@media (min-width:640px){.benefit-grid{grid-template-columns:1fr 1fr}}
+@media (min-width:1000px){.benefit-grid{grid-template-columns:repeat(3,1fr)}}
+
+/* Portal: ruta de aprendizaje */
+.route-grid{list-style:none;margin:0;padding:0;display:grid;gap:20px}
+.route-card{display:flex;flex-direction:column;height:100%;padding:8px;text-decoration:none;color:inherit}
+.route-media{position:relative;display:flex;align-items:flex-end;justify-content:space-between;height:132px;padding:18px 20px;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,rgba(15,65,49,.94),rgba(23,98,68,.78)),var(--pattern) center/380px}
+.route-media::before{content:'';position:absolute;inset:auto -30% -60% auto;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(203,165,47,.28),transparent 65%);transition:transform .6s var(--ease)}
+.route-card:hover .route-media::before{transform:scale(1.3)}
+.route-num{position:relative;font-size:3.4rem;font-weight:700;line-height:.85;color:transparent;-webkit-text-stroke:1.5px var(--gold);letter-spacing:-.02em;transition:color .35s}
+.route-card:hover .route-num{color:var(--gold)}
+.route-icon{position:relative;display:grid;place-items:center;width:52px;height:52px;border-radius:16px;flex:none;background:rgba(255,255,255,.1);color:var(--white);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(6px)}
+.route-start{position:absolute;top:14px;left:16px;font-family:var(--font-accent);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--green-900);background:var(--gold);padding:5px 10px;border-radius:99px}
+.route-body{display:block;flex:1;padding:20px 14px 6px}
+.route-card h3{font-size:1.3rem}
+.route-card p{color:var(--muted);margin-top:8px;font-size:1rem}
+.route-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 14px 10px;margin:8px 6px 0;border-top:1px solid var(--line);font-family:var(--font-accent);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--green-700)}
+.route-go{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--green-50);color:var(--green-900);transition:background .3s,color .3s,transform .4s var(--ease)}
+.route-card:hover .route-go{background:var(--gold);color:var(--green-900);transform:rotate(45deg)}
+.lesson-title .route-icon{background:var(--green-900);color:var(--gold);border:0}
+.route-icon-lg{width:64px;height:64px}
+@media (min-width:640px){.route-grid{grid-template-columns:1fr 1fr}}
+@media (min-width:1000px){.route-grid{grid-template-columns:repeat(3,1fr)}}
+
+/* Portal: regalo de bienvenida */
+.welcome-gift{position:relative;display:grid;gap:18px;align-items:center;margin-top:32px;padding:26px;border-radius:24px;overflow:hidden;color:#D6E3DB;background:linear-gradient(100deg,rgba(15,65,49,.97) 40%,rgba(15,65,49,.82)),var(--pattern) center/420px;border:1px solid rgba(203,165,47,.45)}
+.welcome-icon{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:var(--gold);color:var(--green-900)}
+.welcome-gift h2{font-size:1.35rem;color:var(--white)}
+.welcome-gift p{color:#C9D8D0;margin-top:4px;font-size:1rem}
+@media (min-width:800px){.welcome-gift{grid-template-columns:auto 1fr auto;padding:26px 34px}}
+
+/* Portal: Salón y Cursos */
+.premium-grid{display:grid;gap:22px}
+.premium-card{position:relative;display:grid;grid-template-columns:1fr;min-height:340px;border-radius:28px;overflow:hidden;isolation:isolate;
+  background:radial-gradient(120% 90% at 100% 100%,rgba(203,165,47,.22),transparent 55%),linear-gradient(160deg,var(--green-700),var(--green-900) 70%);
+  border:1px solid rgba(203,165,47,.4);box-shadow:0 30px 60px -30px rgba(0,0,0,.6);transition:transform .35s var(--ease),box-shadow .35s}
+.premium-card:hover{transform:translateY(-4px);box-shadow:0 40px 70px -30px rgba(0,0,0,.7)}
+.premium-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-start;padding:30px;max-width:420px}
+.premium-head{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.premium-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:rgba(203,165,47,.16);color:var(--gold);border:1px solid rgba(203,165,47,.4)}
+.premium-tag{font-family:var(--font-accent);font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.premium-card h3{font-size:1.7rem}
+.premium-card p{margin:12px 0 26px;color:#C9D8D0;flex:1}
+.premium-visual{position:absolute;z-index:0;right:0;bottom:0;width:46%;height:100%;pointer-events:none}
+.premium-salon .premium-visual img{object-fit:cover;object-position:30% 10%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 40%);mask-image:linear-gradient(90deg,transparent,#000 40%);transition:transform .8s var(--ease)}
+.premium-card:hover .premium-visual img{transform:scale(1.04)}
+.premium-cursos .premium-visual{display:grid;place-items:center;opacity:.9}
+.premium-cursos .premium-visual svg{width:72%;max-width:190px;stroke:var(--gold);opacity:.55;transition:transform .8s var(--ease),opacity .4s}
+.premium-card:hover .premium-visual svg{transform:translateY(-6px);opacity:.8}
+.btn-ghost{background:transparent;color:#D6E3DB;border-color:rgba(255,255,255,.25);cursor:default}
+.btn-ghost:hover{transform:none}
+@media (max-width:560px){.premium-content{max-width:none;padding-right:38%}.premium-visual{width:44%}.premium-card h3{font-size:1.45rem}}
+@media (min-width:800px){.premium-grid{grid-template-columns:1fr 1fr}}
+
+/* Sección: recursos */
+.resource-list{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:14px}
+.resource{display:grid;grid-template-columns:auto 1fr;gap:14px 18px;align-items:center;padding:18px 20px}
+.resource-icon{position:relative;display:grid;place-items:center;width:58px;height:66px;border-radius:12px 20px 12px 12px;background:var(--green-900);color:var(--gold)}
+.resource-icon small{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);font-family:var(--font-accent);font-size:.62rem;letter-spacing:.12em;background:var(--gold);color:var(--green-900);padding:2px 7px;border-radius:99px}
+.resource h3{font-size:1.15rem}
+.resource p{color:var(--muted);font-size:1rem;margin-top:2px}
+.resource .btn{grid-column:1/-1}
+@media (min-width:700px){.resource{grid-template-columns:auto 1fr auto}.resource .btn{grid-column:auto}}
+
+/* Sección: navegación anterior / siguiente */
+.lesson-nav{display:grid;gap:14px;border-top:1px solid var(--line);padding-top:28px}
+.lesson-nav a{display:grid;gap:4px;padding:20px 22px;text-decoration:none;color:var(--green-900);font-weight:700}
+.lesson-nav small{font-family:var(--font-accent);font-weight:400;color:var(--green-700);font-size:.78rem;text-transform:uppercase;letter-spacing:.16em}
+.lesson-nav a span{display:inline-flex;align-items:center;gap:8px}
+.lesson-nav-next{text-align:right;justify-items:end}
+
 /* ---------- Movimiento: suave y discreto ---------- */
 :root{--ease:cubic-bezier(.22,.61,.36,1)}
 
@@ -358,20 +418,12 @@ button{font:inherit;cursor:pointer}
 @keyframes menu-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 
 /* Detalles al pasar el cursor */
-.btn svg,.route-cta svg,.lesson-nav svg,.invite-yt svg{transition:transform .25s var(--ease)}
-.btn:hover svg,.route-card:hover .route-cta svg,.lesson-nav a:hover svg{transform:translateX(4px)}
+.btn svg,.lesson-nav svg,.invite-yt svg{transition:transform .25s var(--ease)}
+.btn:hover svg,.lesson-nav a:hover svg{transform:translateX(4px)}
+.btn-gold:hover svg,.btn-green:hover svg{transform:translateX(3px) rotate(-45deg)}
 .lesson-nav a:first-child:hover svg{transform:translateX(-4px)}
 .back-link svg{transition:transform .25s var(--ease)}
 .back-link:hover svg{transform:translateX(-4px)}
-.btn{transition:background .2s,border-color .2s,transform .25s var(--ease),box-shadow .25s}
-.btn-gold:hover,.btn-green:hover{box-shadow:0 8px 22px rgba(15,65,49,.18)}
-.benefit,.premium-card,.resource,.schedule-row{transition:transform .3s var(--ease),box-shadow .3s,border-color .3s}
-.benefit:hover,.resource:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#C9D6CF}
-.premium-card:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.25)}
-.route-card{transition:border-color .3s,transform .3s var(--ease),box-shadow .3s}
-.route-card:hover{box-shadow:0 14px 34px rgba(15,65,49,.12)}
-.route-icon,.benefit-icon{transition:background .3s,color .3s}
-.route-card:hover .route-icon,.benefit:hover .benefit-icon{background:var(--green-900);color:var(--gold)}
 .lab-panel{animation:rise .45s var(--ease)}
 
 @media (prefers-reduced-motion:reduce){
