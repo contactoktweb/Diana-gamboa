@@ -19,17 +19,16 @@ export default function AuthForm({ mode }: { mode: Mode }) {
     const data = new FormData(ev.currentTarget);
     const name = String(data.get('nombre') ?? '').trim();
     try { if (name) localStorage.setItem('dg-nombre', name.split(' ')[0]); } catch {}
-    if (mode === 'ingresar') router.push('/portal');
-    else setSent(true);
+    // Al registrarse o iniciar sesión, el alumno entra directamente a su portal.
+    if (mode === 'recuperar') setSent(true);
+    else router.push('/portal');
   }
 
   if (sent) return <div className="auth-sent" role="status">
     <MailCheck size={40} aria-hidden="true" />
-    <h2>{mode === 'registro' ? 'Revisa tu correo' : 'Te enviamos un enlace'}</h2>
-    <p>{mode === 'registro'
-      ? 'Te enviamos un enlace para confirmar tu correo. Al confirmarlo entrarás directamente a tu Portal del Alumno.'
-      : 'Si el correo está registrado, recibirás un enlace para crear una nueva contraseña.'}</p>
-    <Link className="btn btn-green btn-block" href={mode === 'registro' ? '/portal' : '/ingresar'}>{mode === 'registro' ? 'Ir al portal' : 'Volver a iniciar sesión'}</Link>
+    <h2>Te enviamos un enlace</h2>
+    <p>Si el correo está registrado, recibirás un enlace para crear una nueva contraseña.</p>
+    <Link className="btn btn-green btn-block" href="/ingresar">Volver a iniciar sesión</Link>
   </div>;
 
   return <form className="auth-form" onSubmit={submit}>

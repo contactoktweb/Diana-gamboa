@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ArrowRight, ExternalLink, FileText } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronRight, ExternalLink, FileText, Radio } from 'lucide-react';
 import ChartLab from '@/components/ChartLab';
-import LiveSchedule from '@/components/LiveSchedule';
 import RouteIcon from '@/components/RouteIcon';
 import YouTubeEmbed from '@/components/YouTubeEmbed';
-import { parseYouTube, recursos, ruta } from '@/data/academia';
+import { parseYouTube, recursos, ruta, YOUTUBE_LIVES } from '@/data/academia';
 
 type Props = { params: Promise<{ seccion: string }> };
 
@@ -28,19 +27,27 @@ export default async function SeccionPage({ params }: Props) {
   return <>
     <section className="lesson-head">
       <div className="wrap">
-        <Link href="/portal" className="back-link"><ArrowLeft size={18} aria-hidden="true" /> Volver al portal</Link>
+        <nav className="breadcrumb" aria-label="Estás aquí">
+          <Link href="/portal" className="back-link"><ArrowLeft size={18} aria-hidden="true" /> Inicio del portal</Link>
+          <ChevronRight size={16} aria-hidden="true" />
+          <span aria-current="page">{s.title}</span>
+        </nav>
         <div className="lesson-title">
           <span className="route-icon route-icon-lg"><RouteIcon name={s.icon} size={30} /></span>
-          <div><p className="eyebrow">Ruta gratuita · {s.number} de {ruta.length.toString().padStart(2, '0')}</p><h1>{s.title}</h1></div>
+          <div><p className="eyebrow">{s.kind === 'serie' ? `Serie educativa · ${s.number}` : 'Recurso complementario'}</p><h1>{s.heading ?? s.title}</h1></div>
         </div>
         <p className="lead-sm">{s.intro}</p>
       </div>
     </section>
 
     <div className="wrap lesson-body">
-      {s.schedule && <section className="lesson-block" data-reveal aria-labelledby="prog-title">
-        <h2 id="prog-title">Programación de lives</h2>
-        <LiveSchedule />
+      {s.lives && <section className="lives-cta" data-reveal aria-label="Transmisiones en YouTube">
+        <span className="lives-icon"><Radio size={28} aria-hidden="true" /></span>
+        <div>
+          <p>En estas transmisiones compartimos análisis de gráficas, observamos el comportamiento del precio y conectamos lo aprendido en las clases.</p>
+          <p>Consulta las próximas transmisiones y los lives anteriores en mi canal de YouTube.</p>
+        </div>
+        <a href={YOUTUBE_LIVES} target="_blank" rel="noopener noreferrer" className="btn btn-gold">Ver lives gratuitos <ExternalLink size={18} aria-hidden="true" /></a>
       </section>}
 
       {s.series.map((serie, i) => {
@@ -62,7 +69,7 @@ export default async function SeccionPage({ params }: Props) {
       </section>}
 
       {s.resources && <section className="lesson-block" data-reveal aria-labelledby="rec-title">
-        <h2 id="rec-title">Tus materiales</h2>
+        <h2 id="rec-title" className="sr-only">Materiales</h2>
         <ul className="resource-list">
           {recursos.map(r => <li key={r.title} className="resource">
             <span className="resource-icon"><FileText size={24} aria-hidden="true" /><small>{r.format}</small></span>
@@ -77,7 +84,7 @@ export default async function SeccionPage({ params }: Props) {
       <nav className="lesson-nav" data-reveal aria-label="Navegación de la ruta">
         {prev ? <Link href={`/portal/${prev.slug}`}><small>Anterior</small><span><ArrowLeft size={18} aria-hidden="true" /> {prev.number}. {prev.title}</span></Link> : <span />}
         {next ? <Link href={`/portal/${next.slug}`} className="lesson-nav-next"><small>Siguiente</small><span>{next.number}. {next.title} <ArrowRight size={18} aria-hidden="true" /></span></Link>
-          : <Link href="/portal" className="lesson-nav-next"><small>Terminaste la ruta</small><span>Volver al portal <ArrowRight size={18} aria-hidden="true" /></span></Link>}
+          : <Link href="/portal" className="lesson-nav-next"><small>Inicio del portal</small><span>Volver a mis clases <ArrowRight size={18} aria-hidden="true" /></span></Link>}
       </nav>
     </div>
   </>;

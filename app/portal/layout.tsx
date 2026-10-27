@@ -10,7 +10,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
     <main id="contenido">{children}</main>
     <footer className="portal-footer"><div className="wrap">
       <p className="portal-motto">Aprende a leer. Aprende a analizar. Aprende a decidir.</p>
-      <p>Contenido educativo. No constituye asesoría financiera.</p>
+      <p>El contenido de esta academia es exclusivamente educativo y no constituye asesoría financiera ni recomendaciones personalizadas de inversión.</p>
     </div></footer>
   </div>;
 }

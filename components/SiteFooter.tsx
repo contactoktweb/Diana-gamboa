@@ -8,7 +8,7 @@ export default function SiteFooter() {
     <div className="wrap footer-grid">
       <div className="footer-brand">
         <Brand light />
-        <p>Educación bursátil para aprender a leer el mercado con criterio propio.</p>
+        <p>El idioma del mercado: aprende a leer, analizar y desarrollar tu propio criterio.</p>
       </div>
       <div>
         <h2>Redes oficiales</h2>
@@ -20,6 +20,7 @@ export default function SiteFooter() {
       <div>
         <h2>Academia</h2>
         <ul>
+          <li><Link href="/sobre-diana">Sobre Diana</Link></li>
           <li><Link href="/registro">Registro gratuito</Link></li>
           <li><Link href="/ingresar">Iniciar sesión</Link></li>
           <li><a href={INSTAGRAM} target="_blank" rel="noopener noreferrer">Contacto</a></li>
@@ -34,7 +35,7 @@ export default function SiteFooter() {
       </div>
     </div>
     <div className="wrap footer-base">
-      <p className="footer-disclaimer">Contenido educativo. No constituye asesoría financiera.</p>
+      <p className="footer-disclaimer">El contenido de esta academia es exclusivamente educativo y no constituye asesoría financiera ni recomendaciones personalizadas de inversión.</p>
       <p>© {new Date().getFullYear()} Diana Gamboa · <a href="https://www.kytcode.lat" target="_blank" rel="noopener noreferrer">Desarrollado por K&amp;T <Heart size={12} fill="currentColor" aria-hidden="true" /></a></p>
     </div>
   </footer>;

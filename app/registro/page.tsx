@@ -4,7 +4,7 @@ import AuthLayout from '@/components/AuthLayout';
 
 export const metadata: Metadata = { title: 'Registro gratuito | Diana Gamboa' };
 export default function RegistroPage() {
-  return <AuthLayout title="Crea tu cuenta gratis" subtitle="Accede a tu ruta de aprendizaje, los lives y la biblioteca de recursos. Solo toma un minuto.">
+  return <AuthLayout title="¡Bienvenido a tu academia!" subtitle="Crea tu cuenta gratuita y descubre tu ruta de aprendizaje. Encontrarás clases organizadas, transmisiones y recursos para comenzar desde cero.">
     <AuthForm mode="registro" />
   </AuthLayout>;
 }

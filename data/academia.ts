@@ -1,12 +1,16 @@
 /**
  * Contenido de la academia Diana Gamboa.
- * Todo lo editable (series, horarios, recursos, cursos) vive aquí para que el portal
+ * Todo lo editable (series, recursos, membresía, cursos) vive aquí para que el portal
  * pueda crecer sin tocar los componentes.
  */
 
 export const YOUTUBE = 'https://www.youtube.com/@DianaGamboaMomentum';
-export const YOUTUBE_MEMBERSHIP = 'https://www.youtube.com/@DianaGamboaMomentum/join';
+/** Sección de transmisiones (próximas y anteriores) del canal. */
+export const YOUTUBE_LIVES = 'https://www.youtube.com/@DianaGamboaMomentum/streams';
 export const INSTAGRAM = 'https://www.instagram.com/dianagamboamomentum/';
+
+/** Enlace oficial de la membresía del Salón. Mientras sea `undefined` se muestra «Próximamente». */
+export const SALON_URL: string | undefined = undefined;
 
 export interface Serie {
   title: string;
@@ -19,7 +23,8 @@ export interface Recurso {
   title: string;
   description: string;
   format: string;
-  /** Ruta del archivo en /public. Si no existe todavía, se muestra «Próximamente». */
+  /** Ruta del archivo en /public (por ejemplo '/recursos/proceso-de-analisis.pdf').
+      Si no está definida, la tarjeta muestra «Próximamente». */
   file?: string;
 }
 
@@ -29,26 +34,33 @@ export interface SeccionRuta {
   title: string;
   summary: string;
   intro: string;
+  /** Título de la página de la sección, si es distinto del de la tarjeta. */
+  heading?: string;
   icon: 'grafica' | 'accion' | 'metodo' | 'proceso' | 'lives' | 'biblioteca';
+  /** 'serie': serie educativa. 'complemento': lives y biblioteca. */
+  kind: 'serie' | 'complemento';
+  /** Texto del botón de la tarjeta en el portal. */
+  cta: string;
   series: Serie[];
   /** Incluye el laboratorio interactivo de lectura de gráficas. */
   lab?: boolean;
-  /** Incluye la programación de transmisiones. */
-  schedule?: boolean;
+  /** Muestra la invitación a las transmisiones de YouTube. */
+  lives?: boolean;
   /** Incluye la lista de recursos descargables. */
   resources?: boolean;
 }
 
-/* Las series provienen de las playlists ya compartidas. La asignación a cada sección es
-   provisional hasta recibir los nombres definitivos de las series. */
+/* Las series provienen de las playlists ya compartidas. */
 export const ruta: SeccionRuta[] = [
   {
     slug: 'leer-una-grafica',
     number: '01',
     title: 'Cómo leer una gráfica desde cero',
-    summary: 'Conoce los elementos de una gráfica y aprende a interpretarlos.',
-    intro: 'Tu punto de partida. Aquí aprenderás qué muestra una gráfica, cómo se forman las velas y qué preguntas hacerte antes de sacar conclusiones.',
+    summary: 'Conoce los elementos de una gráfica y comienza a comprender cómo se mueve el precio.',
+    intro: 'Tu punto de partida. Aquí aprenderás qué muestra una gráfica, cómo se forman las velas y qué observar antes de sacar conclusiones.',
     icon: 'grafica',
+    kind: 'serie',
+    cta: 'Ver clases',
     lab: true,
     series: [
       {
@@ -62,9 +74,11 @@ export const ruta: SeccionRuta[] = [
     slug: 'de-la-grafica-a-la-accion',
     number: '02',
     title: 'De la Gráfica a la Acción',
-    summary: 'Traduce lo que observas en un razonamiento claro y ordenado.',
-    intro: 'Aprende a convertir tus observaciones en preguntas mejor fundamentadas, antes de pensar en cualquier decisión.',
+    summary: 'Aprende a relacionar lo que observas en una gráfica con las preguntas y decisiones que forman parte del análisis.',
+    intro: 'Relaciona lo que observas en una gráfica con las preguntas y decisiones que forman parte del análisis.',
     icon: 'accion',
+    kind: 'serie',
+    cta: 'Ver clases',
     series: [
       {
         title: 'Temporada 2: De la Gráfica a la Acción',
@@ -77,9 +91,11 @@ export const ruta: SeccionRuta[] = [
     slug: 'metodo-diana-gamboa',
     number: '03',
     title: 'Método Diana Gamboa',
-    summary: 'El idioma del mercado: velas, tendencias y comportamiento del precio.',
-    intro: 'La forma en que Diana lee el mercado: observar, interpretar, poner en contexto y construir tu propio criterio.',
+    summary: 'Aprende el idioma del mercado: velas, medias móviles, tendencias y otras herramientas para comprender el comportamiento del precio.',
+    intro: 'El idioma del mercado pieza por pieza: velas, medias móviles, tendencias y otras herramientas para comprender el comportamiento del precio.',
     icon: 'metodo',
+    kind: 'serie',
+    cta: 'Ver clases',
     series: [
       {
         title: 'El Idioma del Mercado',
@@ -92,9 +108,11 @@ export const ruta: SeccionRuta[] = [
     slug: 'proceso-de-analisis',
     number: '04',
     title: 'El Proceso de Análisis',
-    summary: 'Sigue un orden para leer la gráfica y construir conclusiones.',
-    intro: 'Un análisis no es una corazonada. Aquí verás el orden que sigue Diana para estudiar una compañía y llegar a conclusiones propias.',
+    summary: 'Aprende a seguir un orden para observar una gráfica, reunir información y construir tus propias conclusiones.',
+    intro: 'Un orden para observar una gráfica, reunir información y construir tus propias conclusiones.',
     icon: 'proceso',
+    kind: 'serie',
+    cta: 'Ver clases',
     series: [
       {
         title: 'El Proceso del Análisis',
@@ -106,11 +124,13 @@ export const ruta: SeccionRuta[] = [
   {
     slug: 'lives',
     number: '05',
-    title: 'Lives gratuitos de YouTube',
-    summary: 'Acompaña a Diana en sus análisis en vivo y vuelve a ver las transmisiones.',
-    intro: 'Consulta la programación en tu hora local y vuelve a ver las transmisiones anteriores cuando quieras.',
+    title: 'Lives gratuitos en YouTube',
+    summary: 'Acompáñame en mis transmisiones para observar y analizar el mercado.',
+    intro: 'Acompáñame a leer y analizar el mercado en vivo.',
     icon: 'lives',
-    schedule: true,
+    kind: 'complemento',
+    cta: 'Ver lives',
+    lives: true,
     series: [
       {
         title: '10 Min Antes del Cierre',
@@ -128,53 +148,24 @@ export const ruta: SeccionRuta[] = [
     slug: 'biblioteca',
     number: '06',
     title: 'Biblioteca de Recursos',
-    summary: 'Descarga hojas de práctica, guías y tu documento del Proceso de Análisis.',
-    intro: 'Todos tus materiales descargables en un solo lugar. Iremos sumando nuevas guías a medida que avances.',
+    heading: 'Tu biblioteca de recursos',
+    summary: 'Encuentra guías y hojas de práctica para repasar y reforzar lo aprendido.',
+    intro: 'Aquí encontrarás materiales para practicar, repasar y reforzar lo aprendido en las clases. Puedes descargarlos y utilizarlos a tu propio ritmo.',
     icon: 'biblioteca',
+    kind: 'complemento',
+    cta: 'Ver recursos',
     resources: true,
     series: [],
   },
 ];
 
+/* Para publicar un recurso: copiar el PDF en /public/recursos y añadir su ruta en `file`.
+   El primero es también el regalo de bienvenida del portal. */
 export const recursos: Recurso[] = [
-  { title: 'Hoja del Proceso de Análisis', description: 'Tu guía de bienvenida para analizar una gráfica paso a paso.', format: 'PDF' },
-  { title: 'Hoja de práctica: lectura de velas', description: 'Ejercicios para identificar apertura, cierre, máximos y mínimos.', format: 'PDF' },
-  { title: 'Glosario del idioma del mercado', description: 'Los términos esenciales explicados de forma sencilla.', format: 'PDF' },
+  { title: 'Hoja del Proceso de Análisis', description: 'Una guía para organizar tu análisis y recordar qué observar cuando te sientas frente a una gráfica.', format: 'PDF' },
+  { title: 'Hoja de práctica: lectura de velas', description: 'Ejercicios para reconocer la apertura, el cierre, el máximo y el mínimo de las velas alcistas y bajistas.', format: 'PDF' },
+  { title: 'Glosario del idioma del mercado', description: 'Las palabras y herramientas que utilizamos en nuestras clases, explicadas de manera sencilla.', format: 'PDF' },
 ];
-
-export interface Transmision {
-  title: string;
-  /** 0 = domingo … 6 = sábado */
-  days: number[];
-  /** Hora de Nueva York (ET), formato 24 h. */
-  time: string;
-}
-
-/* PROVISIONAL: horarios anteriores. Reemplazar con la programación definitiva de Diana. */
-export const programacion: Transmision[] = [
-  { title: 'Live de análisis del mercado', days: [1, 3, 5], time: '15:45' },
-  { title: 'Nuevo episodio: Método Diana Gamboa', days: [3], time: '16:00' },
-  { title: 'Nuevo episodio: De la Gráfica a la Acción', days: [6], time: '16:00' },
-];
-
-export const formacion = [
-  {
-    key: 'salon',
-    title: 'Salón Diana Gamboa',
-    tag: 'Membresía mensual',
-    description: 'Dos clases privadas en vivo al mes para practicar juntos el análisis de diferentes compañías, con materiales de apoyo y hojas de práctica descargables.',
-    cta: 'Conocer la membresía',
-    href: YOUTUBE_MEMBERSHIP,
-  },
-  {
-    key: 'cursos',
-    title: 'Cursos Diana Gamboa',
-    tag: 'Compra individual',
-    description: 'Programas especializados de formación, comenzando con Estrategia Diana Gamboa. Módulos, lecciones cortas y materiales descargables.',
-    cta: 'Próximamente',
-    href: undefined,
-  },
-] as const;
 
 /** Extrae el id de video y, si es completo, el id de la lista de un enlace de YouTube. */
 export function parseYouTube(url: string) {

@@ -22,13 +22,13 @@ const meshitara = localFont({
 
 export const metadata: Metadata = {
   title: 'Diana Gamboa | Aprende a leer el idioma del mercado',
-  description: 'Academia de educación bursátil de Diana Gamboa. Clases gratuitas organizadas, lives de análisis y recursos para desarrollar tu propio criterio.',
+  description: 'Academia de Diana Gamboa para aprender desde cero a leer el idioma del mercado. Clases gratuitas organizadas, lives y recursos para desarrollar tu propio criterio.',
   applicationName: 'Diana Gamboa — Academia',
   openGraph: {
     title: 'Diana Gamboa — Aprende a leer el idioma del mercado',
     description: 'Regístrate gratis y sigue una ruta de aprendizaje clara, desde los fundamentos hasta una formación especializada.',
     type: 'website', locale: 'es_CO',
-    images: [{ url: '/diana-borgona.webp', alt: 'Diana Gamboa, analista de mercados bursátiles' }],
+    images: [{ url: '/diana-borgona.webp', alt: 'Diana Gamboa, analista del mercado de valores' }],
   },
   robots: { index: true, follow: true },
 };
