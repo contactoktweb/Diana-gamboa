@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { leerNombre } from '@/lib/alumno';
 
-/* Mientras no exista el sistema de cuentas, el nombre se lee del registro guardado en este navegador. */
+/* Mientras no exista el sistema de cuentas, el nombre se lee de los datos guardados en este navegador. */
 export default function PortalGreeting() {
   const [name, setName] = useState('');
-  useEffect(() => { try { setName(localStorage.getItem('dg-nombre') ?? ''); } catch {} }, []);
+  useEffect(() => setName(leerNombre()), []);
   return <>{name ? `¡Hola, ${name}!` : '¡Hola!'}</>;
 }

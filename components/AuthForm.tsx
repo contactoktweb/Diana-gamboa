@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { ArrowRight, Eye, EyeOff, MailCheck } from 'lucide-react';
+import { guardarNombre, leerNombre, nombreDesdeCorreo, primerNombre } from '@/lib/alumno';
 
 type Mode = 'registro' | 'ingresar' | 'recuperar';
 
@@ -17,8 +18,9 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   function submit(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
     const data = new FormData(ev.currentTarget);
-    const name = String(data.get('nombre') ?? '').trim();
-    try { if (name) localStorage.setItem('dg-nombre', name.split(' ')[0]); } catch {}
+    const correo = String(data.get('correo') ?? '');
+    if (mode === 'registro') guardarNombre(primerNombre(String(data.get('nombre') ?? '')));
+    else if (mode === 'ingresar' && !leerNombre()) guardarNombre(nombreDesdeCorreo(correo));
     // Al registrarse o iniciar sesión, el alumno entra directamente a su portal.
     if (mode === 'recuperar') setSent(true);
     else router.push('/portal');

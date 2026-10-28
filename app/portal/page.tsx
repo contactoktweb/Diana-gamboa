@@ -32,13 +32,16 @@ export default function PortalPage() {
 
   return <>
     <section className="portal-hero" aria-labelledby="portal-title">
-      <div className="wrap portal-hero-grid">
-        <div>
-          <h1 id="portal-title"><PortalGreeting /> <span>Bienvenido a tu academia</span></h1>
+      <div className="portal-hero-photo" aria-hidden="true">
+        <Image src="/fotos/diana-blazer-azul.webp" alt="" fill priority sizes="(max-width: 860px) 100vw, 62vw" />
+      </div>
+      <div className="wrap portal-hero-inner">
+        <div className="portal-hero-copy">
+          <p className="eyebrow eyebrow-gold">Portal del Alumno</p>
+          <h1 id="portal-title"><PortalGreeting /></h1>
+          <p className="portal-hero-welcome">Bienvenido a tu academia</p>
           <p>Este es tu espacio para aprender a leer el mercado, comprender el comportamiento del precio y desarrollar tu propio análisis, paso a paso y a tu ritmo.</p>
-        </div>
-        <div className="portal-hero-photo" aria-hidden="true">
-          <Image src="/fotos/diana-chaleco-verde.webp" alt="" fill priority sizes="(max-width: 860px) 40vw, 30vw" />
+          <a href="#ruta-title" className="btn btn-gold">Ir a mis clases <ArrowRight size={18} aria-hidden="true" /></a>
         </div>
       </div>
     </section>
