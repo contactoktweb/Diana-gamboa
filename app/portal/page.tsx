@@ -38,7 +38,7 @@ export default function PortalPage() {
           <p>Este es tu espacio para aprender a leer el mercado, comprender el comportamiento del precio y desarrollar tu propio análisis, paso a paso y a tu ritmo.</p>
         </div>
         <div className="portal-hero-photo" aria-hidden="true">
-          <Image src="/diana-negro.webp" alt="" fill priority sizes="(max-width: 860px) 60vw, 30vw" />
+          <Image src="/fotos/diana-chaleco-verde.webp" alt="" fill priority sizes="(max-width: 860px) 40vw, 30vw" />
         </div>
       </div>
     </section>

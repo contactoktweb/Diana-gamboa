@@ -23,7 +23,7 @@ export default function SobreDianaPage() {
             <p className="lead">Analista del mercado de valores, educadora, madre y una mujer profundamente enamorada de lo que hace.</p>
           </div>
           <div className="story-hero-photo">
-            <Image src="/diana-negro.webp" alt="Diana Gamboa" fill priority sizes="(max-width: 860px) 90vw, 40vw" />
+            <Image src="/fotos/diana-traje-claro.webp" alt="Diana Gamboa con traje claro" fill priority sizes="(max-width: 860px) 100vw, 40vw" />
           </div>
         </div>
       </section>
@@ -51,6 +51,10 @@ export default function SobreDianaPage() {
           <p>El conocimiento es importante, pero también lo son la paciencia, la disciplina y las emociones en equilibrio.</p>
           <p>Por eso, cuando enseño, no solo me importa la gráfica. <strong>También me importa la persona que está frente a ella.</strong></p>
         </div>
+
+        <figure className="story-photo">
+          <Image src="/fotos/diana-blazer-azul.webp" alt="Diana Gamboa" fill sizes="(max-width: 760px) 100vw, 720px" />
+        </figure>
 
         <div className="story-block">
           <p>Así nació el <strong>Método Diana Gamboa</strong>: para enseñarte el idioma del mercado pieza por pieza, en orden, con calma y desde cero.</p>

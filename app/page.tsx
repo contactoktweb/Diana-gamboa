@@ -46,12 +46,17 @@ export default function HomePage() {
 
       <section className="section" aria-labelledby="aprender-title">
         <div className="wrap learn">
-          <div className="learn-head" data-reveal>
-            <p className="eyebrow">Lo esencial</p>
-            <h2 id="aprender-title">¿Qué vas a aprender conmigo?</h2>
-            <p>Una gráfica puede parecer complicada cuando no sabes qué estás mirando.</p>
-            <p>Pero cuando comienzas a comprender sus elementos, aprendes a reconocer cómo se mueve el precio y qué información puedes obtener de ese movimiento.</p>
-            <p className="learn-accent">Aquí comenzamos por lo esencial.</p>
+          <div className="learn-top">
+            <div className="learn-head" data-reveal>
+              <p className="eyebrow">Lo esencial</p>
+              <h2 id="aprender-title">¿Qué vas a aprender conmigo?</h2>
+              <p>Una gráfica puede parecer complicada cuando no sabes qué estás mirando.</p>
+              <p>Pero cuando comienzas a comprender sus elementos, aprendes a reconocer cómo se mueve el precio y qué información puedes obtener de ese movimiento.</p>
+              <p className="learn-accent">Aquí comenzamos por lo esencial.</p>
+            </div>
+            <figure className="learn-photo" data-reveal style={{ '--i': 1 } as React.CSSProperties}>
+              <Image src="/fotos/diana-pizarra.webp" alt="Diana Gamboa explicando velas japonesas en una pizarra" fill sizes="(max-width: 900px) 100vw, 45vw" />
+            </figure>
           </div>
           <ol className="learn-list">
             {aprendizajes.map(({ icon: Icon, title, text }, i) => <li key={title} data-reveal style={{ '--i': i } as React.CSSProperties}>

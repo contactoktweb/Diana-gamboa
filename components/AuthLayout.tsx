@@ -12,7 +12,7 @@ export default function AuthLayout({ title, subtitle, children }: { title: strin
       </div>
     </div>
     <div className="auth-visual" aria-hidden="true">
-      <Image src="/diana-negro.webp" alt="" fill sizes="50vw" />
+      <Image src="/fotos/diana-chaleco-verde.webp" alt="" fill sizes="50vw" />
     </div>
   </main>;
 }
