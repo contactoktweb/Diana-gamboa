@@ -12,7 +12,8 @@ export default function YouTubeEmbed({ videoId, listId, title }: { videoId: stri
       ? <iframe src={src} title={title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
       : <button type="button" className="video-poster" onClick={() => setPlay(true)} aria-label={`Reproducir: ${title}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`} alt="" loading="lazy" />
+        <img src={`https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`} alt="" loading="lazy"
+          onError={ev => { const img = ev.currentTarget; if (!img.src.includes('hqdefault')) img.src = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`; }} />
         <span className="video-play"><Play size={30} fill="currentColor" aria-hidden="true" /></span>
       </button>}
   </div>;

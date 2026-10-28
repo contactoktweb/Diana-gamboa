@@ -52,13 +52,14 @@ export default async function SeccionPage({ params }: Props) {
 
       {s.series.map((serie, i) => {
         const { videoId, listId } = parseYouTube(serie.url);
-        return <section className="lesson-block" data-reveal key={serie.title} aria-labelledby={`serie-${i}`}>
-          <div className="serie-head">
-            <div><h2 id={`serie-${i}`}>{serie.title}</h2><p>{serie.description}</p></div>
+        return <section className="lesson-block serie" data-reveal key={serie.title} aria-labelledby={`serie-${i}`}>
+          <div className="serie-video"><YouTubeEmbed videoId={videoId} listId={listId} title={serie.title} /></div>
+          <div className="serie-info">
+            <h2 id={`serie-${i}`}>{serie.title}</h2>
+            <p>{serie.description}</p>
+            {listId && <p className="serie-tip">Usa el ícono de lista en el reproductor para ver todos los episodios en orden.</p>}
             <a href={serie.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm">Ver en YouTube <ExternalLink size={16} aria-hidden="true" /></a>
           </div>
-          <YouTubeEmbed videoId={videoId} listId={listId} title={serie.title} />
-          {listId && <p className="serie-tip">Usa el ícono de lista en el reproductor para ver todos los episodios en orden.</p>}
         </section>;
       })}
 

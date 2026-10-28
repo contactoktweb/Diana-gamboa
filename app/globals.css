@@ -268,15 +268,12 @@ button{font:inherit;cursor:pointer}
 .lesson-body{padding:40px 0 64px;display:grid;gap:48px}
 .lesson-block>h2{font-size:clamp(1.45rem,2.4vw,1.9rem)}
 .lesson-block>h2+p{color:var(--muted);margin-top:8px}
-.serie-head{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-end;margin-bottom:20px}
-.serie-head h2{font-size:clamp(1.4rem,2.4vw,1.8rem)}
-.serie-head p{color:var(--muted);margin-top:6px}
 .serie-tip{color:var(--muted);font-size:.95rem;margin-top:10px}
 .video{position:relative;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;background:var(--green-950);box-shadow:var(--shadow)}
 .video iframe,.video-poster{position:absolute;inset:0;width:100%;height:100%;border:0}
 .video-poster{padding:0;background:var(--green-950)}
 .video-poster img{width:100%;height:100%;object-fit:cover;opacity:.88}
-.video-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:84px;height:84px;border-radius:50%;background:var(--gold);color:var(--green-900);box-shadow:0 8px 30px rgba(0,0,0,.35);transition:transform .2s}
+.video-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--gold);color:var(--green-900);box-shadow:0 8px 30px rgba(0,0,0,.35);transition:transform .2s}
 .video-poster:hover .video-play{transform:translate(-50%,-50%) scale(1.06)}
 
 
@@ -523,3 +520,13 @@ button{font:inherit;cursor:pointer}
 .salon-points svg{color:var(--gold)}
 .salon-disclaimer{color:var(--muted);font-size:.95rem;max-width:46em}
 @media (max-width:420px){.eyebrow{letter-spacing:.1em}}
+
+/* Series: video y descripción lado a lado */
+.serie{display:grid;gap:20px}
+.serie-info h2{font-size:clamp(1.35rem,2.2vw,1.7rem)}
+.serie-info p{color:var(--muted);margin-top:8px}
+.serie-info .serie-tip{font-size:.95rem}
+.serie-info .btn{margin-top:20px}
+@media (min-width:900px){
+  .serie{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:44px;align-items:center}
+}
