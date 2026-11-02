@@ -4,6 +4,7 @@ import { ArrowRight, BookOpen, ChartCandlestick, ChartNoAxesCombined, Compass, F
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
 import ScamNotice from '@/components/ScamNotice';
+import RetoTeaser from '@/components/reto/RetoTeaser';
 
 const aprendizajes = [
   { icon: ChartCandlestick, title: 'Aprender a leer una gráfica', text: 'Conoce las velas japonesas, el comportamiento del precio y las herramientas básicas que nos ayudan a comprender lo que estamos observando.' },
@@ -68,6 +69,8 @@ export default function HomePage() {
           </ol>
         </div>
       </section>
+
+      <RetoTeaser />
 
       <section className="section section-cream" id="sobre-diana" aria-labelledby="sobre-title">
         <div className="wrap about-grid">

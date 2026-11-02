@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, Download, GraduationCap, Users } from 'lucide-react';
 import PortalGreeting from '@/components/PortalGreeting';
 import RouteIcon from '@/components/RouteIcon';
+import DescubreNivel from '@/components/reto/DescubreNivel';
 import { recursos, ruta, type SeccionRuta } from '@/data/academia';
 
 function RouteCard({ s, i, start }: { s: SeccionRuta; i: number; start?: boolean }) {
@@ -48,6 +49,8 @@ export default function PortalPage() {
 
     <section className="section" aria-labelledby="ruta-title">
       <div className="wrap">
+        <DescubreNivel />
+
         <div className="section-head section-head-left" data-reveal>
           <p className="eyebrow">Acceso gratuito</p>
           <h2 id="ruta-title">Tu ruta de aprendizaje gratuita</h2>

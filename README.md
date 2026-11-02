@@ -23,6 +23,8 @@ pnpm build
 | `/portal` | Portal del Alumno: ruta gratuita de 6 tarjetas + Salón y Cursos |
 | `/portal/[seccion]` | Series 01–04 con videos de YouTube (laboratorio en la 01), lives (05) y biblioteca (06) |
 | `/portal/salon` | Información del Salón Diana Gamboa |
+| `/reto` | El Reto de la Gráfica: demostración gratuita para visitantes (4 ejercicios de velas) |
+| `/portal/reto` | El Reto de la Gráfica completo: 5 retos, 20 respuestas, nivel y recomendación |
 | `/terminos`, `/privacidad` | Páginas legales (texto pendiente) |
 | `/playlists` | Redirige a `/portal` |
 
@@ -43,3 +45,12 @@ Según el manual *Diana Gamboa Definitivo*:
 - **Logo:** versión bicolor (DG verde + velas doradas) sobre fondos claros y versión negativa (DG blanco + velas doradas) sobre fondos verdes.
 
 El contenido de esta academia es exclusivamente educativo y no constituye asesoría financiera ni recomendaciones personalizadas de inversión.
+
+## El Reto de la Gráfica
+
+- `data/reto.ts`: banco de ejercicios (dos versiones de cada reto), niveles, categorías y recomendaciones.
+- `lib/reto/grafica.ts`: velas ilustrativas, EMA calculada sobre los cierres y puntos de giro.
+- `lib/reto/registro.ts`: intentos y respuestas. **Hoy se guardan en el navegador del alumno**; el formato (un intento con sus respuestas por categoría, intentos por pregunta, experiencia declarada, inicio/fin y si se completó) es el que tendrá la base de datos.
+- `components/reto/`: juego, gráfica interactiva, preguntas, resultado e insignias.
+
+Reglas: puntúa solo el primer intento de cada pregunta (máximo 20); tras un error hay pista y nuevos intentos, y al tercero se muestra la respuesta. El primer resultado completo se conserva como punto de partida y al repetir se usa la otra versión de los ejercicios.
