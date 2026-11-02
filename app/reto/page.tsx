@@ -5,13 +5,13 @@ import RetoJuego from '@/components/reto/RetoJuego';
 
 export const metadata: Metadata = {
   title: 'El Reto de la Gráfica | Diana Gamboa',
-  description: '¿Qué tanto sabes leer el mercado? Pon a prueba tus conocimientos sobre velas japonesas con un pequeño reto interactivo.',
+  description: '¿Qué tanto sabes leer el mercado? Cinco retos visuales sobre velas, tendencias, niveles y medias móviles. Gratis y sin registro.',
 };
 
 export default function RetoDemoPage() {
   return <>
     <SiteHeader />
-    <main id="contenido" className="reto-pagina"><div className="wrap"><RetoJuego modo="demo" /></div></main>
+    <main id="contenido" className="reto-pagina"><div className="wrap"><RetoJuego modo="visitante" /></div></main>
     <SiteFooter />
   </>;
 }

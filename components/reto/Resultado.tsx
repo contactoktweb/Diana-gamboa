@@ -6,7 +6,7 @@ import Insignia from './Insignia';
 import { CATEGORIAS, TOTAL_PUNTOS, recomendar, type Categoria } from '@/data/reto';
 import { resumir, type Intento } from '@/lib/reto/registro';
 
-export default function Resultado({ intento, primero, onRepetir }: { intento: Intento; primero?: Intento; onRepetir: () => void }) {
+export default function Resultado({ intento, primero, onRepetir, visitante }: { intento: Intento; primero?: Intento; onRepetir: () => void; visitante?: boolean }) {
   const { puntaje, nivel, porCategoria, fuertes, debiles } = resumir(intento.respuestas);
   const recs = recomendar(debiles);
   const esRepeticion = primero && primero.id !== intento.id;
@@ -37,9 +37,13 @@ export default function Resultado({ intento, primero, onRepetir }: { intento: In
     <div className="reto-recomendacion">
       <p className="eyebrow eyebrow-gold">Tu siguiente paso</p>
       {recs.map((r, i) => <div key={r.slug} className="reto-rec">
-        <p>{i === 0 ? 'Te recomiendo continuar con' : 'Y después,'} <strong>{r.titulo}</strong> {r.motivo}.</p>
-        <Link href={`/portal/${r.slug}`} className="btn btn-gold">Ir a mis clases <ArrowRight aria-hidden="true" /></Link>
+        <p>{i === 0 ? (visitante ? 'Te recomiendo comenzar con' : 'Te recomiendo continuar con') : 'Y después,'} <strong>{r.titulo}</strong> {r.motivo}.</p>
+        {!visitante && <Link href={`/portal/${r.slug}`} className="btn btn-gold">Ir a mis clases <ArrowRight aria-hidden="true" /></Link>}
       </div>)}
+      {visitante && <div className="reto-registro">
+        <Link href="/registro" className="btn btn-gold btn-lg">Quiero aprender con Diana <ArrowRight aria-hidden="true" /></Link>
+        <p>Crea tu cuenta gratis para comenzar tu ruta de aprendizaje. Encontrarás estas clases y tu resultado en tu Portal del Alumno.</p>
+      </div>}
     </div>
 
     {esRepeticion && <p className="reto-primero">Tu primer resultado fue <strong>{primero.puntaje} de {TOTAL_PUNTOS} ({primero.nivel})</strong>. Lo conservamos como punto de partida para ver tu progreso.</p>}

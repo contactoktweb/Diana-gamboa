@@ -23,7 +23,7 @@ pnpm build
 | `/portal` | Portal del Alumno: ruta gratuita de 6 tarjetas + Salón y Cursos |
 | `/portal/[seccion]` | Series 01–04 con videos de YouTube (laboratorio en la 01), lives (05) y biblioteca (06) |
 | `/portal/salon` | Información del Salón Diana Gamboa |
-| `/reto` | El Reto de la Gráfica: demostración gratuita para visitantes (4 ejercicios de velas) |
+| `/reto` | El Reto de la Gráfica completo para visitantes, sin registro; al final invita a crear la cuenta |
 | `/portal/reto` | El Reto de la Gráfica completo: 5 retos, 20 respuestas, nivel y recomendación |
 | `/terminos`, `/privacidad` | Páginas legales (texto pendiente) |
 | `/playlists` | Redirige a `/portal` |

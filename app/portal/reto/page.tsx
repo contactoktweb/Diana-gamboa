@@ -13,7 +13,7 @@ export default function RetoPortalPage() {
         <ChevronRight size={16} aria-hidden="true" />
         <span aria-current="page">El Reto de la Gráfica</span>
       </nav>
-      <RetoJuego modo="completo" />
+      <RetoJuego modo="alumno" />
     </div>
   </div>;
 }

@@ -62,8 +62,8 @@ function PreguntaVela({ velas, k, parte, onSiguiente, ultima }: { velas: [Vela, 
   </Pregunta>;
 }
 
-export function RetoVelas({ velas, limite, ...props }: PropsReto & { velas: [Vela, Vela]; limite?: number }) {
-  const items = [0, 1].flatMap(k => PARTES.map(p => ({ k, parte: p.parte }))).slice(0, limite ?? 8);
+export function RetoVelas({ velas, ...props }: PropsReto & { velas: [Vela, Vela] }) {
+  const items = [0, 1].flatMap(k => PARTES.map(p => ({ k, parte: p.parte })));
   const { idx, responder, contador } = useSecuencia(items.length, 'velas', props);
   const it = items[idx];
   return <>{contador}<PreguntaVela key={idx} velas={velas} k={it.k} parte={it.parte} ultima={idx === items.length - 1}
