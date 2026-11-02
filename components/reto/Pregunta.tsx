@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Check, Lightbulb, RotateCcw } from 'lucide-react';
 
 export const MAX_INTENTOS = 3;
@@ -30,6 +30,17 @@ export default function Pregunta({ pregunta, instruccion, children, listo, compr
   const [intentos, setIntentos] = useState(0);
   const [estado, setEstado] = useState<Estado>('respondiendo');
   const terminado = estado === 'acierto' || estado === 'revelado';
+  const raiz = useRef<HTMLDivElement>(null);
+
+  // Al pasar a una nueva pregunta, se lleva a la vista si quedó fuera de la pantalla.
+  useEffect(() => {
+    const el = raiz.current; if (!el) return;
+    const top = el.getBoundingClientRect().top;
+    if (top < 90 || top > window.innerHeight * 0.45) {
+      const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: window.scrollY + top - 150, behavior: suave ? 'smooth' : 'auto' });
+    }
+  }, []);
 
   function verificar() {
     const n = intentos + 1;
@@ -38,7 +49,7 @@ export default function Pregunta({ pregunta, instruccion, children, listo, compr
     else setEstado(n >= MAX_INTENTOS ? 'revelado' : 'error');
   }
 
-  return <div className="reto-pregunta">
+  return <div className="reto-pregunta" ref={raiz}>
     <div className="reto-enunciado">
       <h2>{pregunta}</h2>
       {instruccion && <p>{instruccion}</p>}
