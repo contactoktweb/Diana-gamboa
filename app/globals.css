@@ -649,3 +649,4 @@ button{font:inherit;cursor:pointer}
 .reto-registro{display:grid;gap:10px;justify-items:start;padding-top:14px;border-top:1px solid rgba(255,255,255,.15)}
 .reto-registro p{font-size:.95rem;color:#C9D8D0}
 .reto-recomendacion .reto-registro .btn-gold{background:var(--white);color:var(--green-900)}
+.reto-punto{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(15,65,49,.2)}

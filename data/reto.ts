@@ -3,7 +3,7 @@
  * Cada reto tiene dos versiones; al repetir el juego se usa la otra, para que el
  * alumno no mejore solo por memorizar dónde tocar.
  */
-import { cierresTendencia, ema, reflejar, velasDesdeCierres, type Vela } from '@/lib/reto/grafica';
+import { cierresTendencia, ema, pivotes, reflejar, velasDesdeCierres, type Vela } from '@/lib/reto/grafica';
 
 export type Categoria = 'velas' | 'movimiento' | 'tendencia' | 'niveles' | 'medias';
 
@@ -88,34 +88,87 @@ const MOV: Record<Movimiento, number[]>[] = [
 const ORDEN_MOV: Movimiento[][] = [['alcista', 'lateral', 'bajista'], ['bajista', 'alcista', 'lateral']];
 
 /* ---------- Reto 3: tendencia ---------- */
+/**
+ * Línea de tendencia como la trazaría un analista: une dos mínimos (alcista) o dos máximos
+ * (bajista) separados en el tiempo, sin que ningún cuerpo de vela la atraviese, y con el
+ * mayor número de toques posible.
+ */
+export function lineaDeTendencia(velas: Vela[], tipo: 'alcista' | 'bajista'): [number, number] {
+  const ext = velas.map(v => (tipo === 'alcista' ? v.l : v.h));
+  const lado = tipo === 'alcista' ? 1 : -1;
+  let mejor: [number, number] = [0, velas.length - 1], puntos = -1;
+  for (let a = 0; a < velas.length; a++) for (let b = a + Math.ceil(velas.length * 0.4); b < velas.length; b++) {
+    const en = (i: number) => ext[a] + (ext[b] - ext[a]) * (i - a) / (b - a);
+    if ((ext[b] - ext[a]) * lado <= 0) continue; // debe acompañar la dirección de la tendencia
+    // Ningún cuerpo puede cruzar la línea; una mecha puede rozarla (hasta 0,3).
+    const cuerpo = velas.map(v => (tipo === 'alcista' ? Math.min(v.o, v.c) : Math.max(v.o, v.c)));
+    if (cuerpo.some((x, i) => (x - en(i)) * lado < 0) || ext.some((x, i) => (x - en(i)) * lado < -0.3)) continue;
+    const toques = ext.filter((x, i) => Math.abs(x - en(i)) < 0.6).length;
+    const valor = toques * 100 + (b - a);
+    if (valor > puntos) { puntos = valor; mejor = [a, b]; }
+  }
+  return mejor;
+}
+
+/**
+ * Comprueba la línea del alumno con el mismo criterio de un analista: sigue la dirección
+ * de la tendencia, se apoya en al menos dos mínimos (o máximos) y ningún cuerpo la cruza.
+ * Los márgenes son proporcionales al rango de la gráfica para tolerar el trazo con el dedo.
+ */
+export function lineaValida(velas: Vela[], tipo: 'alcista' | 'bajista', a: { i: number; precio: number }, b: { i: number; precio: number }) {
+  if (Math.abs(b.i - a.i) < velas.length * 0.25) return false;
+  const lado = tipo === 'alcista' ? 1 : -1;
+  const m = (b.precio - a.precio) / (b.i - a.i);
+  if (m * lado <= 0) return false;
+  const en = (i: number) => a.precio + m * (i - a.i);
+  const rango = Math.max(...velas.map(v => v.h)) - Math.min(...velas.map(v => v.l));
+  const toque = rango * 0.05, cruce = rango * 0.04;
+  const ext = velas.map(v => (tipo === 'alcista' ? v.l : v.h));
+  const cuerpo = velas.map(v => (tipo === 'alcista' ? Math.min(v.o, v.c) : Math.max(v.o, v.c)));
+  if (cuerpo.some((x, i) => (x - en(i)) * lado < -cruce)) return false;
+  // Toques en giros distintos: puntos de apoyo separados por al menos tres velas.
+  const apoyos = ext.map((x, i) => (Math.abs(x - en(i)) <= toque ? i : -1)).filter(i => i >= 0);
+  return apoyos.length >= 2 && apoyos[apoyos.length - 1] - apoyos[0] >= 3;
+}
+
 function tendencia(version: number) {
   const [n, sube, baja, paso, retro] = version === 0 ? [24, 4, 2, 2.2, 1.6] : [25, 3, 2, 2.4, 1.5];
-  const ciclo = sube + baja;
   const alcista = velasDesdeCierres(cierresTendencia(n, 100, sube, baja, paso, retro), 11 + version, 0.5);
-  // Mínimos de giro: última vela de cada retroceso.
-  const giros = Array.from({ length: Math.floor(n / ciclo) }, (_, k) => k * ciclo + ciclo - 1).filter(i => i < n - 1);
-  const anclas: [number, number] = [giros[0], giros[giros.length - 1]];
   const bajista = reflejar(velasDesdeCierres(cierresTendencia(n, 100, sube, baja, paso, retro), 23 + version, 0.5), 110);
   return [
-    { velas: alcista, tipo: 'alcista' as const, anclas },
-    { velas: bajista, tipo: 'bajista' as const, anclas },
+    { velas: alcista, tipo: 'alcista' as const, anclas: lineaDeTendencia(alcista, 'alcista') },
+    { velas: bajista, tipo: 'bajista' as const, anclas: lineaDeTendencia(bajista, 'bajista') },
   ];
 }
 
 /* ---------- Reto 4: niveles ---------- */
+export type TipoNivel = 'soporte' | 'resistencia';
+export interface ZonaNivel { tipo: TipoNivel; desde: number; hasta: number }
 const SOPORTES = [
-  { cierres: [111, 109, 106, 103, 101, 103.5, 106, 108.5, 107, 104, 101.5, 101, 103, 106, 109, 107.5, 105, 102, 101, 102.5, 105, 107.5, 106, 104], zona: [99.4, 102] as [number, number], eje: 106 },
-  { cierres: [96, 94, 92, 90.5, 92, 94.5, 96, 95, 93, 91, 90.6, 92, 95, 97, 96, 94, 91.5, 90.8, 93, 95, 96.5, 95, 93, 92], zona: [89.3, 91.6] as [number, number], eje: 94 },
+  { cierres: [111, 109, 106, 103, 101, 103.5, 106, 108.5, 107, 104, 101.5, 101, 103, 106, 109, 107.5, 105, 102, 101, 102.5, 105, 107.5, 106, 104], eje: 106 },
+  { cierres: [96, 94, 92, 90.5, 92, 94.5, 96, 95, 93, 91, 90.6, 92, 95, 97, 96, 94, 91.5, 90.8, 93, 95, 96.5, 95, 93, 92], eje: 94 },
 ];
+
+/** Zona alrededor de los puntos donde el precio giró varias veces (mínimos o máximos). */
+function zonaDeGiros(velas: Vela[], tipo: TipoNivel): ZonaNivel {
+  const p = pivotes(velas);
+  const precios = tipo === 'soporte' ? p.bajos.map(i => velas[i].l) : p.altos.map(i => velas[i].h);
+  const margen = (Math.max(...velas.map(v => v.h)) - Math.min(...velas.map(v => v.l))) * 0.05;
+  return { tipo, desde: Math.min(...precios) - margen, hasta: Math.max(...precios) + margen };
+}
+
+/**
+ * Cada gráfica tiene un nivel principal (el que se busca) y el nivel opuesto, que también
+ * es real: si el alumno lo marca, la respuesta es correcta.
+ */
 function niveles(version: number) {
   const s = SOPORTES[version];
-  const soporte = velasDesdeCierres(s.cierres, 31 + version, 0.5);
-  // La resistencia es la misma estructura reflejada: los mínimos pasan a ser máximos.
-  const resistencia = reflejar(velasDesdeCierres(s.cierres, 41 + version, 0.5), s.eje);
-  return [
-    { velas: soporte, tipo: 'soporte' as const, zona: s.zona },
-    { velas: resistencia, tipo: 'resistencia' as const, zona: [2 * s.eje - s.zona[1], 2 * s.eje - s.zona[0]] as [number, number] },
-  ];
+  const graficaSoporte = velasDesdeCierres(s.cierres, 31 + version, 0.5);
+  const graficaResistencia = reflejar(velasDesdeCierres(s.cierres, 41 + version, 0.5), s.eje);
+  return [graficaSoporte, graficaResistencia].map((velas, k) => {
+    const principal: TipoNivel = k === 0 ? 'soporte' : 'resistencia';
+    return { velas, tipo: principal, zonas: [zonaDeGiros(velas, principal), zonaDeGiros(velas, principal === 'soporte' ? 'resistencia' : 'soporte')] };
+  });
 }
 
 /* ---------- Reto 5: medias móviles ---------- */

@@ -5,7 +5,7 @@ import { ChevronDown, ChevronUp, Eraser } from 'lucide-react';
 import Grafica, { type Marca, type Punto } from './Grafica';
 import Opciones from './Opciones';
 import Pregunta, { type Resultado } from './Pregunta';
-import { PARTES, relacionFinal, type Banco, type Categoria, type Movimiento, type ParteVela, type Relacion } from '@/data/reto';
+import { PARTES, lineaValida, relacionFinal, type Banco, type Categoria, type Movimiento, type ParteVela, type Relacion } from '@/data/reto';
 import { pivotes, type Vela } from '@/lib/reto/grafica';
 import type { Respuesta } from '@/lib/reto/registro';
 
@@ -42,10 +42,10 @@ function PreguntaVela({ velas, k, parte, onSiguiente, ultima }: { velas: [Vela, 
   const [toque, setToque] = useState<number | null>(null);
   const v = velas[k];
   const pregunta = PARTES.find(p => p.parte === parte)!.pregunta;
-  // La respuesta es la parte de la vela más cercana a la altura tocada.
-  const cercana = (precio: number) => PARTES.map(p => p.parte).reduce((a, b) => Math.abs(precioDe(v, a) - precio) <= Math.abs(precioDe(v, b) - precio) ? a : b);
+  // Correcto si el toque cae cerca de la parte pedida: margen del 12 % del tamaño total de la vela.
+  const acierta = (precio: number) => Math.abs(precio - precioDe(v, parte)) <= (v.h - v.l) * 0.12;
   return <Pregunta pregunta={pregunta} instruccion="Toca la gráfica a la altura donde crees que está." listo={toque !== null}
-    comprobar={() => toque !== null && cercana(toque) === parte}
+    comprobar={() => toque !== null && acierta(toque)}
     acierto={`¡Excelente! Reconociste ${NOMBRE[parte]} de esta vela.`}
     pista={parte === 'apertura' || parte === 'cierre' ? 'Observa el cuerpo de la vela e inténtalo nuevamente.' : 'Observa las mechas de la vela e inténtalo nuevamente.'}
     explicacion={explicacionVela(k === 0, parte)} onSiguiente={onSiguiente} ultima={ultima}>
@@ -86,6 +86,7 @@ function PreguntaMovimiento({ ej, onSiguiente, ultima }: { ej: Banco['movimiento
       const pv = pivotes(ej.velas);
       const marcas: Marca[] = fin ? [...pv.altos.map(i => ({ i, precio: ej.velas[i].h, color: C.oro })), ...pv.bajos.map(i => ({ i, precio: ej.velas[i].l, color: C.verde }))] : [];
       return <>
+        {fin && <div className="reto-leyenda"><span><b className="reto-punto" style={{ background: C.oro }} /> Máximos</span><span><b className="reto-punto" style={{ background: C.verde }} /> Mínimos</span></div>}
         <Grafica velas={ej.velas} alto={300} marcas={marcas} etiqueta="Gráfica de velas para reconocer el movimiento del precio." />
         <Opciones etiqueta="Movimiento" valor={eleccion} onCambio={setEleccion} bloqueado={fin} correcta={estado === 'revelado' ? ej.tipo : undefined}
           opciones={[{ valor: 'alcista', etiqueta: 'Alcista' }, { valor: 'bajista', etiqueta: 'Bajista' }, { valor: 'lateral', etiqueta: 'Lateral' }]} />
@@ -99,22 +100,13 @@ export function RetoMovimiento({ ejercicios, ...props }: PropsReto & { ejercicio
 }
 
 /* ---------------- Reto 3: líneas de tendencia ---------------- */
-const rango = (velas: Vela[]) => Math.max(...velas.map(v => v.h)) - Math.min(...velas.map(v => v.l));
 
 function PreguntaTendencia({ ej, onSiguiente, ultima }: { ej: Banco['tendencia'][number]; onSiguiente: (r: Resultado) => void; ultima: boolean }) {
   const [puntos, setPuntos] = useState<Punto[]>([]);
   const k = ej.tipo === 'alcista' ? 'l' : 'h';
   const [i1, i2] = ej.anclas;
   const ref = { a: { i: i1, precio: ej.velas[i1][k] }, b: { i: i2, precio: ej.velas[i2][k] } };
-  function valida() {
-    if (puntos.length < 2) return false;
-    const [a, b] = puntos;
-    if (Math.abs(a.i - b.i) < ej.velas.length * 0.25) return false;
-    // Se acepta una línea que pase cerca de los puntos de referencia (margen del 7 % del rango).
-    const en = (i: number) => a.precio + (b.precio - a.precio) * (i - a.i) / (b.i - a.i);
-    const tol = rango(ej.velas) * 0.07;
-    return Math.abs(en(ref.a.i) - ref.a.precio) <= tol && Math.abs(en(ref.b.i) - ref.b.precio) <= tol;
-  }
+  const valida = () => puntos.length === 2 && lineaValida(ej.velas, ej.tipo, puntos[0], puntos[1]);
   return <Pregunta pregunta="¿Por dónde pasarías la línea de tendencia?" instruccion="Toca dos puntos de la gráfica. La línea se dibuja sola entre ellos."
     listo={puntos.length === 2} comprobar={valida} textoBoton="Comprobar mi línea"
     acierto="¡Muy bien! Reconociste los puntos que ayudan a identificar esta tendencia."
@@ -146,18 +138,20 @@ function PreguntaNivel({ ej, onSiguiente, ultima }: { ej: Banco['niveles'][numbe
   const lo = Math.min(...ej.velas.map(v => v.l)), hi = Math.max(...ej.velas.map(v => v.h));
   const paso = (hi - lo) / 40;
   const mover = (d: number) => setNivel(n => Math.max(lo, Math.min(hi, (n ?? (lo + hi) / 2) + d)));
+  // Vale tanto el nivel principal como el opuesto: los dos son zonas reales de reacción.
+  const zonaElegida = nivel === null ? undefined : ej.zonas.find(z => nivel >= z.desde && nivel <= z.hasta);
   return <Pregunta pregunta="¿Dónde colocarías un nivel importante?" instruccion="Toca la gráfica para colocar la línea. Puedes arrastrarla o moverla con las flechas."
-    listo={nivel !== null} comprobar={() => nivel !== null && nivel >= ej.zona[0] && nivel <= ej.zona[1]} textoBoton="Comprobar mi nivel"
-    acierto={`¡Muy bien! Encontraste una zona de ${ej.tipo} donde el precio ha reaccionado.`}
+    listo={nivel !== null} comprobar={() => zonaElegida !== undefined} textoBoton="Comprobar mi nivel"
+    acierto={`¡Muy bien! Encontraste una zona de ${zonaElegida?.tipo ?? ej.tipo}: ${zonaElegida?.tipo === 'resistencia' ? 'allí el precio dejó de subir' : 'allí el precio dejó de bajar'} varias veces.`}
     pista="Observa dónde el precio se ha detenido y ha cambiado de dirección varias veces."
-    explicacion="Los niveles importantes no siempre son precios exactos. Muchas veces representan zonas donde debemos prestar atención."
+    explicacion="En esta gráfica hay un soporte, donde el precio dejó de bajar, y una resistencia, donde dejó de subir. Los niveles importantes no siempre son precios exactos: muchas veces representan zonas donde debemos prestar atención."
     onSiguiente={onSiguiente} ultima={ultima}>
     {estado => {
       const fin = estado === 'acierto' || estado === 'revelado';
       return <>
         <div className="reto-nivel-wrap">
           <Grafica velas={ej.velas} alto={320} arrastrable={!fin}
-            zonas={fin ? [{ desde: ej.zona[0], hasta: ej.zona[1], color: C.zona }] : []}
+            zonas={fin ? ej.zonas.map(z => ({ desde: z.desde, hasta: z.hasta, color: C.zona })) : []}
             lineasH={nivel !== null ? [{ precio: nivel, color: estado === 'acierto' ? C.verde : C.oro, etiqueta: 'Tu nivel', grosor: 3 }] : []}
             onPunto={fin ? undefined : p => setNivel(p.precio)} etiqueta="Gráfica con varios movimientos. Coloca una línea horizontal en el nivel importante." />
           {!fin && <div className="reto-flechas">
@@ -207,8 +201,8 @@ function PreguntaColor({ g, ema8Color, pregunta, buscar, onSiguiente, ultima }: 
 }
 
 const EXPLICA_REL: Record<Relacion, string> = {
-  encima: 'La EMA 8 (gris) está por encima de la EMA 21 (azul): el precio reciente ha subido con más fuerza que el de las últimas semanas.',
-  debajo: 'La EMA 8 (gris) está por debajo de la EMA 21 (azul): el precio reciente ha bajado con más fuerza que el de las últimas semanas.',
+  encima: 'La EMA 8 (gris) está por encima de la EMA 21 (azul): los precios más recientes están por encima del promedio de más largo plazo. El impulso es alcista.',
+  debajo: 'La EMA 8 (gris) está por debajo de la EMA 21 (azul): los precios más recientes están por debajo del promedio de más largo plazo. El impulso es bajista.',
   cruce: 'Las dos medias se están cruzando: el impulso del precio está cambiando.',
 };
 function PreguntaLectura({ g, onSiguiente, ultima }: { g: Banco['medias']['lectura']; onSiguiente: (r: Resultado) => void; ultima: boolean }) {
