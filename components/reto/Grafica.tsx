@@ -4,7 +4,7 @@ import { useId, useRef } from 'react';
 import type { Vela } from '@/lib/reto/grafica';
 
 export interface Linea { puntos: [number, number][]; color: string; grosor?: number; guiones?: string; id?: string; onElegir?: () => void; elegida?: boolean }
-export interface LineaH { precio: number; color: string; guiones?: string; etiqueta?: string; grosor?: number }
+export interface LineaH { precio: number; color: string; guiones?: string; etiqueta?: string; grosor?: number; /** Dibuja la línea solo sobre esta vela. */ enVela?: number }
 export interface Zona { desde: number; hasta: number; color: string }
 export interface Marca { i: number; precio: number; color: string; etiqueta?: string; lado?: 'izq' | 'der' }
 export interface Punto { i: number; precio: number }
@@ -24,14 +24,19 @@ interface Props {
   cuerpoMax?: number;
   /** Sombrea las últimas velas para indicar «este momento». */
   resaltarUltimas?: number;
+  /** Ancho interno del dibujo; uno menor hace la gráfica más alta en pantallas estrechas. */
+  anchoVista?: number;
+  /** Muestra una escala de precios con este intervalo (p. ej. 10 → $10, $20…). */
+  ejePrecio?: number;
   onPunto?: (p: Punto, fase: 'inicio' | 'mover' | 'fin') => void;
   arrastrable?: boolean;
   etiqueta: string;
 }
 
-const W = 640, PAD = { l: 14, r: 14, t: 18, b: 18 };
 
-export default function Grafica({ velas, alto = 320, dominio, lineas = [], lineasH = [], zonas = [], marcas = [], recta, activa, cuerpoMax = 26, resaltarUltimas, onPunto, arrastrable, etiqueta }: Props) {
+export default function Grafica({ velas, alto = 320, dominio, lineas = [], lineasH = [], zonas = [], marcas = [], recta, activa, cuerpoMax = 26, resaltarUltimas, ejePrecio, anchoVista = 640, onPunto, arrastrable, etiqueta }: Props) {
+  const W = anchoVista;
+  const PAD = { l: ejePrecio ? 58 : 14, r: 14, t: 18, b: 18 };
   const svg = useRef<SVGSVGElement>(null);
   const clip = useId();
   const arrastrando = useRef(false);
@@ -67,7 +72,12 @@ export default function Grafica({ velas, alto = 320, dominio, lineas = [], linea
 
   return <svg ref={svg} viewBox={`0 0 ${W} ${alto}`} className={`reto-grafica ${onPunto ? 'es-interactiva' : ''} ${arrastrable ? 'es-arrastrable' : ''}`} role="img" aria-label={etiqueta} {...handlers}>
     <defs><clipPath id={clip}><rect x={PAD.l} y={PAD.t} width={W - PAD.l - PAD.r} height={altoUtil} /></clipPath></defs>
-    {[0.2, 0.4, 0.6, 0.8].map(f => <line key={f} className="reto-rejilla" x1={PAD.l} x2={W - PAD.r} y1={PAD.t + altoUtil * f} y2={PAD.t + altoUtil * f} />)}
+    {ejePrecio
+      ? Array.from({ length: Math.floor((max - min) / ejePrecio) + 1 }, (_, k) => Math.ceil(min / ejePrecio) * ejePrecio + k * ejePrecio).filter(p => p <= max).map(p => <g key={p}>
+        <line className="reto-rejilla" x1={PAD.l} x2={W - PAD.r} y1={y(p)} y2={y(p)} />
+        <text x={PAD.l - 10} y={y(p) + 5} textAnchor="end" className="reto-eje">${p}</text>
+      </g>)
+      : [0.2, 0.4, 0.6, 0.8].map(f => <line key={f} className="reto-rejilla" x1={PAD.l} x2={W - PAD.r} y1={PAD.t + altoUtil * f} y2={PAD.t + altoUtil * f} />)}
     {resaltarUltimas && <rect className="reto-momento" x={x(n - resaltarUltimas) - paso / 2} y={PAD.t} width={paso * resaltarUltimas + PAD.r} height={altoUtil} />}
     {zonas.map((z, k) => <rect key={k} x={PAD.l} width={W - PAD.l - PAD.r} y={y(Math.max(z.desde, z.hasta))} height={Math.abs(y(z.desde) - y(z.hasta))} fill={z.color} rx="4" />)}
     {velas.map((v, i) => {
@@ -87,10 +97,13 @@ export default function Grafica({ velas, alto = 320, dominio, lineas = [], linea
       })}
       {segmento && <line x1={segmento[0]} y1={segmento[1]} x2={segmento[2]} y2={segmento[3]} stroke={recta!.color} strokeWidth={3} strokeDasharray={recta!.guiones} strokeLinecap="round" />}
     </g>
-    {lineasH.map((h, k) => <g key={k}>
-      <line x1={PAD.l} x2={W - PAD.r} y1={y(h.precio)} y2={y(h.precio)} stroke={h.color} strokeWidth={h.grosor ?? 2.5} strokeDasharray={h.guiones} />
-      {h.etiqueta && <text x={W - PAD.r - 6} y={y(h.precio) - 8} textAnchor="end" className="reto-texto" fill={h.color}>{h.etiqueta}</text>}
-    </g>)}
+    {lineasH.map((h, k) => {
+      const [x1, x2] = h.enVela === undefined ? [PAD.l, W - PAD.r] : [x(h.enVela) - Math.max(ancho, 60) * 0.95, x(h.enVela) + Math.max(ancho, 60) * 0.95];
+      return <g key={k}>
+      <line x1={x1} x2={x2} y1={y(h.precio)} y2={y(h.precio)} stroke={h.color} strokeWidth={h.grosor ?? 2.5} strokeDasharray={h.guiones} />
+      {h.etiqueta && <text x={h.enVela === undefined ? W - PAD.r - 6 : x2 + 8} y={h.enVela === undefined ? y(h.precio) - 8 : y(h.precio) + 5} textAnchor={h.enVela === undefined ? 'end' : 'start'} className="reto-texto reto-texto-marca" fill={h.color}>{h.etiqueta}</text>}
+      </g>;
+    })}
     {marcas.map((m, k) => <g key={k}>
       <circle cx={x(m.i)} cy={y(m.precio)} r={7} fill={m.color} stroke="#fff" strokeWidth={2.5} />
       {m.etiqueta && <text x={x(m.i) + (m.lado === 'izq' ? -14 : 14)} y={y(m.precio) + 5} textAnchor={m.lado === 'izq' ? 'end' : 'start'} className="reto-texto reto-texto-marca" fill={m.color}>{m.etiqueta}</text>}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp, Eraser } from 'lucide-react';
 import Grafica, { type Marca, type Punto } from './Grafica';
 import Opciones from './Opciones';
@@ -38,24 +38,49 @@ function explicacionVela(alcista: boolean, parte: ParteVela) {
     : 'En una vela bajista (roja) el precio terminó abajo: el cierre es la parte inferior del cuerpo.';
 }
 
+/** En celular, las velas se dibujan en un formato más alto para verse más grandes. */
+function usePantallaEstrecha() {
+  const [estrecha, setEstrecha] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 600px)');
+    const cambiar = () => setEstrecha(mq.matches);
+    cambiar(); mq.addEventListener('change', cambiar);
+    return () => mq.removeEventListener('change', cambiar);
+  }, []);
+  return estrecha;
+}
+
+/** Preguntas concretas: nombran la vela y dicen qué precio buscar. */
+function textoVela(parte: ParteVela, alcista: boolean) {
+  const vela = alcista ? 'la vela alcista (verde)' : 'la vela bajista (roja)';
+  return {
+    apertura: { pregunta: `¿En qué precio abrió ${vela}?`, instruccion: 'La apertura es el primer precio de la vela. Toca su altura sobre la vela marcada.' },
+    cierre: { pregunta: `¿En qué precio cerró ${vela}?`, instruccion: 'El cierre es el último precio de la vela. Toca su altura sobre la vela marcada.' },
+    maximo: { pregunta: `¿Cuál fue el precio más alto que alcanzó ${vela}?`, instruccion: 'Toca la altura del precio máximo al que llegó durante la vela.' },
+    minimo: { pregunta: `¿Cuál fue el precio más bajo que alcanzó ${vela}?`, instruccion: 'Toca la altura del precio mínimo al que llegó durante la vela.' },
+  }[parte];
+}
+const dolares = (p: number) => `$${Math.round(p)}`;
+
 function PreguntaVela({ velas, k, parte, onSiguiente, ultima }: { velas: [Vela, Vela]; k: number; parte: ParteVela; onSiguiente: (r: Resultado) => void; ultima: boolean }) {
   const [toque, setToque] = useState<number | null>(null);
+  const estrecha = usePantallaEstrecha();
   const v = velas[k];
-  const pregunta = PARTES.find(p => p.parte === parte)!.pregunta;
+  const { pregunta, instruccion } = textoVela(parte, k === 0);
   // Correcto si el toque cae cerca de la parte pedida: margen del 12 % del tamaño total de la vela.
   const acierta = (precio: number) => Math.abs(precio - precioDe(v, parte)) <= (v.h - v.l) * 0.12;
-  return <Pregunta pregunta={pregunta} instruccion="Toca la gráfica a la altura donde crees que está." listo={toque !== null}
+  return <Pregunta pregunta={pregunta} instruccion={instruccion} listo={toque !== null}
     comprobar={() => toque !== null && acierta(toque)}
-    acierto={`¡Excelente! Reconociste ${NOMBRE[parte]} de esta vela.`}
+    acierto={`¡Excelente! Reconociste ${NOMBRE[parte]} de esta vela: ${dolares(precioDe(v, parte))}.`}
     pista={parte === 'apertura' || parte === 'cierre' ? 'Observa el cuerpo de la vela e inténtalo nuevamente.' : 'Observa las mechas de la vela e inténtalo nuevamente.'}
     explicacion={explicacionVela(k === 0, parte)} onSiguiente={onSiguiente} ultima={ultima}>
     {estado => {
       const fin = estado === 'acierto' || estado === 'revelado';
-      const marcas: Marca[] = fin ? [{ i: k, precio: precioDe(v, parte), color: C.oro, etiqueta: ETIQUETA[parte], lado: k === 0 ? 'der' : 'izq' }] : [];
+      const marcas: Marca[] = fin ? [{ i: k, precio: precioDe(v, parte), color: C.oro, etiqueta: `${ETIQUETA[parte]}: ${dolares(precioDe(v, parte))}`, lado: k === 0 ? 'der' : 'izq' }] : [];
       return <>
         <div className="reto-chips"><span className={`reto-chip ${k === 0 ? 'es-sube' : 'es-baja'}`}>{k === 0 ? 'Vela alcista' : 'Vela bajista'}</span></div>
-        <Grafica velas={velas} dominio={[0, 100]} activa={k} cuerpoMax={78} alto={340} marcas={marcas}
-          lineasH={toque !== null && !fin ? [{ precio: toque, color: C.oroClaro, guiones: '6 6', etiqueta: 'Tu respuesta' }] : []}
+        <Grafica velas={velas} dominio={[10, 100]} ejePrecio={10} activa={k} cuerpoMax={78} alto={estrecha ? 460 : 360} anchoVista={estrecha ? 420 : 640} marcas={marcas}
+          lineasH={toque !== null && !fin ? [{ precio: toque, color: C.oro, guiones: '6 5', etiqueta: dolares(toque), enVela: k, grosor: 3 }] : []}
           onPunto={fin ? undefined : p => setToque(p.precio)} etiqueta={`Dos velas: una alcista y una bajista. ${pregunta}`} />
       </>;
     }}
