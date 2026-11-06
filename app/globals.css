@@ -105,11 +105,11 @@ button{font:inherit;cursor:pointer}
 /* La foto es un recorte sin fondo: «contain» la muestra completa, con la cabeza siempre visible. */
 .hero-photo img{object-fit:contain;object-position:50% 100%;top:20px!important;height:calc(100% - 20px)!important}
 .hero-copy{padding:28px 0 48px}
-/* Celular: foto más baja para que el título, el texto y el botón se vean al entrar. */
+/* Celular: la foto ocupa todo el ancho y se ve completa, con espacio sobre la cabeza. */
 @media (max-width:859px){
   .hero-eyebrow{display:none}
-  .hero-photo{aspect-ratio:auto;height:clamp(160px,32svh,300px);max-height:none;padding-top:12px}
-  .hero-photo img{top:12px!important;height:calc(100% - 12px)!important}
+  .hero-photo{aspect-ratio:auto;height:calc((100vw * 1164 / 1351) + 28px);max-height:none;padding-top:0}
+  .hero-photo img{top:28px!important;height:calc(100% - 28px)!important}
   .hero-copy{padding:20px 0 40px}
   .hero-copy h1{font-size:clamp(1.9rem,8.4vw,2.4rem)}
   .hero .lead{font-size:1.04rem;line-height:1.5;margin-top:10px}
