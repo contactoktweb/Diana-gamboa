@@ -105,7 +105,7 @@ export default function Grafica({ velas, alto = 320, dominio, lineas = [], linea
       </g>;
     })}
     {marcas.map((m, k) => <g key={k}>
-      <circle cx={x(m.i)} cy={y(m.precio)} r={7} fill={m.color} stroke="#fff" strokeWidth={2.5} />
+      <circle cx={x(m.i)} cy={y(m.precio)} r={7} fill={m.color} stroke="#262D3D" strokeWidth={2.5} />
       {m.etiqueta && <text x={x(m.i) + (m.lado === 'izq' ? -14 : 14)} y={y(m.precio) + 5} textAnchor={m.lado === 'izq' ? 'end' : 'start'} className="reto-texto reto-texto-marca" fill={m.color}>{m.etiqueta}</text>}
     </g>)}
   </svg>;

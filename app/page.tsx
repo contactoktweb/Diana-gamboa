@@ -29,15 +29,15 @@ export default function HomePage() {
       <section className="hero" aria-labelledby="hero-title">
         <div className="wrap hero-grid">
           <div className="hero-copy">
-            <p className="eyebrow">Diana Gamboa · El idioma del mercado</p>
+            <p className="eyebrow hero-eyebrow">Diana Gamboa · El idioma del mercado</p>
             <h1 id="hero-title">Aprende a leer el <em>idioma del mercado</em></h1>
-            <p className="hero-quote">Antes de comprar, antes de vender y antes de buscar una estrategia, hay algo que necesitas aprender: <strong>leer el mercado.</strong></p>
             <p className="lead">Aquí aprenderás desde cero a comprender lo que sucede en una gráfica, reconocer el comportamiento del precio y desarrollar tu propio análisis.</p>
             <div className="hero-actions">
               <Link href="/registro" className="btn btn-gold btn-lg">Quiero aprender con Diana <ArrowRight size={20} aria-hidden="true" /></Link>
               <p className="cta-note">Crea tu cuenta gratis y descubre tu ruta de aprendizaje.</p>
               <p className="hero-login">¿Ya eres alumno? <Link href="/ingresar">Iniciar sesión</Link></p>
             </div>
+            <p className="hero-quote"><span>Antes de comprar. Antes de vender. Antes de buscar una estrategia.</span> Hay algo que necesitas aprender: <strong>leer el mercado.</strong></p>
           </div>
           <div className="hero-photo">
             <Image src="/diana-borgona.webp" alt="Diana Gamboa, analista del mercado de valores" fill priority sizes="(max-width: 860px) 100vw, 50vw" />

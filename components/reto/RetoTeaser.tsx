@@ -18,8 +18,8 @@ export default function RetoTeaser() {
       </div>
       <div className="teaser-grafica" aria-hidden="true">
         <Grafica velas={velas} alto={260} etiqueta="Gráfica ilustrativa"
-          recta={{ a: { i: 5, precio: velas[5].l }, b: { i: 13, precio: velas[13].l }, color: '#CBA52F', guiones: '8 7' }}
-          marcas={[{ i: 9, precio: velas[9].l, color: '#CBA52F', etiqueta: '?', lado: 'der' }]} />
+          recta={{ a: { i: 5, precio: velas[5].l }, b: { i: 13, precio: velas[13].l }, color: '#F2C94C', guiones: '8 7' }}
+          marcas={[{ i: 9, precio: velas[9].l, color: '#F2C94C', etiqueta: '?', lado: 'der' }]} />
       </div>
     </div>
   </section>;

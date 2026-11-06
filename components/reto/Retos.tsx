@@ -10,7 +10,8 @@ import { pivotes, type Vela } from '@/lib/reto/grafica';
 import type { Respuesta } from '@/lib/reto/registro';
 
 export interface PropsReto { onRespuesta: (r: Respuesta) => void; onFin: () => void }
-const C = { verde: '#176244', oro: '#B8901E', oroClaro: '#CBA52F', zona: 'rgba(23,98,68,.16)', violeta: '#7C4DCC', gris: '#7B817E', azul: '#2563EB' };
+/* Colores de plataforma de análisis (fondo oscuro): EMA 8 blanca discontinua, EMA 21 azul, trazos en amarillo. */
+const C = { verde: '#7EE08A', oro: '#F2C94C', oroClaro: '#F2C94C', zona: 'rgba(126,224,138,.18)', blanca: '#F4F6FA', azul: '#5B9BEA' };
 
 /** Avanza ejercicio por ejercicio y registra cada respuesta. */
 function useSecuencia(total: number, categoria: Categoria, { onRespuesta, onFin }: PropsReto) {
@@ -194,8 +195,9 @@ export function RetoNiveles({ ejercicios, ...props }: PropsReto & { ejercicios: 
 }
 
 /* ---------------- Reto 5: medias móviles ---------------- */
-const COLOR = { oro: C.oroClaro, violeta: C.violeta } as const;
-const NOMBRE_COLOR = { oro: 'Línea dorada', violeta: 'Línea violeta' } as const;
+const COLOR = { blanca: C.blanca, azul: C.azul } as const;
+const GUIONES = { blanca: '7 6', azul: undefined } as const;
+const NOMBRE_COLOR = { blanca: 'Línea blanca', azul: 'Línea azul' } as const;
 type ColorMedia = keyof typeof COLOR;
 const serie = (vals: number[]) => vals.map((p, i) => [i, p] as [number, number]).slice(2);
 const EXPLICA_RAPIDA = 'La EMA 8 se calcula con las últimas 8 velas: por eso acompaña más de cerca al precio y reacciona antes. La EMA 21 usa más velas y es más lenta y suave.';
@@ -204,7 +206,7 @@ function PreguntaColor({ g, ema8Color, pregunta, buscar, onSiguiente, ultima }: 
   g: Banco['medias']['rapida']['g']; ema8Color: ColorMedia; pregunta: string; buscar: 8 | 21; onSiguiente: (r: Resultado) => void; ultima: boolean;
 }) {
   const [eleccion, setEleccion] = useState<string | null>(null);
-  const otro: ColorMedia = ema8Color === 'oro' ? 'violeta' : 'oro';
+  const otro: ColorMedia = ema8Color === 'blanca' ? 'azul' : 'blanca';
   const correcta = buscar === 8 ? ema8Color : otro;
   return <Pregunta pregunta={pregunta} instruccion="Toca una de las líneas o elige su color." listo={eleccion !== null}
     comprobar={() => eleccion === correcta} acierto="¡Muy bien! Reconociste la media."
@@ -213,21 +215,21 @@ function PreguntaColor({ g, ema8Color, pregunta, buscar, onSiguiente, ultima }: 
     onSiguiente={onSiguiente} ultima={ultima}>
     {estado => {
       const fin = estado === 'acierto' || estado === 'revelado';
-      const linea = (c: ColorMedia, vals: number[]) => ({ id: c, puntos: serie(vals), color: COLOR[c], grosor: 3.5, elegida: eleccion === c, onElegir: fin ? undefined : () => setEleccion(c) });
+      const linea = (c: ColorMedia, vals: number[]) => ({ id: c, puntos: serie(vals), color: COLOR[c], guiones: GUIONES[c], grosor: 3.5, elegida: eleccion === c, onElegir: fin ? undefined : () => setEleccion(c) });
       return <>
         <Grafica velas={g.velas} alto={320} lineas={[linea(ema8Color, g.ema8), linea(otro, g.ema21)]}
           marcas={fin ? [{ i: g.ema8.length - 1, precio: g.ema8.at(-1)!, color: COLOR[ema8Color], etiqueta: 'EMA 8', lado: 'izq' }, { i: g.ema21.length - 1, precio: g.ema21.at(-1)!, color: COLOR[otro], etiqueta: 'EMA 21', lado: 'izq' }] : []}
-          etiqueta="Gráfica de velas con dos medias móviles sin nombre: una dorada y una violeta." />
+          etiqueta="Gráfica de velas con dos medias móviles sin nombre: una blanca discontinua y una azul." />
         <Opciones etiqueta="Media móvil" valor={eleccion} onCambio={setEleccion} bloqueado={fin} correcta={estado === 'revelado' ? correcta : undefined}
-          opciones={(['oro', 'violeta'] as ColorMedia[]).map(c => ({ valor: c, etiqueta: NOMBRE_COLOR[c], color: COLOR[c] }))} />
+          opciones={(['blanca', 'azul'] as ColorMedia[]).map(c => ({ valor: c, etiqueta: NOMBRE_COLOR[c], color: COLOR[c] }))} />
       </>;
     }}
   </Pregunta>;
 }
 
 const EXPLICA_REL: Record<Relacion, string> = {
-  encima: 'La EMA 8 (gris) está por encima de la EMA 21 (azul): los precios más recientes están por encima del promedio de más largo plazo. El impulso es alcista.',
-  debajo: 'La EMA 8 (gris) está por debajo de la EMA 21 (azul): los precios más recientes están por debajo del promedio de más largo plazo. El impulso es bajista.',
+  encima: 'La EMA 8 (blanca) está por encima de la EMA 21 (azul): los precios más recientes están por encima del promedio de más largo plazo. El impulso es alcista.',
+  debajo: 'La EMA 8 (blanca) está por debajo de la EMA 21 (azul): los precios más recientes están por debajo del promedio de más largo plazo. El impulso es bajista.',
   cruce: 'Las dos medias se están cruzando: el impulso del precio está cambiando.',
 };
 function PreguntaLectura({ g, onSiguiente, ultima }: { g: Banco['medias']['lectura']; onSiguiente: (r: Resultado) => void; ultima: boolean }) {
@@ -235,14 +237,14 @@ function PreguntaLectura({ g, onSiguiente, ultima }: { g: Banco['medias']['lectu
   const rel = relacionFinal(g);
   return <Pregunta pregunta="¿Qué observas en este momento?" instruccion="Fíjate en la zona resaltada, al final de la gráfica." listo={eleccion !== null}
     comprobar={() => eleccion === rel} acierto="¡Muy bien! Leíste correctamente lo que muestran las medias."
-    pista="Mira la zona resaltada: ¿qué línea está arriba, la gris o la azul?" explicacion={EXPLICA_REL[rel]} onSiguiente={onSiguiente} ultima={ultima}>
+    pista="Mira la zona resaltada: ¿qué línea está arriba, la blanca o la azul?" explicacion={EXPLICA_REL[rel]} onSiguiente={onSiguiente} ultima={ultima}>
     {estado => {
       const fin = estado === 'acierto' || estado === 'revelado';
       return <>
-        <div className="reto-leyenda"><span><i style={{ background: C.gris }} /> EMA 8</span><span><i style={{ background: C.azul }} /> EMA 21</span></div>
+        <div className="reto-leyenda"><span><i className="es-discontinua" /> EMA 8</span><span><i style={{ background: C.azul }} /> EMA 21</span></div>
         <Grafica velas={g.velas} alto={320} resaltarUltimas={3}
-          lineas={[{ puntos: serie(g.ema21), color: C.azul, grosor: 3.5 }, { puntos: serie(g.ema8), color: C.gris, grosor: 3.5 }]}
-          etiqueta="Gráfica con la EMA 8 en gris y la EMA 21 en azul. Las últimas velas están resaltadas." />
+          lineas={[{ puntos: serie(g.ema21), color: C.azul, grosor: 3.5 }, { puntos: serie(g.ema8), color: C.blanca, guiones: '7 6', grosor: 3.5 }]}
+          etiqueta="Gráfica con la EMA 8 en blanco y la EMA 21 en azul. Las últimas velas están resaltadas." />
         <Opciones etiqueta="Lectura de las medias" valor={eleccion} onCambio={setEleccion} bloqueado={fin} correcta={estado === 'revelado' ? rel : undefined}
           opciones={[{ valor: 'encima', etiqueta: 'La EMA 8 está por encima de la EMA 21' }, { valor: 'debajo', etiqueta: 'La EMA 8 está por debajo de la EMA 21' }, { valor: 'cruce', etiqueta: 'Las dos medias están cruzándose' }]} />
       </>;
