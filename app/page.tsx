@@ -12,6 +12,9 @@ const aprendizajes = [
   { icon: Compass, title: 'Desarrollar tu propio criterio', text: 'Aprende a hacer las preguntas correctas, reunir información y llegar a tus propias conclusiones antes de estudiar estrategias de inversión.' },
 ];
 
+/** Cambiar a `true` para volver a mostrar el Salón y los Cursos (formación de pago) en la escalera. */
+const MOSTRAR_PAGO = false;
+
 const espacios = [
   { icon: BookOpen, title: 'Clases gratuitas desde cero', text: 'Videos educativos para comenzar sin conocimientos previos.' },
   { icon: Route, title: 'Una ruta de aprendizaje', text: 'Tus clases organizadas para saber por dónde empezar y cómo continuar.' },
@@ -96,8 +99,8 @@ export default function HomePage() {
             <h2 id="espacios-title">Tu aprendizaje comienza aquí</h2>
             <p>Desde tu primera gráfica hasta tu propio análisis.</p>
           </div>
-          <ul className="stair">
-            {espacios.map(({ icon: Icon, title, text, premium }, i) => <li key={title} className={`stair-step ${premium ? 'is-premium' : ''}`} data-reveal style={{ '--i': i } as React.CSSProperties}>
+          <ul className={`stair ${MOSTRAR_PAGO ? '' : 'stair-solo-gratis'}`}>
+            {espacios.filter(e => MOSTRAR_PAGO || !e.premium).map(({ icon: Icon, title, text, premium }, i) => <li key={title} className={`stair-step ${premium ? 'is-premium' : ''}`} data-reveal style={{ '--i': i } as React.CSSProperties}>
               <div className="stair-text">
                 <span className="stair-num">{String(i + 1).padStart(2, '0')}</span>
                 <h3>{title}</h3>
@@ -106,7 +109,7 @@ export default function HomePage() {
               <div className="stair-candle" aria-hidden="true"><span className="stair-body"><Icon size={22} /></span></div>
             </li>)}
             <li className="stair-group stair-group-free"><span>Acceso gratuito</span></li>
-            <li className="stair-group stair-group-paid"><span>Formación adicional de pago</span></li>
+            {MOSTRAR_PAGO && <li className="stair-group stair-group-paid"><span>Formación adicional de pago</span></li>}
           </ul>
         </div>
       </section>

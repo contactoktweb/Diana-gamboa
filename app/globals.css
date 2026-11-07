@@ -365,6 +365,8 @@ button{font:inherit;cursor:pointer}
   .stair-group::after{display:none}
   .stair-group-free{grid-column:1/5}
   .stair-group-paid{grid-column:5/7;border-top-color:var(--gold)}
+  .stair-solo-gratis{grid-template-columns:repeat(4,1fr)}
+  .stair-solo-gratis .stair-group-free{grid-column:1/-1}
 }
 
 /* Portal: ruta de aprendizaje */
