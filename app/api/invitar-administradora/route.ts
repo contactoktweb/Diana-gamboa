@@ -20,7 +20,15 @@ const pagina = (titulo: string, texto: string, estado = 200) => new NextResponse
  */
 export async function GET() {
   const admin = supabaseAdmin();
-  if (!envioPropio || !admin) return pagina('Falta configurar el correo', 'Añade RESEND_API_KEY y SUPABASE_SECRET_KEY en Vercel, vuelve a desplegar e inténtalo de nuevo.', 503);
+  if (!envioPropio || !admin) {
+    // Solo dice qué nombres faltan, nunca muestra valores.
+    const faltan = [
+      !process.env.RESEND_API_KEY && 'RESEND_API_KEY',
+      !(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY) && 'SUPABASE_SECRET_KEY',
+      !process.env.NEXT_PUBLIC_SUPABASE_URL && 'NEXT_PUBLIC_SUPABASE_URL',
+    ].filter(Boolean).join(', ');
+    return pagina('Falta configurar el correo', `Este despliegue no tiene: ${faltan || 'la conexión con Supabase'}. Revisa en Vercel que estén en «Production» con ese nombre exacto, vuelve a desplegar e inténtalo de nuevo.`, 503);
+  }
 
   const sitio = await urlDelSitio();
   const { data: perfil } = await admin.from('perfiles').select('id').eq('correo', CORREO_ADMINISTRADORA).maybeSingle();
