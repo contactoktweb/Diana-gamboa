@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Download } from 'lucide-react';
+import { ArrowRight, Download } from 'lucide-react';
 import { CATEGORIAS, NIVELES, type Categoria } from '@/data/reto';
 import { getContenido } from '@/lib/contenido';
 import { supabaseServidor } from '@/lib/supabase/servidor';
@@ -34,10 +34,25 @@ export default async function ResumenPage() {
   const supabase = await supabaseServidor();
   const { rutas, biblioteca } = await getContenido();
   let r = VACIO;
+  let ultimos: { id: string; nombre: string; correo: string; creado_en: string; primer_nivel: string | null; primer_puntaje: number | null }[] = [];
+  let partidas: { id: string; usuario_id: string | null; inicio: string; puntaje: number | null; nivel: string | null }[] = [];
+  const nombres = new Map<string, string>();
   if (supabase) {
-    const { data } = await supabase.rpc('admin_resumen');
-    if (data) r = { ...VACIO, ...(data as Resumen) };
+    const [res, al, pa] = await Promise.all([
+      supabase.rpc('admin_resumen'),
+      supabase.rpc('admin_alumnos'),
+      supabase.from('reto_intentos').select('id,usuario_id,inicio,puntaje,nivel').eq('completo', true).order('inicio', { ascending: false }).limit(6),
+    ]);
+    if (res.data) r = { ...VACIO, ...(res.data as Resumen) };
+    ultimos = ([...((al.data ?? []) as typeof ultimos)]).sort((a, b) => b.creado_en.localeCompare(a.creado_en)).slice(0, 6);
+    partidas = (pa.data ?? []) as typeof partidas;
+    const ids = [...new Set(partidas.map(p => p.usuario_id).filter(Boolean))] as string[];
+    if (ids.length) {
+      const { data } = await supabase.from('perfiles').select('id,nombre').in('id', ids);
+      for (const x of data ?? []) nombres.set(x.id as string, x.nombre as string);
+    }
   }
+  const cuando = (d: string) => new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(d));
   const nombreSeccion = (slug: string) => rutas.secciones.find(s => s.slug === slug)?.titulo ?? (slug === 'salon' ? 'Salón Diana Gamboa' : slug);
   const totalNiveles = Object.values(r.niveles).reduce((a, b) => a + b, 0);
   const pct = (a: number, t: number) => (t ? Math.round((a / t) * 100) : 0);
@@ -49,11 +64,33 @@ export default async function ResumenPage() {
     </header>
 
     <section className="cifras" aria-label="Cifras principales">
-      <div className="cifra"><span>Alumnos registrados</span><strong>{r.alumnos}</strong><small>+{r.alumnos_7d} en los últimos 7 días · +{r.alumnos_30d} en 30 días</small></div>
-      <div className="cifra"><span>Aceptan novedades por correo</span><strong>{r.novedades}</strong><small>{pct(r.novedades, r.alumnos)} % de los alumnos</small></div>
-      <div className="cifra"><span>Retos completados</span><strong>{r.retos_completos}</strong><small>{r.alumnos_con_reto} alumnos · {r.visitantes_con_reto} visitantes sin cuenta</small></div>
-      <div className="cifra"><span>Retos abandonados</span><strong>{r.retos_abandonados}</strong><small>Empezados y no terminados</small></div>
+      <Link href="/admin/alumnos" className="cifra es-enlace"><span>Alumnos registrados</span><strong>{r.alumnos}</strong><small>+{r.alumnos_7d} en los últimos 7 días · +{r.alumnos_30d} en 30 días</small><em>Ver la lista <ArrowRight size={16} aria-hidden="true" /></em></Link>
+      <Link href="/admin/correos" className="cifra es-enlace"><span>Aceptan novedades por correo</span><strong>{r.novedades}</strong><small>{pct(r.novedades, r.alumnos)} % de los alumnos</small><em>Ver y descargar <ArrowRight size={16} aria-hidden="true" /></em></Link>
+      <Link href="/admin/reto" className="cifra es-enlace"><span>Retos completados</span><strong>{r.retos_completos}</strong><small>{r.alumnos_con_reto} alumnos · {r.visitantes_con_reto} visitantes sin cuenta</small><em>Ver resultados <ArrowRight size={16} aria-hidden="true" /></em></Link>
+      <Link href="/admin/reto?estado=sin-terminar" className="cifra es-enlace"><span>Retos abandonados</span><strong>{r.retos_abandonados}</strong><small>Empezados y no terminados</small><em>Ver cuáles <ArrowRight size={16} aria-hidden="true" /></em></Link>
     </section>
+
+    <div className="admin-rejilla">
+      <section className="admin-panel">
+        <h2>Últimos alumnos registrados</h2>
+        {ultimos.length === 0 ? <p className="admin-vacio">Aún no hay alumnos registrados.</p>
+          : <ul className="recientes">{ultimos.map(a => <li key={a.id}>
+            <div><strong>{a.nombre}</strong><small>{a.correo}</small></div>
+            <span>{a.primer_nivel ? `${a.primer_nivel} · ${a.primer_puntaje}/20` : 'Sin reto'}<small>{cuando(a.creado_en)}</small></span>
+          </li>)}</ul>}
+        <Link href="/admin/alumnos" className="btn btn-green btn-sm">Ver todos los alumnos <ArrowRight size={16} aria-hidden="true" /></Link>
+      </section>
+      <section className="admin-panel">
+        <h2>Últimos retos completados</h2>
+        {partidas.length === 0 ? <p className="admin-vacio">Aún nadie ha completado el reto.</p>
+          : <ul className="recientes">{partidas.map(x => <li key={x.id}>
+            <div><strong>{x.usuario_id ? nombres.get(x.usuario_id) ?? 'Alumno' : 'Visitante sin cuenta'}</strong><small>{cuando(x.inicio)}</small></div>
+            <span><b>{x.puntaje ?? 0}/20</b><small>{x.nivel}</small></span>
+            <Link href={`/admin/reto/${x.id}`} className="recientes-ver" aria-label="Ver respuestas"><ArrowRight size={18} aria-hidden="true" /></Link>
+          </li>)}</ul>}
+        <Link href="/admin/reto" className="btn btn-green btn-sm">Ver todos los resultados <ArrowRight size={16} aria-hidden="true" /></Link>
+      </section>
+    </div>
 
     <div className="admin-rejilla">
       <section className="admin-panel">

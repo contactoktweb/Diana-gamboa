@@ -30,7 +30,7 @@ export default function AdminNav({ logo, nombre }: { logo: string; nombre: strin
   return <aside className={`admin-nav ${abierto ? 'is-open' : ''}`}>
     <div className="admin-nav-top">
       <Link href="/admin" className="admin-logo"><Image src={logo} alt="Diana Gamboa" width={600} height={345} /><span>Administración</span></Link>
-      <button type="button" className="admin-menu" onClick={() => setAbierto(v => !v)} aria-expanded={abierto} aria-label={abierto ? 'Cerrar menú' : 'Abrir menú'}>{abierto ? <X size={22} /> : <Menu size={22} />}</button>
+      <button type="button" className="admin-menu" onClick={() => setAbierto(v => !v)} aria-expanded={abierto} aria-label={abierto ? 'Cerrar menú' : 'Abrir menú'}>{abierto ? <X size={22} /> : <Menu size={22} />}<span>{abierto ? 'Cerrar' : 'Menú'}</span></button>
     </div>
     <nav aria-label="Administración" onClick={() => setAbierto(false)}>
       {ENLACES.map(({ href, texto, icono: I }) => <Link key={href} href={href} aria-current={activo(href) ? 'page' : undefined}><I size={20} aria-hidden="true" /> {texto}</Link>)}
