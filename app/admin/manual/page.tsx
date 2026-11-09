@@ -28,10 +28,11 @@ export default function ManualPage() {
       <h2>1. Entrar a la administración</h2>
       <ol>
         <li>Ve a la web y pulsa <strong>«Iniciar sesión»</strong>.</li>
-        <li>Escribe el correo y la contraseña de tu cuenta de administración (o usa «Continuar con Google» si tu cuenta es de Google).</li>
+        <li>Escribe el correo y la contraseña de tu cuenta de administración.</li>
         <li>Entrarás directamente a esta zona. También puedes escribir la dirección <code>/admin</code> después del dominio de la web.</li>
       </ol>
-      <p>Desde el Portal del Alumno verás además el botón <strong>«Administración»</strong>: solo aparece a las cuentas administradoras.</p>
+      <p>Desde el Portal del Alumno verás además el botón <strong>«Administración»</strong>. Solo la cuenta de Diana tiene acceso a esta zona.</p>
+      <p className="manual-nota">La primera vez, Diana recibe un correo «Crea tu contraseña de administración». Al pulsar el botón crea su contraseña y entra directamente aquí.</p>
       <p className="manual-nota">¿Olvidaste tu contraseña? Pulsa «¿Olvidaste tu contraseña?» en la pantalla de inicio de sesión y sigue el enlace que llega a tu correo.</p>
     </section>
 
@@ -128,7 +129,7 @@ export default function ManualPage() {
         <li><strong>Buscar y filtrar:</strong> por nombre o correo, por nivel inicial del Reto y por fecha de registro. Pulsa «Filtrar».</li>
         <li><strong>Descargar Excel o CSV:</strong> descarga la lista con los filtros que tengas aplicados (una fila por alumno, con su nivel inicial, sus aciertos por tema y su nivel actual).</li>
         <li><strong>Detalle de cada intento del Reto:</strong> una fila por respuesta, para análisis más profundos.</li>
-        <li><strong>Dar acceso de administración:</strong> botón «…» de la persona › «Dar acceso de administración». Hazlo solo con personas de confianza: podrán editar la web y ver todos los datos.</li>
+        <li><strong>Crear un alumno:</strong> botón «Crear alumno». Escribe su nombre y su correo: recibirá un correo con una <strong>contraseña provisional</strong> y, al entrar por primera vez, creará la suya.</li>
         <li><strong>Eliminar una cuenta:</strong> botón «…» › «Eliminar cuenta y datos». Úsalo cuando un alumno lo pida. No se puede deshacer. Los alumnos también pueden eliminar su cuenta desde «Mi cuenta».</li>
       </ul>
     </section>
@@ -137,7 +138,7 @@ export default function ManualPage() {
       <h2>6. Correos</h2>
       <ul>
         <li><strong>Lista de novedades:</strong> solo quienes marcaron «Quiero recibir novedades». Descárgala en Excel o CSV para usarla en Mailchimp, Brevo u otra herramienta, o copia todos los correos de una vez.</li>
-        <li><strong>Correos automáticos:</strong> confirmación de registro, recuperación de contraseña y cambio de correo. Los envía Supabase. En «Correos» encontrarás cada plantilla en español, lista para copiar en Supabase.</li>
+        <li><strong>Correos automáticos:</strong> confirmación de correo, recuperación de contraseña, contraseña provisional e invitación de administración. Los envía la academia con Resend, con el diseño de la web. En «Correos» puedes ver cómo se ve cada uno.</li>
       </ul>
       <p className="manual-nota">Al escribir a varios alumnos desde tu correo, usa siempre «CCO» (copia oculta).</p>
     </section>
@@ -153,7 +154,7 @@ export default function ManualPage() {
       <h2>8. Privacidad y buenas prácticas</h2>
       <ul>
         <li>Cada alumno solo ve sus propios datos. Solo las cuentas administradoras ven los datos de todos.</li>
-        <li>No compartas tu contraseña. Si otra persona te ayuda, dale su propia cuenta de administración y quítasela cuando ya no la necesite.</li>
+        <li>No compartas tu contraseña: la cuenta de administración es solo tuya.</li>
         <li>Guarda los archivos descargados (Excel, CSV) en un lugar seguro: contienen datos personales.</li>
         <li>Cierra sesión al usar un computador compartido.</li>
       </ul>
@@ -167,11 +168,11 @@ export default function ManualPage() {
         <dt>«Tu sesión expiró o no tienes permiso»</dt>
         <dd>Cierra sesión, vuelve a entrar e intenta de nuevo. Tus cambios no se pierden mientras no cierres la página.</dd>
         <dt>Un alumno no recibe el correo de confirmación</dt>
-        <dd>Pídele que revise «spam» o «promociones». Si pasa con frecuencia, conviene configurar un servidor de correo propio en Supabase (ver «Puesta en marcha»).</dd>
+        <dd>Pídele que revise «spam» o «promociones». Si sigue sin llegar, puede pedir uno nuevo con «¿Olvidaste tu contraseña?».</dd>
         <dt>Una imagen no se sube</dt>
         <dd>Revisa que pese menos de 20 MB y que sea JPG, PNG, WebP o SVG.</dd>
       </dl>
-      <p>Para la configuración técnica (claves, dominio, Google, correo propio) consulta el documento <strong>«Puesta en marcha»</strong> que entregó el desarrollador (archivo <code>docs/PUESTA-EN-MARCHA.md</code> del proyecto) o escribe a K&amp;T.</p>
+      <p>Para la configuración técnica (claves, dominio, Resend) consulta el documento <strong>«Puesta en marcha»</strong> que entregó el desarrollador (archivo <code>docs/PUESTA-EN-MARCHA.md</code> del proyecto) o escribe a K&amp;T.</p>
       <p><Link href="/admin" className="btn btn-outline btn-sm">Volver al resumen</Link></p>
     </section>
   </article>;

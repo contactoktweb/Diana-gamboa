@@ -874,3 +874,10 @@ button{font:inherit;cursor:pointer}
   .editor-barra .btn-green{flex:1}
 }
 .subir-vista.es-oscuro{background:var(--green-900);padding:10px}
+.crear-alumno{flex-basis:100%;margin:8px 0 0}
+.crear-alumno-campos{display:grid;gap:12px}
+@media (min-width:700px){.crear-alumno-campos{grid-template-columns:1fr 1fr}}
+.correos-estado{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;margin:8px 0 4px}
+.correos-estado svg{flex:none;margin-top:2px}
+.correos-estado.es-ok{background:#E3F4EC;color:#13573A}
+.correos-estado.es-pendiente{background:#FFF5DE;color:#7C5A06}

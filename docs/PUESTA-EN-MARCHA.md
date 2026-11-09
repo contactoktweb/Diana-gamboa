@@ -34,18 +34,19 @@ funciones del panel, el espacio de archivos `medios` (logos, fotos y PDF) y toda
 
 ## 3. Variables de entorno en Vercel
 
-Vercel → proyecto → **Settings → Environment Variables** (en *Production*, *Preview* y *Development*):
+Vercel → proyecto → **Settings → Environment Variables** (en *Production* y *Preview*). Ver también `.env.example`.
 
-| Variable | Dónde se obtiene |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → *Project URL* |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys → *Publishable key* (`sb_publishable_…`). En proyectos antiguos: `NEXT_PUBLIC_SUPABASE_ANON_KEY` con la clave *anon public* |
-| `NEXT_PUBLIC_SITE_URL` | La dirección pública de la web, por ejemplo `https://diana-gamboa.vercel.app` |
+| Variable | Dónde se obtiene | ¿Secreta? |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → *Project URL* | No |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys → *Publishable key* (`sb_publishable_…`) | No |
+| `SUPABASE_SECRET_KEY` | Supabase → Project Settings → API Keys → *Secret keys* (`sb_secret_…`) | **Sí** |
+| `RESEND_API_KEY` | Resend → API Keys → *Create API Key* (permiso «Sending access») | **Sí** |
+| `CORREO_REMITENTE` | Un remitente de un dominio verificado en Resend, p. ej. `Academia Diana Gamboa <hola@dianagamboa.com>` | No |
+| `NEXT_PUBLIC_SITE_URL` | La dirección pública de la web | No |
 
-No hace falta la clave secreta (*service role*): la seguridad está en la base de datos.
+Las claves secretas solo van en Vercel: nunca en el código, en GitHub ni en mensajes.
 Después de guardar las variables, haz un nuevo despliegue (**Deployments → Redeploy**).
-
-Para trabajar en local, copia `.env.example` como `.env.local` y complétalo.
 
 ## 4. Configurar el acceso (Authentication)
 
@@ -62,45 +63,49 @@ Supabase → **Authentication → Sign In / Providers → Email**:
 - **Confirm email:** activado (el alumno confirma su correo antes de entrar).
 - Longitud mínima de contraseña: 8.
 
-## 5. Correos en español
+## 5. Correos con Resend
 
-Supabase → **Authentication → Email Templates**. Para cada plantilla (*Confirm signup*, *Reset Password*,
-*Change Email Address*, *Magic Link*) copia el asunto y el contenido desde la administración de la web:
-**Administración → Correos → Correos automáticos** (botones «Copiar asunto» y «Copiar el contenido»).
+Con `RESEND_API_KEY` y `SUPABASE_SECRET_KEY` configuradas, la web envía sus propios correos con el diseño
+de la academia (las plantillas están en `lib/correo/plantillas.ts` y se pueden ver en
+**Administración → Correos**):
 
-**Recomendado — correo propio:** el servidor de correo incluido en Supabase tiene un límite bajo de envíos
-por hora y puede terminar en spam. Para producción, configura un SMTP propio en
-**Project Settings → Authentication → SMTP Settings** (por ejemplo Resend, Brevo o el correo del dominio),
-con remitente `Academia Diana Gamboa <hola@tudominio.com>`.
+| Correo | Cuándo se envía |
+|---|---|
+| Confirmación de correo | Al registrarse |
+| Recuperación de contraseña | Al pulsar «¿Olvidaste tu contraseña?» |
+| Contraseña provisional | Cuando la administradora crea un alumno (Administración → Alumnos → Crear alumno) |
+| Invitación de administración | Para que Diana cree su contraseña (ver paso 7) |
 
-## 6. Continuar con Google
+**Dominio en Resend (obligatorio para enviar a cualquier persona):** Resend → **Domains → Add Domain**,
+añade los registros DNS que indica y espera a que aparezca *Verified*. Sin un dominio verificado, Resend solo
+entrega correos a la dirección de la propia cuenta de Resend. Después pon el remitente en `CORREO_REMITENTE`.
 
-1. En [Google Cloud Console](https://console.cloud.google.com/) → *APIs y servicios → Credenciales* →
-   **Crear credenciales → ID de cliente de OAuth** (tipo *Aplicación web*).
-2. En *URI de redireccionamiento autorizados* pega la dirección que muestra Supabase en
-   **Authentication → Sign In / Providers → Google** (termina en `/auth/v1/callback`).
-3. Copia el *ID de cliente* y el *Secreto* en ese mismo apartado de Supabase y actívalo.
-4. En la *pantalla de consentimiento* de Google pon el nombre «Academia Diana Gamboa» y el logo.
+Sin Resend configurado, la web sigue funcionando: los correos de registro y recuperación los envía Supabase
+con su diseño básico.
 
-Mientras Google no esté activado, el botón muestra el mensaje «El acceso con Google aún no está activado».
+## 6. Acceso con Google
 
-## 7. Crear la cuenta de administración
+Desactivado por ahora: el botón «Continuar con Google» no se muestra.
 
-1. Diana se registra en la web como cualquier alumno (`/registro`) y confirma su correo.
-2. En Supabase → **SQL Editor** ejecuta:
+## 7. Cuenta de administración (Diana)
 
-   ```sql
-   select public.hacer_admin('correo-de-diana@ejemplo.com');
-   ```
+La única cuenta administradora es **dianapersonalinfo@gmail.com** (se puede cambiar con la variable `ADMIN_CORREO`).
 
-3. Al iniciar sesión entrará directamente a `/admin`. Desde **Administración → Alumnos** puede dar acceso
-   a otras personas.
+1. Con las variables del paso 3 configuradas y la web desplegada, abre en el navegador:
+   `https://TU-DOMINIO/api/invitar-administradora`
+2. La página confirma «Invitación enviada». Diana recibe el correo **«Crea tu contraseña de administración»**,
+   crea su contraseña y entra directamente a `/admin`.
+
+El enlace solo escribe a esa dirección, no reenvía más de una vez cada 10 minutos y deja a Diana como única
+administradora. Si su cuenta ya está activa, indica que use «¿Olvidaste tu contraseña?».
+
+Alternativa sin Resend: Diana se registra en `/registro` y se ejecuta en el SQL Editor
+`select public.hacer_admin('dianapersonalinfo@gmail.com');`.
 
 ## 8. Comprobación final
 
 - [ ] Registro con correo: llega el correo en español y el enlace lleva al Portal.
 - [ ] Inicio de sesión y «¿Olvidaste tu contraseña?».
-- [ ] Continuar con Google.
 - [ ] `/portal` sin sesión lleva a «Iniciar sesión».
 - [ ] Hacer el Reto como visitante, registrarse y ver el nivel en el Portal.
 - [ ] En la administración: cambiar un texto, guardar y verlo publicado al instante.
@@ -118,7 +123,7 @@ Mientras Google no esté activado, el botón muestra el mensaje «El acceso con 
 | Contenido original y formularios de edición | `lib/contenido/predeterminado.ts`, `lib/contenido/esquema.ts` |
 | Renovación de la sesión | `proxy.ts` |
 | Administración | `app/admin/` |
-| Plantillas de correo | `lib/correos.ts` |
+| Plantillas de correo (Resend) | `lib/correo/plantillas.ts` |
 
 - **Contenido editable:** cada sección se guarda en la tabla `contenido` (una fila por sección). Lo no guardado
   usa el texto original de `predeterminado.ts`. Para añadir un campo nuevo: añádelo en `predeterminado.ts`, en

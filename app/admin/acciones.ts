@@ -5,6 +5,10 @@ import { supabaseServidor, ETIQUETA_CONTENIDO } from '@/lib/supabase/servidor';
 import { seccionPorId } from '@/lib/contenido/esquema';
 import { PREDETERMINADO, type NombreSeccion } from '@/lib/contenido/predeterminado';
 import { getSesion } from '@/lib/sesion';
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import { correoProvisional } from '@/lib/correo/plantillas';
+import { enviarCorreo, envioPropio } from '@/lib/correo/enviar';
+import { urlDelSitio } from '@/lib/sitio';
 
 type Resultado = { ok: true } | { ok: false; error: string };
 
@@ -58,11 +62,32 @@ export async function restablecerOriginal(seccion: string): Promise<Resultado> {
   return { ok: true };
 }
 
-export async function cambiarRol(usuario: string, rol: 'alumno' | 'admin'): Promise<Resultado> {
+/** Contraseña provisional fácil de dictar: sin letras ni números que se confundan. */
+function claveProvisional() {
+  const letras = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  const azar = crypto.getRandomValues(new Uint32Array(10));
+  return Array.from(azar, n => letras[n % letras.length]).join('');
+}
+
+/** Crea la cuenta de un alumno con una contraseña provisional y se la envía por correo. */
+export async function crearAlumnoProvisional(nombreIngresado: string, correoIngresado: string): Promise<Resultado> {
   const c = await clienteAdmin();
   if ('error' in c) return { ok: false, error: c.error! };
-  const { error } = await c.supabase.rpc('admin_cambiar_rol', { p_usuario: usuario, p_rol: rol });
-  if (error) return { ok: false, error: error.message };
+  const admin = supabaseAdmin();
+  if (!envioPropio || !admin) return { ok: false, error: 'Falta configurar Resend y la clave secreta de Supabase en Vercel.' };
+  const nombre = nombreIngresado.trim().slice(0, 80);
+  const correo = correoIngresado.trim().toLowerCase();
+  if (!nombre || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return { ok: false, error: 'Revisa el nombre y el correo.' };
+
+  const clave = claveProvisional();
+  const { error } = await admin.auth.admin.createUser({ email: correo, password: clave, email_confirm: true, user_metadata: { nombre, debe_cambiar_clave: true } });
+  if (error) return { ok: false, error: /already|registered|exists/i.test(error.message) ? 'Ya existe una cuenta con ese correo.' : 'No se pudo crear la cuenta: ' + error.message };
+  try {
+    const sitio = await urlDelSitio();
+    await enviarCorreo({ para: correo, ...correoProvisional({ sitio, nombre: nombre.split(' ')[0], correo, clave }) });
+  } catch (e) {
+    return { ok: false, error: `La cuenta se creó, pero el correo no se pudo enviar (${(e as Error).message}). Pide al alumno que use «¿Olvidaste tu contraseña?».` };
+  }
   revalidatePath('/admin/alumnos');
   return { ok: true };
 }

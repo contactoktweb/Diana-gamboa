@@ -1,7 +1,8 @@
 import { Download, Search } from 'lucide-react';
 import AccionesAlumno from '@/components/admin/AccionesAlumno';
+import CrearAlumno from '@/components/admin/CrearAlumno';
+import { envioPropio } from '@/lib/correo/enviar';
 import { NIVELES } from '@/data/reto';
-import { getSesion } from '@/lib/sesion';
 import { supabaseServidor } from '@/lib/supabase/servidor';
 
 interface Alumno {
@@ -16,7 +17,6 @@ export default async function AlumnosPage({ searchParams }: Props) {
   const q = await searchParams;
   const filtros = { busqueda: q.busqueda ?? '', nivel: q.nivel ?? '', desde: q.desde ?? '', hasta: q.hasta ?? '' };
   const supabase = await supabaseServidor();
-  const sesion = await getSesion();
   let alumnos: Alumno[] = [];
   if (supabase) {
     const { data } = await supabase.rpc('admin_alumnos', {
@@ -51,6 +51,7 @@ export default async function AlumnosPage({ searchParams }: Props) {
         <a className="btn btn-green btn-sm" href={enlace('alumnos', 'xlsx')}><Download size={16} aria-hidden="true" /> Descargar Excel</a>
         <a className="btn btn-outline btn-sm" href={enlace('alumnos', 'csv')}><Download size={16} aria-hidden="true" /> CSV</a>
         <a className="btn btn-outline btn-sm" href={enlace('reto', 'xlsx')}><Download size={16} aria-hidden="true" /> Detalle de cada intento del Reto</a>
+        <CrearAlumno disponible={envioPropio} />
       </div>
     </div>
 
@@ -65,7 +66,7 @@ export default async function AlumnosPage({ searchParams }: Props) {
           <td data-titulo="Nivel inicial">{a.primer_nivel ? `${a.primer_nivel} (${a.primer_puntaje}/20)` : <span className="admin-tenue">Sin reto</span>}</td>
           <td data-titulo="Nivel actual">{a.ultimo_nivel && a.retos_completos > 1 ? `${a.ultimo_nivel} (${a.ultimo_puntaje}/20)` : <span className="admin-tenue">—</span>}</td>
           <td data-titulo="Novedades">{a.acepta_novedades ? 'Sí' : 'No'}</td>
-          <td><AccionesAlumno id={a.id} nombre={a.nombre} rol={a.rol} esYo={a.id === sesion?.id} /></td>
+          <td><AccionesAlumno id={a.id} nombre={a.nombre} esAdmin={a.rol === 'admin'} /></td>
         </tr>)}</tbody>
       </table></div>}
   </>;
