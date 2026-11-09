@@ -4,13 +4,38 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
+import { getContenido } from '@/lib/contenido';
+import { Enriquecido } from '@/lib/contenido/texto';
+import type { BloqueHistoria } from '@/lib/contenido/predeterminado';
 
-export const metadata: Metadata = {
-  title: 'Sobre Diana | Diana Gamboa · El idioma del mercado',
-  description: 'Analista del mercado de valores, educadora y madre. Diana Gamboa enseña a leer el mercado vela a vela, con calma, en orden y desde cero.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { sobre, global } = await getContenido();
+  return { title: `${sobre.etiqueta} | ${global.nombreSitio} · El idioma del mercado`, description: sobre.intro };
+}
 
-export default function SobreDianaPage() {
+/** Agrupa los bloques de la historia en partes, separadas por los bloques «separador». */
+function partes(bloques: BloqueHistoria[]) {
+  const out: BloqueHistoria[][] = [[]];
+  for (const b of bloques) {
+    if (b.tipo === 'separador') out.push([]);
+    else out[out.length - 1].push(b);
+  }
+  return out.filter(p => p.length);
+}
+
+function Bloque({ b }: { b: BloqueHistoria }) {
+  switch (b.tipo) {
+    case 'destacado': return <p className="story-pull"><Enriquecido texto={b.texto} /></p>;
+    case 'grande': return <p className="story-big"><Enriquecido texto={b.texto} /></p>;
+    case 'firma': return <blockquote className="signature story-signature">{b.texto}</blockquote>;
+    case 'lista': return <ul className="story-pieces">{b.texto.split('\n').filter(l => l.trim()).map((l, i) => <li key={i}><Enriquecido texto={l} /></li>)}</ul>;
+    case 'foto': return b.foto ? <figure className="story-photo"><Image src={b.foto} alt={b.texto} fill sizes="(max-width: 760px) 100vw, 720px" /></figure> : null;
+    default: return <p><Enriquecido texto={b.texto} /></p>;
+  }
+}
+
+export default async function SobreDianaPage() {
+  const { sobre: c, global: g } = await getContenido();
   return <>
     <a className="skip-link" href="#contenido">Saltar al contenido</a>
     <SiteHeader />
@@ -18,73 +43,31 @@ export default function SobreDianaPage() {
       <section className="story-hero">
         <div className="wrap story-hero-grid">
           <div className="story-hero-copy">
-            <p className="eyebrow">Sobre Diana</p>
-            <h1>Hola, soy Diana Gamboa</h1>
-            <p className="lead">Analista del mercado de valores, educadora, madre y una mujer profundamente enamorada de lo que hace.</p>
+            <p className="eyebrow">{c.etiqueta}</p>
+            <h1>{c.titulo}</h1>
+            <p className="lead">{c.intro}</p>
           </div>
           <div className="story-hero-photo">
-            <Image src="/fotos/diana-traje-claro.webp" alt="Diana Gamboa con traje claro" fill priority sizes="(max-width: 860px) 100vw, 40vw" />
+            <Image src={c.foto} alt={g.nombreSitio} fill priority sizes="(max-width: 860px) 100vw, 40vw" />
           </div>
         </div>
       </section>
 
       <article className="story wrap">
-        <div className="story-block">
-          <p>Durante años miré gráficas todos los días, hasta que un día comprendí algo que lo cambió todo:</p>
-          <p className="story-pull">No puedes pretender ser rentable si primero no aprendes a leer y entender el comportamiento del mercado, vela a vela.</p>
-          <p>Saber qué te dice cada vela. Reconocer cómo utilizar los indicadores básicos. Entender lo que visualmente te está mostrando cada uno.</p>
-          <p>Ese es el primer objetivo: <strong>aprender a leer el mercado antes de buscar un patrón, antes de aplicar una estrategia y antes de comprar o vender.</strong></p>
-        </div>
-
-        <div className="story-block">
-          <p>Y aquí viene algo que casi nadie te dice:</p>
-          <p className="story-big">Cada vela es una emoción.</p>
-          <p>Es el resultado de las decisiones de compradores y vendedores, de sus miedos, su euforia, sus dudas y sus expectativas sobre lo que puede suceder con el precio.</p>
-          <p>Cuando aprendes a leer una gráfica, también comienzas a reconocer las emociones que se reflejan en el comportamiento del mercado.</p>
-          <p className="story-pull">Pero ¿cómo vas a leer las emociones del mercado si no sabes reconocer las tuyas?</p>
-        </div>
-
-        <div className="story-block">
-          <p>Soy una mujer espiritual y creo profundamente en la conexión entre la mente, el cuerpo y el alma.</p>
-          <p>Una mente tranquila nos ayuda a observar con claridad. Un cuerpo descansado nos permite estar más atentos. Y un alma en paz nos enseña algo que considero fundamental: <strong>saber esperar.</strong></p>
-          <p>Porque si un día tus emociones están hechas un revoltillo, lo mejor es no operar. Así de sencillo.</p>
-          <p>El conocimiento es importante, pero también lo son la paciencia, la disciplina y las emociones en equilibrio.</p>
-          <p>Por eso, cuando enseño, no solo me importa la gráfica. <strong>También me importa la persona que está frente a ella.</strong></p>
-        </div>
-
-        <figure className="story-photo">
-          <Image src="/fotos/diana-blazer-azul.webp" alt="Diana Gamboa" fill sizes="(max-width: 760px) 100vw, 720px" />
-        </figure>
-
-        <div className="story-block">
-          <p>Así nació el <strong>Método Diana Gamboa</strong>: para enseñarte el idioma del mercado pieza por pieza, en orden, con calma y desde cero.</p>
-          <ul className="story-pieces">
-            <li>Las velas te cuentan quién tiene el control.</li>
-            <li>Las medias móviles te muestran cómo respira el precio.</li>
-            <li>Los niveles te dicen dónde abrir los ojos.</li>
-          </ul>
-          <p>Y cuando aprendes a conectar todas esas piezas, la gráfica deja de ser un misterio y comienza a hablarte.</p>
-        </div>
-
-        <div className="story-block">
-          <p>No importa si nunca has abierto una gráfica. <strong>Aquí nadie se queda atrás.</strong></p>
-          <p>Conmigo no vas a encontrar promesas de dinero fácil, señales para copiar ni atajos.</p>
-          <p>Vas a encontrar a alguien que te habla claro, que te muestra lo que funciona y también lo que no, y que celebra contigo ese día en que miras una gráfica y dices:</p>
-          <p className="story-big">«¡Ya la entiendo!»</p>
-        </div>
-
-        <div className="story-block">
-          <p>Porque mi sueño no es que dependas de mí.</p>
-          <p className="story-pull">Es que un día ya no me necesites.</p>
-          <blockquote className="signature story-signature">Yo no adivino el mercado. Lo leo. Y te enseño a leerlo.</blockquote>
-        </div>
+        {partes(c.bloques).map((parte, i) => {
+          // Una foto sola entre dos partes no lleva la línea divisoria de bloque.
+          if (parte.length === 1 && parte[0].tipo === 'foto') return <Bloque key={i} b={parte[0]} />;
+          return <div className="story-block" key={i}>{parte.map((b, j) => b.tipo === 'foto'
+            ? <div key={j} className="story-photo-inline"><Bloque b={b} /></div>
+            : <Bloque key={j} b={b} />)}</div>;
+        })}
       </article>
 
       <section className="section invite" aria-labelledby="historia-cta">
         <div className="wrap invite-inner">
-          <h2 id="historia-cta">Comienza tu formación desde cero</h2>
-          <Link href="/registro" className="btn btn-gold btn-lg">Quiero aprender con Diana <ArrowRight size={20} aria-hidden="true" /></Link>
-          <p className="cta-note">Crea tu cuenta gratis y descubre tu ruta de aprendizaje.</p>
+          <h2 id="historia-cta">{c.ctaTitulo}</h2>
+          <Link href="/registro" className="btn btn-gold btn-lg">{g.botonPrincipal} <ArrowRight size={20} aria-hidden="true" /></Link>
+          <p className="cta-note">{g.notaBoton}</p>
         </div>
       </section>
     </main>

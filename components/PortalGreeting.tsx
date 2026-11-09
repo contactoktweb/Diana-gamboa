@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { leerNombre } from '@/lib/alumno';
+import { leerNombre, primerNombre } from '@/lib/alumno';
 
-/* Mientras no exista el sistema de cuentas, el nombre se lee de los datos guardados en este navegador. */
-export default function PortalGreeting() {
-  const [name, setName] = useState('');
-  useEffect(() => setName(leerNombre()), []);
+/** Saludo con el nombre del alumno (de su cuenta o, en modo demostración, del navegador). */
+export default function PortalGreeting({ nombre }: { nombre?: string }) {
+  const [name, setName] = useState(nombre ? primerNombre(nombre) : '');
+  useEffect(() => { if (!nombre) setName(leerNombre()); }, [nombre]);
   return <>{name ? `¡Hola, ${name}!` : '¡Hola!'}</>;
 }

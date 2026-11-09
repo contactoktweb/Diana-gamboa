@@ -5,12 +5,25 @@ import { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import Insignia from './Insignia';
 import { TOTAL_PUNTOS } from '@/data/reto';
-import { ultimoResultado, type Intento } from '@/lib/reto/registro';
+import { idsLocales, ultimoResultado } from '@/lib/reto/registro';
+import { supabaseNavegador } from '@/lib/supabase/cliente';
 
 /** Tarjeta del portal: invita a hacer el reto o muestra el nivel obtenido. */
 export default function DescubreNivel() {
-  const [res, setRes] = useState<Intento | undefined>();
-  useEffect(() => setRes(ultimoResultado()), []);
+  const [res, setRes] = useState<{ nivel: string; puntaje: number } | undefined>();
+  useEffect(() => {
+    const local = ultimoResultado();
+    if (local?.nivel) setRes({ nivel: local.nivel, puntaje: local.puntaje ?? 0 });
+    const sb = supabaseNavegador();
+    if (!sb) return;
+    (async () => {
+      // Pasa a la cuenta los retos hechos en este navegador y muestra el último guardado (de cualquier dispositivo).
+      const ids = idsLocales();
+      if (ids.length) await sb.rpc('reto_vincular', { ids });
+      const { data } = await sb.from('reto_intentos').select('nivel, puntaje').eq('completo', true).order('inicio', { ascending: false }).limit(1).maybeSingle();
+      if (data?.nivel) setRes({ nivel: data.nivel, puntaje: data.puntaje ?? 0 });
+    })();
+  }, []);
   return <aside className="descubre" data-reveal>
     <Insignia nivel={res?.nivel ?? 'Explorador'} tam={92} />
     <div>

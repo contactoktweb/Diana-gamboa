@@ -1,30 +1,20 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, ChartCandlestick, ChartNoAxesCombined, Compass, FolderDown, GraduationCap, Radio, Route, Users } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
 import ScamNotice from '@/components/ScamNotice';
 import RetoTeaser from '@/components/reto/RetoTeaser';
+import { getContenido } from '@/lib/contenido';
+import { Enriquecido, Parrafos } from '@/lib/contenido/texto';
+import { Icono } from '@/lib/iconos';
 
-const aprendizajes = [
-  { icon: ChartCandlestick, title: 'Aprender a leer una gráfica', text: 'Conoce las velas japonesas, el comportamiento del precio y las herramientas básicas que nos ayudan a comprender lo que estamos observando.' },
-  { icon: ChartNoAxesCombined, title: 'Aprender a analizar', text: 'Descubre cómo se relacionan las tendencias, los niveles, las medias móviles y el recorrido del precio para construir una lectura ordenada.' },
-  { icon: Compass, title: 'Desarrollar tu propio criterio', text: 'Aprende a hacer las preguntas correctas, reunir información y llegar a tus propias conclusiones antes de estudiar estrategias de inversión.' },
-];
+export default async function HomePage() {
+  const { inicio: c, global: g } = await getContenido();
+  // Los espacios de pago van siempre después de los gratuitos.
+  const espacios = [...c.espacios.filter(e => !e.pago), ...(c.espaciosMostrarPago ? c.espacios.filter(e => e.pago) : [])];
+  const gratis = espacios.filter(e => !e.pago).length;
 
-/** Cambiar a `true` para volver a mostrar el Salón y los Cursos (formación de pago) en la escalera. */
-const MOSTRAR_PAGO = false;
-
-const espacios = [
-  { icon: BookOpen, title: 'Clases gratuitas desde cero', text: 'Videos educativos para comenzar sin conocimientos previos.' },
-  { icon: Route, title: 'Una ruta de aprendizaje', text: 'Tus clases organizadas para saber por dónde empezar y cómo continuar.' },
-  { icon: Radio, title: 'Lives gratuitos en YouTube', text: 'Transmisiones para observar y analizar el mercado conmigo.' },
-  { icon: FolderDown, title: 'Biblioteca de recursos', text: 'Guías y materiales para practicar y reforzar lo aprendido.' },
-  { icon: Users, title: 'Salón Diana Gamboa', text: 'Clases privadas en vivo para practicar y profundizar en el análisis.', premium: true },
-  { icon: GraduationCap, title: 'Cursos especializados', text: 'Formaciones para continuar desarrollando tus conocimientos.', premium: true },
-];
-
-export default function HomePage() {
   return <>
     <a className="skip-link" href="#contenido">Saltar al contenido</a>
     <SiteHeader />
@@ -32,18 +22,18 @@ export default function HomePage() {
       <section className="hero" aria-labelledby="hero-title">
         <div className="wrap hero-grid">
           <div className="hero-copy">
-            <p className="eyebrow hero-eyebrow">Diana Gamboa · El idioma del mercado</p>
-            <h1 id="hero-title">Aprende a leer el <em>idioma del mercado</em></h1>
-            <p className="lead">Aquí aprenderás desde cero a comprender lo que sucede en una gráfica, reconocer el comportamiento del precio y desarrollar tu propio análisis.</p>
+            <p className="eyebrow hero-eyebrow">{c.heroEtiqueta}</p>
+            <h1 id="hero-title">{c.heroTitulo} <em>{c.heroTituloDestacado}</em></h1>
+            <Parrafos texto={c.heroTexto} className="lead" />
             <div className="hero-actions">
-              <Link href="/registro" className="btn btn-gold btn-lg">Quiero aprender con Diana <ArrowRight size={20} aria-hidden="true" /></Link>
-              <p className="cta-note">Crea tu cuenta gratis y descubre tu ruta de aprendizaje.</p>
+              <Link href="/registro" className="btn btn-gold btn-lg">{g.botonPrincipal} <ArrowRight size={20} aria-hidden="true" /></Link>
+              <p className="cta-note">{g.notaBoton}</p>
               <p className="hero-login">¿Ya eres alumno? <Link href="/ingresar">Iniciar sesión</Link></p>
             </div>
-            <p className="hero-quote"><span>Antes de comprar. Antes de vender. Antes de buscar una estrategia.</span> Hay algo que necesitas aprender: <strong>leer el mercado.</strong></p>
+            {(c.heroFraseTitulo || c.heroFrase) && <p className="hero-quote"><span>{c.heroFraseTitulo}</span> <Enriquecido texto={c.heroFrase} /></p>}
           </div>
           <div className="hero-photo">
-            <Image src="/diana-borgona.webp" alt="Diana Gamboa, analista del mercado de valores" fill priority sizes="(max-width: 860px) 100vw, 50vw" />
+            <Image src={c.heroFoto} alt={`${g.nombreSitio}, analista del mercado de valores`} fill priority sizes="(max-width: 860px) 100vw, 50vw" />
           </div>
         </div>
       </section>
@@ -52,42 +42,40 @@ export default function HomePage() {
         <div className="wrap learn">
           <div className="learn-top">
             <div className="learn-head" data-reveal>
-              <p className="eyebrow">Lo esencial</p>
-              <h2 id="aprender-title">¿Qué vas a aprender conmigo?</h2>
-              <p>Una gráfica puede parecer complicada cuando no sabes qué estás mirando.</p>
-              <p>Pero cuando comienzas a comprender sus elementos, aprendes a reconocer cómo se mueve el precio y qué información puedes obtener de ese movimiento.</p>
-              <p className="learn-accent">Aquí comenzamos por lo esencial.</p>
+              <p className="eyebrow">{c.aprenderEtiqueta}</p>
+              <h2 id="aprender-title">{c.aprenderTitulo}</h2>
+              <Parrafos texto={c.aprenderTexto} />
+              {c.aprenderAcento && <p className="learn-accent">{c.aprenderAcento}</p>}
             </div>
-            <figure className="learn-photo" data-reveal style={{ '--i': 1 } as React.CSSProperties}>
-              <Image src="/fotos/diana-pizarra.webp" alt="Diana Gamboa explicando velas japonesas en una pizarra" fill sizes="(max-width: 900px) 100vw, 45vw" />
-            </figure>
+            {c.aprenderFoto && <figure className="learn-photo" data-reveal style={{ '--i': 1 } as React.CSSProperties}>
+              <Image src={c.aprenderFoto} alt={`${g.nombreSitio} explicando velas japonesas`} fill sizes="(max-width: 900px) 100vw, 45vw" />
+            </figure>}
           </div>
           <ol className="learn-list">
-            {aprendizajes.map(({ icon: Icon, title, text }, i) => <li key={title} data-reveal style={{ '--i': i } as React.CSSProperties}>
-              <span className="learn-icon"><Icon size={26} aria-hidden="true" /></span>
+            {c.aprendizajes.map((a, i) => <li key={i} data-reveal style={{ '--i': i } as React.CSSProperties}>
+              <span className="learn-icon"><Icono nombre={a.icono} size={26} /></span>
               <span className="learn-num">{String(i + 1).padStart(2, '0')}</span>
-              <h3>{title}</h3>
-              <p>{text}</p>
+              <h3>{a.titulo}</h3>
+              <Parrafos texto={a.texto} />
             </li>)}
           </ol>
         </div>
       </section>
 
-      <RetoTeaser />
+      {c.retoMostrar && <RetoTeaser etiqueta={c.retoEtiqueta} titulo={c.retoTitulo} texto={c.retoTexto} boton={c.retoBoton} nota={c.retoNota} />}
 
       <section className="section section-cream" id="sobre-diana" aria-labelledby="sobre-title">
         <div className="wrap about-grid">
           <div className="about-photo" data-reveal>
-            <Image src="/diana-gesto.webp" alt="Diana Gamboa sonriendo" fill sizes="(max-width: 860px) 100vw, 40vw" />
+            <Image src={c.sobreFoto} alt={g.nombreSitio} fill sizes="(max-width: 860px) 100vw, 40vw" />
           </div>
           <div className="about-copy" data-reveal style={{ '--i': 1 } as React.CSSProperties}>
-            <p className="eyebrow">Sobre Diana</p>
-            <h2 id="sobre-title">Hola, soy Diana Gamboa</h2>
-            <p className="lead-sm">Soy analista del mercado de valores, educadora, madre y una mujer profundamente enamorada de lo que hace.</p>
-            <p>Creo que antes de comprar, vender o buscar una estrategia, necesitas aprender a leer el mercado. Porque detrás de cada vela hay emociones, decisiones y una historia que aprender a interpretar.</p>
-            <p>Y también creo que una mente tranquila, un cuerpo descansado y unas emociones en equilibrio son parte importante de ese aprendizaje.</p>
-            <blockquote className="signature">Yo no adivino el mercado. Lo leo. Y te enseño a leerlo.</blockquote>
-            <Link href="/sobre-diana" className="btn btn-outline">Conoce mi historia <ArrowRight size={18} aria-hidden="true" /></Link>
+            <p className="eyebrow">{c.sobreEtiqueta}</p>
+            <h2 id="sobre-title">{c.sobreTitulo}</h2>
+            <Parrafos texto={c.sobreIntro} className="lead-sm" />
+            <Parrafos texto={c.sobreTexto} />
+            {c.sobreFrase && <blockquote className="signature">{c.sobreFrase}</blockquote>}
+            <Link href="/sobre-diana" className="btn btn-outline">{c.sobreBoton} <ArrowRight size={18} aria-hidden="true" /></Link>
           </div>
         </div>
       </section>
@@ -95,32 +83,31 @@ export default function HomePage() {
       <section className="section" aria-labelledby="espacios-title">
         <div className="wrap">
           <div className="section-head" data-reveal>
-            <p className="eyebrow">Tu academia</p>
-            <h2 id="espacios-title">Tu aprendizaje comienza aquí</h2>
-            <p>Desde tu primera gráfica hasta tu propio análisis.</p>
+            <p className="eyebrow">{c.espaciosEtiqueta}</p>
+            <h2 id="espacios-title">{c.espaciosTitulo}</h2>
+            <p>{c.espaciosSubtitulo}</p>
           </div>
-          <ul className={`stair ${MOSTRAR_PAGO ? '' : 'stair-solo-gratis'}`}>
-            {espacios.filter(e => MOSTRAR_PAGO || !e.premium).map(({ icon: Icon, title, text, premium }, i) => <li key={title} className={`stair-step ${premium ? 'is-premium' : ''}`} data-reveal style={{ '--i': i } as React.CSSProperties}>
+          <ul className={`stair ${c.espaciosMostrarPago ? '' : 'stair-solo-gratis'}`} style={{ '--n': espacios.length, '--col-gratis': `1 / ${gratis + 1}`, '--col-pago': `${gratis + 1} / -1` } as React.CSSProperties}>
+            {espacios.map((e, i) => <li key={i} className={`stair-step ${e.pago ? 'is-premium' : ''}`} data-reveal style={{ '--i': i } as React.CSSProperties}>
               <div className="stair-text">
                 <span className="stair-num">{String(i + 1).padStart(2, '0')}</span>
-                <h3>{title}</h3>
-                <p>{text}</p>
+                <h3>{e.titulo}</h3>
+                <p>{e.texto}</p>
               </div>
-              <div className="stair-candle" aria-hidden="true"><span className="stair-body"><Icon size={22} /></span></div>
+              <div className="stair-candle" aria-hidden="true"><span className="stair-body"><Icono nombre={e.icono} size={22} /></span></div>
             </li>)}
-            <li className="stair-group stair-group-free"><span>Acceso gratuito</span></li>
-            {MOSTRAR_PAGO && <li className="stair-group stair-group-paid"><span>Formación adicional de pago</span></li>}
+            <li className="stair-group stair-group-free"><span>{c.espaciosGrupoGratis}</span></li>
+            {c.espaciosMostrarPago && <li className="stair-group stair-group-paid"><span>{c.espaciosGrupoPago}</span></li>}
           </ul>
         </div>
       </section>
 
       <section className="section invite" aria-labelledby="invite-title">
         <div className="wrap invite-inner" data-reveal>
-          <h2 id="invite-title">Comienza tu formación desde cero</h2>
-          <p>No importa si nunca has abierto una gráfica.</p>
-          <p>Aquí encontrarás una formación organizada para aprender a comprender el mercado, desarrollar tu propio análisis y avanzar a tu ritmo.</p>
-          <Link href="/registro" className="btn btn-gold btn-lg">Quiero aprender con Diana <ArrowRight size={20} aria-hidden="true" /></Link>
-          <p className="cta-note">Crea tu cuenta gratis y descubre tu ruta de aprendizaje.</p>
+          <h2 id="invite-title">{c.invitacionTitulo}</h2>
+          <Parrafos texto={c.invitacionTexto} />
+          <Link href="/registro" className="btn btn-gold btn-lg">{g.botonPrincipal} <ArrowRight size={20} aria-hidden="true" /></Link>
+          <p className="cta-note">{g.notaBoton}</p>
         </div>
       </section>
 

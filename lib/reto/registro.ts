@@ -1,9 +1,10 @@
 /*
  * Registro de intentos del Reto de la Gráfica.
- * Por ahora se guarda en este navegador. La forma de los datos es la misma que tendrá la
- * base de datos (una fila por intento y una por respuesta), para conectarla sin cambios.
+ * Se guarda en este navegador y, si Supabase está configurado, también en la base de datos
+ * (función `reto_guardar`): así la administración ve los resultados de visitantes y alumnos.
  */
 import { CATEGORIAS, TOTAL_PUNTOS, dominada, nivelDe, type Categoria } from '@/data/reto';
+import { supabaseNavegador } from '@/lib/supabase/cliente';
 
 export interface Respuesta {
   categoria: Categoria;
@@ -35,6 +36,16 @@ function guardar(intentos: Intento[]) {
   try { localStorage.setItem(KEY, JSON.stringify(intentos)); } catch {}
 }
 
+/** Envía el intento a Supabase sin bloquear el juego (si falla, queda guardado en el navegador). */
+function sincronizar(intento: Intento | undefined) {
+  const sb = supabaseNavegador();
+  if (!sb || !intento) return;
+  void sb.rpc('reto_guardar', { p: intento }).then(({ error }) => { if (error) console.warn('No se pudo guardar el reto', error.message); });
+}
+
+/** Identificadores de los intentos hechos en este navegador (para pasarlos a la cuenta al registrarse). */
+export const idsLocales = () => leerIntentos().map(i => i.id);
+
 export function iniciarIntento(experiencia: string): Intento {
   const previos = leerIntentos();
   // Al repetir, se usa la otra versión de los ejercicios.
@@ -42,11 +53,14 @@ export function iniciarIntento(experiencia: string): Intento {
   const version = ultima === undefined ? 0 : 1 - ultima;
   const intento: Intento = { id: crypto.randomUUID(), version, experiencia, inicio: new Date().toISOString(), completo: false, respuestas: [] };
   guardar([...previos, intento]);
+  sincronizar(intento);
   return intento;
 }
 
 export function registrarRespuesta(id: string, r: Respuesta) {
-  guardar(leerIntentos().map(i => i.id === id ? { ...i, respuestas: [...i.respuestas.filter(x => x.item !== r.item), r] } : i));
+  const intentos = leerIntentos().map(i => i.id === id ? { ...i, respuestas: [...i.respuestas.filter(x => x.item !== r.item), r] } : i);
+  guardar(intentos);
+  sincronizar(intentos.find(i => i.id === id));
 }
 
 export function resumir(respuestas: Respuesta[]) {
@@ -67,6 +81,7 @@ export function finalizarIntento(id: string) {
     final = { ...i, completo: true, fin: new Date().toISOString(), puntaje: r.puntaje, nivel: r.nivel.nombre, porCategoria: r.porCategoria };
     return final;
   }));
+  sincronizar(final);
   return final;
 }
 

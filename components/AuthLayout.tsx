@@ -1,18 +1,21 @@
 import Image from 'next/image';
 import Brand from './Brand';
+import { getContenido } from '@/lib/contenido';
+import { Parrafos } from '@/lib/contenido/texto';
 
-export default function AuthLayout({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+export default async function AuthLayout({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+  const { acceso, global: g } = await getContenido();
   return <main className="auth">
     <div className="auth-panel">
-      <Brand />
+      <Brand logo={g.logo} nombre={g.nombreSitio} />
       <div className="auth-box">
         <h1>{title}</h1>
-        <p className="auth-sub">{subtitle}</p>
+        <div className="auth-sub"><Parrafos texto={subtitle} /></div>
         {children}
       </div>
     </div>
     <div className="auth-visual" aria-hidden="true">
-      <Image src="/fotos/diana-chaleco-verde.webp" alt="" fill sizes="50vw" />
+      <Image src={acceso.foto} alt="" fill sizes="50vw" />
     </div>
   </main>;
 }
