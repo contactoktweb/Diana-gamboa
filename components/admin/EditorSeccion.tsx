@@ -108,7 +108,7 @@ function CampoEditor({ campo: c, valor, onChange }: { campo: Campo; valor: unkno
     case 'imagen':
     case 'archivo':
       return <div className="editor-campo"><span className="editor-etiqueta">{c.etiqueta}</span>
-        <SubirArchivo tipo={c.tipo} valor={texto} onChange={onChange} />{ayuda}</div>;
+        <SubirArchivo tipo={c.tipo} valor={texto} onChange={onChange} oscuro={c.clave === 'logoClaro'} />{ayuda}</div>;
     case 'lista':
       return <EditorLista campo={c} valor={Array.isArray(valor) ? valor as Datos[] : []} onChange={onChange} />;
     default:

@@ -873,3 +873,4 @@ button{font:inherit;cursor:pointer}
   .editor-estado{min-width:0;flex-basis:100%}
   .editor-barra .btn-green{flex:1}
 }
+.subir-vista.es-oscuro{background:var(--green-900);padding:10px}

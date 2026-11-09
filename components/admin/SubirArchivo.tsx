@@ -8,7 +8,7 @@ import { BUCKET } from '@/lib/supabase/config';
 const MAX_MB = 20;
 
 /** Sube una imagen o un archivo a Supabase Storage y devuelve su dirección pública. */
-export default function SubirArchivo({ tipo, valor, onChange }: { tipo: 'imagen' | 'archivo'; valor: string; onChange: (url: string) => void }) {
+export default function SubirArchivo({ tipo, valor, onChange, oscuro }: { tipo: 'imagen' | 'archivo'; valor: string; onChange: (url: string) => void; oscuro?: boolean }) {
   const input = useRef<HTMLInputElement>(null);
   const [estado, setEstado] = useState<'' | 'subiendo' | string>('');
 
@@ -29,7 +29,7 @@ export default function SubirArchivo({ tipo, valor, onChange }: { tipo: 'imagen'
   return <div className="subir">
     {valor && (tipo === 'imagen'
       // eslint-disable-next-line @next/next/no-img-element
-      ? <img src={valor} alt="" className="subir-vista" />
+      ? <img src={valor} alt="" className={`subir-vista ${oscuro ? 'es-oscuro' : ''}`} />
       : <a href={valor} target="_blank" rel="noopener noreferrer" className="subir-archivo"><FileText size={20} aria-hidden="true" /> {nombreArchivo}</a>)}
     <div className="subir-acciones">
       <button type="button" className="btn btn-outline btn-sm" onClick={() => input.current?.click()} disabled={estado === 'subiendo'}>
