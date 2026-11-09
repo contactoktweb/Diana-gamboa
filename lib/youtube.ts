@@ -15,3 +15,11 @@ export function parseYouTube(url: string) {
     return null;
   }
 }
+
+/** Dirección de la consulta pública de YouTube (oEmbed) que da el título y la miniatura de un video o una playlist. */
+export function urlOEmbed(url: string) {
+  const yt = parseYouTube(url);
+  if (!yt) return null;
+  const canonica = yt.listId && !yt.videoId ? `https://www.youtube.com/playlist?list=${yt.listId}` : url.trim();
+  return `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(canonica)}`;
+}

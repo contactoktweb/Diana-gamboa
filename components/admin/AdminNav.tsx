@@ -4,12 +4,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { BookOpen, ExternalLink, FilePenLine, LayoutDashboard, LogOut, Mail, Menu, Trophy, Users, X } from 'lucide-react';
+import { BookOpen, ExternalLink, FilePenLine, LayoutDashboard, LogOut, Mail, Menu, MonitorPlay, Trophy, Users, X } from 'lucide-react';
 import { supabaseNavegador } from '@/lib/supabase/cliente';
 
 const ENLACES = [
   { href: '/admin', texto: 'Resumen', icono: LayoutDashboard },
   { href: '/admin/contenido', texto: 'Contenido de la web', icono: FilePenLine },
+  { href: '/admin/academia', texto: 'Clases y recursos', icono: MonitorPlay },
   { href: '/admin/alumnos', texto: 'Alumnos', icono: Users },
   { href: '/admin/reto', texto: 'Resultados del Reto', icono: Trophy },
   { href: '/admin/correos', texto: 'Correos', icono: Mail },

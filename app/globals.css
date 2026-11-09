@@ -905,3 +905,64 @@ button{font:inherit;cursor:pointer}
 }
 .reto-tabla td[data-titulo="Duración"],.reto-tabla td:last-child .btn{white-space:nowrap}
 .reto-tabla td[data-titulo="Fecha"]{min-width:110px}
+
+/* Clases y recursos (administración) */
+.gestor{display:grid;gap:14px}
+.gestor-cabeza{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.gestor-cabeza h2{margin:0 0 4px}
+.gestor-lista{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.gestor-serie,.gestor-recurso{border:1px solid var(--line);border-radius:16px;background:var(--white)}
+.gestor-serie.es-oculta{background:#F6F7F6}
+.gestor-serie.es-oculta .gestor-titulo strong{color:#8A938E}
+.gestor-fila{display:flex;align-items:center;gap:12px;padding:12px 14px}
+.gestor-recurso .gestor-fila{align-items:flex-start}
+.gestor-num{font-weight:700;color:var(--gold);min-width:26px;font-size:1.05rem}
+.gestor-titulo{flex:1;min-width:0;display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:10px;text-align:left;background:none;border:0;padding:4px 0;cursor:pointer;font:inherit;color:inherit}
+.gestor-titulo strong{color:var(--green-900);font-size:1.02rem}
+.gestor-titulo small{grid-column:1;color:var(--muted);font-size:.86rem}
+.gestor-flecha{grid-column:2;grid-row:1/span 2;color:var(--muted);transition:transform .2s}
+.gestor-titulo[aria-expanded="true"] .gestor-flecha{transform:rotate(180deg)}
+.gestor-botones{display:flex;gap:6px;flex-shrink:0}
+.gestor-botones.es-vertical{flex-direction:column}
+.gestor-botones button{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line);background:var(--white);color:var(--green-900);cursor:pointer}
+.gestor-botones button:hover:not(:disabled){border-color:var(--green-900)}
+.gestor-botones button:disabled{opacity:.35;cursor:default}
+.gestor-botones button.es-peligro,.btn.es-peligro{color:#A23B2A}
+.gestor-detalle{border-top:1px solid #EEF1EF;padding:16px 14px 14px;display:grid;gap:16px}
+.gestor-campos{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.gestor-campos .gestor-ancho{grid-column:1/-1}
+.gestor-videos{display:grid;gap:10px}
+.gestor-videos h3{margin:0;font-size:1rem;color:var(--green-900)}
+.gestor-video{display:flex;gap:12px;align-items:flex-start;padding:10px;border:1px solid #EEF1EF;border-radius:14px;background:#FAFBFA}
+.gestor-mini{width:120px;aspect-ratio:16/9;object-fit:cover;border-radius:10px;flex-shrink:0;background:#E3E8E5}
+.gestor-mini.es-vacia{display:grid;place-items:center;color:var(--green-900)}
+.gestor-video-datos{flex:1;min-width:0;display:grid;gap:6px}
+.gestor-video-datos input,.gestor-video-datos textarea{width:100%;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--white)}
+.gestor-video-datos input{font-weight:700;color:var(--green-900)}
+.gestor-video-datos small{display:flex;align-items:center;gap:4px;flex-wrap:wrap;color:var(--muted)}
+.gestor-video-datos small a{color:var(--green-900)}
+.gestor-agregar{display:grid;gap:10px;padding:14px;border:1.5px dashed var(--line);border-radius:14px}
+.gestor-agregar h4{margin:0;display:flex;align-items:center;gap:6px;color:var(--green-900)}
+.gestor-agregar .btn{justify-self:start}
+.gestor-pie{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.gestor-recurso-datos{flex:1;min-width:0;display:grid;gap:10px}
+.gestor-recurso-archivo{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
+.gestor-recurso-archivo .editor-campo:first-child{width:110px}
+.gestor-guardar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:16px;background:var(--white);border:1px solid var(--line);box-shadow:0 8px 24px rgba(15,65,49,.08)}
+.gestor-guardar p{margin:0;color:var(--muted)}
+.gestor-guardar.es-sucio{position:sticky;bottom:12px;z-index:5;border-color:var(--gold)}
+.gestor-guardar.es-sucio p{color:#7A5E0E;font-weight:600}
+.gestor-guardar .es-ok{color:#176244;font-weight:600}
+.gestor-guardar .es-error{color:#A23B2A;font-weight:600}
+@media (max-width:640px){
+  .gestor-fila{flex-wrap:wrap}
+  .gestor-serie .gestor-titulo{flex-basis:calc(100% - 50px)}
+  .gestor-serie .gestor-botones{margin-left:38px}
+  .gestor-video{flex-wrap:wrap}
+  .gestor-mini{width:100%}
+  .gestor-video .gestor-botones{width:100%;justify-content:flex-end}
+  .gestor-recurso .gestor-fila{flex-direction:column}
+  .gestor-botones.es-vertical{flex-direction:row;align-self:flex-end}
+}
+.gestor-previa{display:flex;gap:12px;align-items:center}
+.gestor-previa .admin-nota{margin:0}

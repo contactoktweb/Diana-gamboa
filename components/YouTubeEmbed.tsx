@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Play } from 'lucide-react';
 
 /* Carga el reproductor de YouTube solo al pulsar, para que el portal sea rápido. */
-export default function YouTubeEmbed({ videoId, listId, title }: { videoId: string; listId?: string; title: string }) {
+export default function YouTubeEmbed({ videoId, listId, title, poster }: { videoId: string; listId?: string; title: string; poster?: string }) {
   const [play, setPlay] = useState(false);
   const src = `https://www.youtube-nocookie.com/embed/${listId ? `videoseries?list=${listId}&` : `${videoId}?`}autoplay=1&rel=0`;
   return <div className="video">
@@ -14,6 +14,9 @@ export default function YouTubeEmbed({ videoId, listId, title }: { videoId: stri
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {videoId && <img src={`https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`} alt="" loading="lazy"
           onError={ev => { const img = ev.currentTarget; if (!img.src.includes('hqdefault')) img.src = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`; }} />}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {!videoId && poster && <img src={poster.replace('hqdefault', 'maxresdefault')} alt="" loading="lazy"
+          onError={ev => { const img = ev.currentTarget; if (img.src !== poster) img.src = poster; }} />}
         <span className="video-play"><Play size={30} fill="currentColor" aria-hidden="true" /></span>
       </button>}
   </div>;

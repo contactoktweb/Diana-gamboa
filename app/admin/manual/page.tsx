@@ -102,14 +102,16 @@ export default function ManualPage() {
         <dd>Contenido de la web › <strong>Información general</strong> › «Contacto y redes oficiales». Los avisos de estafas usan estos mismos datos.</dd>
         <dt>Cambiar el texto del botón «Quiero aprender con Diana»</dt>
         <dd>Información general › «Texto del botón principal de registro». Cambia en todos los botones de la web a la vez.</dd>
-        <dt>Añadir un video a una serie</dt>
-        <dd>Contenido de la web › <strong>Series y videos</strong> › abre la tarjeta de la serie › «Videos o listas de YouTube» › «Añadir video». Pega el enlace de YouTube (si incluye <code>list=</code>, se muestra la lista completa).</dd>
+        <dt>Añadir una playlist o un video a una serie</dt>
+        <dd>Menú › <strong>Clases y recursos</strong> › pulsa la serie para abrirla › «Añadir video o playlist»: pega el enlace de YouTube, escribe un título y pulsa «Añadir». Después, <strong>Guardar y publicar</strong>. Si el enlace es de una playlist, los alumnos ven la lista completa.</dd>
+        <dt>Cambiar el orden de las series o de los videos</dt>
+        <dd>Clases y recursos › usa las flechas ↑ ↓ junto a cada serie o video. Los números de las tarjetas se actualizan solos. Al terminar, <strong>Guardar y publicar</strong>.</dd>
         <dt>Crear una serie nueva</dt>
-        <dd>Series y videos › «Añadir tarjeta». Escribe el título, el número, un identificador sin espacios (por ejemplo <code>estrategia</code>), elige el grupo y el ícono, marca «Visible» y añade sus videos.</dd>
+        <dd>Clases y recursos › «Nueva serie» › escribe el nombre. Aparece abierta para que añadas su resumen y sus playlists.</dd>
         <dt>Ocultar una serie sin borrarla</dt>
-        <dd>Series y videos › abre la tarjeta › desmarca «Visible para los alumnos».</dd>
-        <dt>Publicar un PDF en la Biblioteca</dt>
-        <dd>Contenido de la web › <strong>Biblioteca de recursos</strong> › abre el recurso › «Subir archivo». El botón cambia de «Próximamente» a «Descargar». <strong>El primer recurso es también el regalo de bienvenida</strong> del portal.</dd>
+        <dd>Clases y recursos › pulsa el ojo junto a la serie. Vuelve a pulsarlo para mostrarla.</dd>
+        <dt>Subir un PDF a la Biblioteca</dt>
+        <dd>Clases y recursos › «PDF y recursos» › «Subir archivo» en el recurso (o «Nuevo recurso» para uno nuevo) › Guardar y publicar. El botón del portal cambia de «Próximamente» a «Descargar». <strong>El primer recurso es también el regalo de bienvenida</strong>; usa las flechas para cambiar el orden.</dd>
         <dt>Abrir la membresía del Salón</dt>
         <dd>Contenido de la web › <strong>Salón y Cursos</strong> › «Enlace de la membresía»: pega el enlace oficial (por ejemplo, el de membresías de YouTube). Mientras esté vacío, se muestra «Próximamente».</dd>
         <dt>Publicar los cursos</dt>

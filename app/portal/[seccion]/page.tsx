@@ -8,7 +8,7 @@ import { EnlaceDescarga, Visita } from '@/components/Rastreo';
 import { getContenido } from '@/lib/contenido';
 import { Parrafos } from '@/lib/contenido/texto';
 import { Icono } from '@/lib/iconos';
-import { parseYouTube } from '@/lib/youtube';
+import { parseYouTube, urlOEmbed } from '@/lib/youtube';
 
 type Props = { params: Promise<{ seccion: string }> };
 
@@ -26,6 +26,13 @@ export default async function SeccionPage({ params }: Props) {
   const index = ruta.findIndex(r => r.slug === seccion);
   if (index < 0) notFound();
   const s = ruta[index];
+  // Las playlists pegadas sin video inicial toman su portada de YouTube (se guarda un día).
+  const portadas = await Promise.all(s.videos.map(async v => {
+    const yt = parseYouTube(v.url);
+    const u = yt && !yt.videoId ? urlOEmbed(v.url) : null;
+    if (!u) return undefined;
+    try { const r = await fetch(u, { next: { revalidate: 86400 } }); return r.ok ? ((await r.json()).thumbnail_url as string) : undefined; } catch { return undefined; }
+  }));
   const next = ruta[index + 1];
   const prev = ruta[index - 1];
 
@@ -55,8 +62,9 @@ export default async function SeccionPage({ params }: Props) {
 
       {s.videos.map((v, i) => {
         const yt = parseYouTube(v.url);
+        const poster = yt && !yt.videoId ? portadas[i] : undefined;
         return <section className="lesson-block serie" data-reveal key={i} aria-labelledby={`serie-${i}`}>
-          <div className="serie-video">{yt ? <YouTubeEmbed videoId={yt.videoId} listId={yt.listId} title={v.titulo} /> : null}</div>
+          <div className="serie-video">{yt ? <YouTubeEmbed videoId={yt.videoId} listId={yt.listId} title={v.titulo} poster={poster} /> : null}</div>
           <div className="serie-info">
             <h2 id={`serie-${i}`}>{v.titulo}</h2>
             <Parrafos texto={v.descripcion} />
