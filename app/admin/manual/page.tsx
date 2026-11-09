@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Download } from 'lucide-react';
 import { NIVELES } from '@/data/reto';
 
 const INDICE = [
@@ -18,6 +19,7 @@ export default function ManualPage() {
     <header className="admin-cabecera">
       <h1>Manual de uso</h1>
       <p>Todo lo que necesitas para administrar la academia sin conocimientos técnicos.</p>
+      <p><a className="btn btn-green btn-sm" href="/manual-administracion.pdf" download="Manual de administración - Diana Gamboa.pdf"><Download size={16} aria-hidden="true" /> Descargar el manual en PDF</a></p>
     </header>
 
     <nav className="manual-indice" aria-label="Índice del manual">
