@@ -235,7 +235,7 @@ button{font:inherit;cursor:pointer}
 
 /* ---------- Páginas legales ---------- */
 .legal{max-width:760px}
-.legal p{margin-top:16px;color:var(--muted)}
+.legal p{margin-top:16px;color:var(--muted);white-space:pre-line}
 
 /* ---------- Portal ---------- */
 .portal{background:var(--paper);min-height:100vh;display:flex;flex-direction:column}
