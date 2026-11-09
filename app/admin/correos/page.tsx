@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { CheckCircle2, CircleAlert, Download } from 'lucide-react';
 import CopiarTexto from '@/components/admin/CopiarTexto';
-import { correoConfirmacion, correoInvitacionAdmin, correoProvisional, correoRecuperacion } from '@/lib/correo/plantillas';
+import { correoBienvenida, correoConfirmacion, correoInvitacionAdmin, correoProvisional, correoRecuperacion } from '@/lib/correo/plantillas';
 import { envioPropio, REMITENTE } from '@/lib/correo/enviar';
 import { getContenido } from '@/lib/contenido';
 import { supabaseServidor } from '@/lib/supabase/servidor';
@@ -18,7 +18,8 @@ export default async function CorreosPage() {
   }
   const ejemplo = `${sitio}/ingresar`;
   const correos = [
-    { nombre: 'Confirmación de correo', cuando: 'Cuando alguien crea su cuenta.', ...correoConfirmacion({ sitio, nombre: 'María', enlace: ejemplo }) },
+    { nombre: 'Bienvenida', cuando: 'Cuando alguien crea su cuenta y la confirmación de correo está desactivada en Supabase (entra de inmediato).', ...correoBienvenida({ sitio, nombre: 'María' }) },
+    { nombre: 'Confirmación de correo', cuando: 'Cuando alguien crea su cuenta, solo si la confirmación de correo está activada en Supabase.', ...correoConfirmacion({ sitio, nombre: 'María', enlace: ejemplo }) },
     { nombre: 'Recuperación de contraseña', cuando: 'Cuando un alumno pulsa «¿Olvidaste tu contraseña?».', ...correoRecuperacion({ sitio, nombre: 'María', enlace: ejemplo }) },
     { nombre: 'Contraseña provisional', cuando: 'Cuando creas un alumno desde «Alumnos › Crear alumno».', ...correoProvisional({ sitio, nombre: 'María', correo: 'maria@ejemplo.com', clave: 'Kp7mR4wZq2' }) },
     { nombre: 'Invitación de administración', cuando: 'Para que la administradora cree su contraseña.', ...correoInvitacionAdmin({ sitio, nombre: 'Diana', enlace: ejemplo }) },

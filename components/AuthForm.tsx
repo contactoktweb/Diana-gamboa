@@ -8,7 +8,7 @@ import { guardarNombre, leerNombre, nombreDesdeCorreo, primerNombre } from '@/li
 import { supabaseNavegador } from '@/lib/supabase/cliente';
 import { traducirError } from '@/lib/supabase/errores';
 import { idsLocales } from '@/lib/reto/registro';
-import { recuperar, registrar } from '@/app/acceso/acciones';
+import { confirmarPendiente, recuperar, registrar } from '@/app/acceso/acciones';
 
 type Mode = 'registro' | 'ingresar' | 'recuperar' | 'nueva-clave';
 
@@ -66,7 +66,11 @@ export default function AuthForm({ mode, confirmacion, envioPropio = false }: { 
         if (envioPropio) {
           const r = await registrar({ nombre, correo, clave, novedades, next });
           if (!r.ok) throw new Aviso(r.error);
-          setEnviado(true);
+          if (r.entrar) {
+            const { error: e } = await sb.auth.signInWithPassword({ email: correo, password: clave });
+            if (e) throw e;
+            await entrar(next);
+          } else setEnviado(true);
         } else {
           const { data: r, error: e } = await sb.auth.signUp({
             email: correo, password: clave,
@@ -81,11 +85,15 @@ export default function AuthForm({ mode, confirmacion, envioPropio = false }: { 
           if (r.session) await entrar(next); else setEnviado(true);
         }
       } else if (mode === 'ingresar') {
-        const { data: r, error: e } = await sb.auth.signInWithPassword({ email: correo, password: clave });
+        let { data: r, error: e } = await sb.auth.signInWithPassword({ email: correo, password: clave });
+        // Cuenta antigua sin confirmar: si la confirmación ya no se exige, se confirma y se reintenta.
+        if (e && /not confirmed/i.test(e.message) && envioPropio && (await confirmarPendiente(correo)).ok) {
+          ({ data: r, error: e } = await sb.auth.signInWithPassword({ email: correo, password: clave }));
+        }
         if (e) throw e;
         // Cuenta creada con contraseña provisional: primero debe crear la suya.
-        if (r.user.user_metadata?.debe_cambiar_clave) { await entrar('/nueva-clave?primera=1'); return; }
-        const { data: perfil } = await sb.from('perfiles').select('rol').eq('id', r.user.id).maybeSingle();
+        if (r.user!.user_metadata?.debe_cambiar_clave) { await entrar('/nueva-clave?primera=1'); return; }
+        const { data: perfil } = await sb.from('perfiles').select('rol').eq('id', r.user!.id).maybeSingle();
         await entrar(params.get('next') ? next : perfil?.rol === 'admin' ? '/admin' : '/portal');
       } else if (mode === 'recuperar') {
         if (envioPropio) {

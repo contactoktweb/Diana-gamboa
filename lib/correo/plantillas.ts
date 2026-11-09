@@ -106,3 +106,14 @@ export function correoInvitacionAdmin({ sitio, nombre, enlace }: { sitio: string
     texto: textoPlano(titulo, parrafos, [`Crea tu contraseña aquí: ${enlace}`]),
   };
 }
+
+export function correoBienvenida({ sitio, nombre }: { sitio: string; nombre: string }) {
+  const titulo = `¡Bienvenido a tu academia, ${nombre}!`;
+  const enlace = `${sitio}/portal`;
+  const parrafos = ['Tu cuenta ya está lista. En tu <strong>Portal del Alumno</strong> encontrarás tus clases organizadas, los lives y la biblioteca de recursos para comenzar desde cero.', 'Te recomendamos empezar por el <strong>Reto de la Gráfica</strong>: en pocos minutos descubrirás tu nivel y la ruta de aprendizaje ideal para ti.'];
+  return {
+    asunto: 'Bienvenido a la Academia Diana Gamboa',
+    html: marco({ sitio, previa: 'Tu cuenta está lista. Entra a tu Portal del Alumno.', etiqueta: 'Tu cuenta está lista', titulo, parrafos, boton: { texto: 'Entrar a mi portal', enlace }, nota: 'Entra siempre con tu correo y la contraseña que creaste. Si la olvidas, usa «¿Olvidaste tu contraseña?».' }),
+    texto: textoPlano(titulo, parrafos, [`Entra a tu portal: ${enlace}`]),
+  };
+}
