@@ -3,6 +3,7 @@ import { Download } from 'lucide-react';
 import { CATEGORIAS, NIVELES, type Categoria } from '@/data/reto';
 import { getContenido } from '@/lib/contenido';
 import { supabaseServidor } from '@/lib/supabase/servidor';
+import { nombreItem } from '@/lib/reto/nombres';
 
 interface Resumen {
   alumnos: number; alumnos_7d: number; alumnos_30d: number; novedades: number;
@@ -17,18 +18,6 @@ interface Resumen {
 }
 
 const VACIO: Resumen = { alumnos: 0, alumnos_7d: 0, alumnos_30d: 0, novedades: 0, retos_completos: 0, retos_abandonados: 0, alumnos_con_reto: 0, visitantes_con_reto: 0, niveles: {}, categorias: {}, items: [], experiencia: [], visitas: [], descargas: [], registros_semana: [] };
-
-/** Nombre legible de cada pregunta del reto (por ejemplo «velas-bajista-cierre»). */
-function nombreItem(item: string) {
-  const p = item.split('-');
-  const parte: Record<string, string> = { apertura: 'apertura', cierre: 'cierre', maximo: 'máximo', minimo: 'mínimo' };
-  if (p[0] === 'velas') return `Vela ${p[1]}: ${parte[p[2]] ?? p[2]}`;
-  if (p[0] === 'movimiento') return `Movimiento ${p[2]} (ejercicio ${p[1]})`;
-  if (p[0] === 'tendencia') return `Línea de tendencia ${p[1]}`;
-  if (p[0] === 'niveles') return `Nivel de ${p[1]}`;
-  const medias: Record<string, string> = { 'medias-mas-rapida': 'Media más rápida', 'medias-identifica-ema8': 'Identificar la EMA 8', 'medias-identifica-ema21': 'Identificar la EMA 21', 'medias-identifica-ema21-b': 'Identificar la EMA 21 (2.ª gráfica)', 'medias-lectura': 'Lectura de las medias' };
-  return medias[item] ?? item;
-}
 
 /** Barras horizontales de una sola serie: el valor siempre escrito junto a la barra. */
 function Barras({ filas, sufijo = '', vacio }: { filas: { etiqueta: string; valor: number; detalle?: string }[]; sufijo?: string; vacio: string }) {

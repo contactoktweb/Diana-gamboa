@@ -148,6 +148,15 @@ export default function ManualPage() {
       <p>Cinco retos con 20 respuestas: velas (8), movimiento del precio (3), líneas de tendencia (2), niveles (2) y medias móviles (5). Solo puntúa el <strong>primer intento</strong> de cada pregunta. Niveles:</p>
       <ul>{NIVELES.map(n => <li key={n.nombre}><strong>{n.nombre}</strong> ({n.min}–{n.max} puntos): {n.mensaje}</li>)}</ul>
       <p>Lo pueden hacer visitantes sin cuenta y alumnos. Si un visitante se registra después desde el mismo dispositivo, su resultado pasa a su cuenta. Se conserva el primer resultado (nivel inicial) y los siguientes muestran su progreso.</p>
+      <h3>Ver los resultados</h3>
+      <ol>
+        <li>Entra a <strong>Resultados del Reto</strong> en el menú. Verás cada partida: fecha, persona (o «Visitante sin cuenta»), puntaje sobre 20, nivel, aciertos por tema y cuánto tardó.</li>
+        <li>Filtra por nombre o correo, por alumnos o visitantes, por nivel, por fechas o por partidas sin terminar.</li>
+        <li>Pulsa <strong>Ver respuestas</strong> para ver la partida pregunta por pregunta (si acertó a la primera y cuántos intentos necesitó) y todas las partidas de esa persona.</li>
+        <li>Desde <strong>Alumnos</strong>, el enlace «Ver sus retos» bajo el nivel inicial lleva directo a los retos de ese alumno.</li>
+        <li>Para trabajar en Excel, pulsa <strong>Descargar detalle (Excel)</strong>.</li>
+      </ol>
+      <p>Todo se guarda automáticamente mientras la persona juega: si abandona a la mitad, la partida aparece como «Sin terminar».</p>
     </section>
 
     <section id="privacidad">

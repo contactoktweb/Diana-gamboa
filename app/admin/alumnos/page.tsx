@@ -63,7 +63,7 @@ export default async function AlumnosPage({ searchParams }: Props) {
           <td data-titulo="Nombre"><strong>{a.nombre}</strong>{a.rol === 'admin' && <span className="admin-insignia">Administración</span>}{a.pais && <small>{a.pais}</small>}</td>
           <td data-titulo="Correo"><a href={`mailto:${a.correo}`}>{a.correo}</a></td>
           <td data-titulo="Registro">{fecha(a.creado_en)}</td>
-          <td data-titulo="Nivel inicial">{a.primer_nivel ? `${a.primer_nivel} (${a.primer_puntaje}/20)` : <span className="admin-tenue">Sin reto</span>}</td>
+          <td data-titulo="Nivel inicial">{a.primer_nivel ? <>{a.primer_nivel} ({a.primer_puntaje}/20)<small><a href={`/admin/reto?usuario=${a.id}&estado=todos`}>Ver {a.retos_completos === 1 ? 'su reto' : `sus ${a.retos_completos} retos`}</a></small></> : <span className="admin-tenue">Sin reto</span>}</td>
           <td data-titulo="Nivel actual">{a.ultimo_nivel && a.retos_completos > 1 ? `${a.ultimo_nivel} (${a.ultimo_puntaje}/20)` : <span className="admin-tenue">—</span>}</td>
           <td data-titulo="Novedades">{a.acepta_novedades ? 'Sí' : 'No'}</td>
           <td><AccionesAlumno id={a.id} nombre={a.nombre} esAdmin={a.rol === 'admin'} /></td>

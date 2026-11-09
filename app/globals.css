@@ -881,3 +881,27 @@ button{font:inherit;cursor:pointer}
 .correos-estado svg{flex:none;margin-top:2px}
 .correos-estado.es-ok{background:#E3F4EC;color:#13573A}
 .correos-estado.es-pendiente{background:#FFF5DE;color:#7C5A06}
+
+/* Resultados del Reto (administración) */
+.reto-puntaje{font-size:.95rem;color:var(--muted);white-space:nowrap}
+.reto-puntaje strong{font-size:1.35rem;color:var(--green-900)}
+.admin-insignia.es-pendiente{margin-left:0;background:#F3EBD2;color:#7A5E0E}
+.reto-temas{list-style:none;margin:0;padding:0;display:grid;gap:2px;font-size:.85rem;min-width:200px}
+.reto-temas li{display:flex;justify-content:space-between;gap:10px}
+.reto-temas span{color:var(--muted)}
+.reto-tabla td[data-titulo="Persona"] small{display:block}
+.reto-resultado{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:.9rem}
+.reto-resultado.es-ok{color:#176244}
+.reto-resultado.es-fallo{color:#A23B2A}
+.reto-historial{list-style:none;margin:0;padding:0;display:grid}
+.reto-historial li{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid #EEF1EF}
+.reto-historial span{color:var(--muted)}
+.admin-volver{display:inline-flex;align-items:center;gap:6px;color:var(--green-900);font-weight:600;text-decoration:none;margin-bottom:6px}
+.admin-paginas{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px}
+.admin-paginas>span{color:var(--muted);font-size:.92rem}
+@media (max-width:899px){
+  .reto-tabla td[data-titulo="Persona"]::before,.reto-tabla td[data-titulo="Por tema"]::before{content:none}
+  .reto-temas{max-width:320px}
+}
+.reto-tabla td[data-titulo="Duración"],.reto-tabla td:last-child .btn{white-space:nowrap}
+.reto-tabla td[data-titulo="Fecha"]{min-width:110px}

@@ -37,10 +37,13 @@ function guardar(intentos: Intento[]) {
 }
 
 /** Envía el intento a Supabase sin bloquear el juego (si falla, queda guardado en el navegador). */
+// Los envíos van en fila: así la última respuesta nunca llega después del resultado final.
+let cola: Promise<unknown> = Promise.resolve();
 function sincronizar(intento: Intento | undefined) {
   const sb = supabaseNavegador();
   if (!sb || !intento) return;
-  void sb.rpc('reto_guardar', { p: intento }).then(({ error }) => { if (error) console.warn('No se pudo guardar el reto', error.message); });
+  const copia = structuredClone(intento);
+  cola = cola.then(() => sb.rpc('reto_guardar', { p: copia }).then(({ error }) => { if (error) console.warn('No se pudo guardar el reto', error.message); }), () => {});
 }
 
 /** Identificadores de los intentos hechos en este navegador (para pasarlos a la cuenta al registrarse). */

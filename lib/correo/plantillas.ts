@@ -54,6 +54,7 @@ export function marco({ sitio, previa, etiqueta, titulo, parrafos, boton, destac
     </td></tr>
   </table>
   <p style="margin:18px 0 0;font-size:11px;color:#8A938E">«Aprende a leer. Aprende a analizar. Aprende a decidir.»</p>
+  <p style="margin:10px 0 0;font-size:10px;letter-spacing:.5px;color:#A9B0AC">Desarrollado con <span style="color:#CBA52F">&#9829;</span> por K&amp;T</p>
 </td></tr></table>
 </body></html>`;
 }
