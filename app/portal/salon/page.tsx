@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, ChevronRight, Clock3 } from 'lucide-react';
 import { getContenido } from '@/lib/contenido';
 import { Parrafos } from '@/lib/contenido/texto';
@@ -10,6 +11,8 @@ export const metadata: Metadata = { title: 'Salón Diana Gamboa | Portal del Alu
 
 export default async function SalonPage() {
   const { formacion: f } = await getContenido();
+  // Mientras la formación de pago esté oculta, esta página lleva de vuelta al Portal.
+  if (!f.mostrar) redirect('/portal');
   return <>
     <Visita referencia="salon" />
     <section className="lesson-head">

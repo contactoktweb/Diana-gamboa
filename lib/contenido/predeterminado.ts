@@ -235,7 +235,7 @@ export const PREDETERMINADO = {
   },
 
   formacion: {
-    mostrar: true,
+    mostrar: false,
     etiqueta: 'Formación adicional de pago',
     titulo: 'Continúa tu formación con Diana',
     texto: 'Opciones para ampliar tu formación cuando quieras profundizar. No son un requisito para comenzar a estudiar.',

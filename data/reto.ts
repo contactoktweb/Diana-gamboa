@@ -194,9 +194,9 @@ function medias(version: number) {
   const [a, b, d, c] = version === 0 ? [0, 1, 2, 3] : [2, 0, 1, 3];
   const final = version === 0 ? SERIES_MEDIAS[c] : SERIES_MEDIAS[c].map(x => 220 - x);
   return {
-    rapida: { g: grafica(SERIES_MEDIAS[a], 51 + version), ema8Color: version === 0 ? 'blanca' : 'azul' } as const,
-    identificar: { g: grafica(SERIES_MEDIAS[b], 61 + version), ema8Color: version === 0 ? 'azul' : 'blanca' } as const,
-    identificar2: { g: grafica(SERIES_MEDIAS[d], 71 + version), ema8Color: version === 0 ? 'blanca' : 'azul' } as const,
+    rapida: { g: grafica(SERIES_MEDIAS[a], 51 + version), ema8Color: 'blanca' } as const,
+    identificar: { g: grafica(SERIES_MEDIAS[b], 61 + version), ema8Color: 'blanca' } as const,
+    identificar2: { g: grafica(SERIES_MEDIAS[d], 71 + version), ema8Color: 'blanca' } as const,
     lectura: grafica(final, 81 + version),
   };
 }
