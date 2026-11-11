@@ -1,6 +1,6 @@
 'use server';
 
-import { correoBienvenida, correoConfirmacion, correoRecuperacion } from '@/lib/correo/plantillas';
+import { correoConfirmacion, correoRecuperacion } from '@/lib/correo/plantillas';
 import { SUPABASE_KEY, SUPABASE_URL } from '@/lib/supabase/config';
 import { enviarCorreo, envioPropio } from '@/lib/correo/enviar';
 import { supabaseAdmin } from '@/lib/supabase/admin';
@@ -31,11 +31,10 @@ export async function registrar(datos: { nombre: string; correo: string; clave: 
   const metadatos = { nombre, acepta_terminos: 'true', acepta_novedades: datos.novedades ? 'true' : 'false' };
   const sitio = await urlDelSitio();
 
-  // Sin confirmación de correo: la cuenta queda lista, entra de inmediato y recibe la bienvenida.
+  // Sin confirmación de correo: la cuenta queda lista y entra de inmediato (sin enviar correos, para no gastar cuota).
   if (await sinConfirmacion()) {
     const { error } = await admin.auth.admin.createUser({ email: correo, password: datos.clave, email_confirm: true, user_metadata: metadatos });
     if (error) return { ok: false, error: traducirError(/already|registered|exists/i.test(error.message) ? 'already registered' : error.message) };
-    try { await enviarCorreo({ para: correo, ...correoBienvenida({ sitio, nombre: nombre.split(' ')[0] }) }); } catch { /* la cuenta ya existe: el correo de bienvenida es opcional */ }
     return { ok: true, entrar: true };
   }
 

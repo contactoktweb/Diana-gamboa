@@ -142,7 +142,7 @@ export default function ManualPage() {
       <h2>6. Correos</h2>
       <ul>
         <li><strong>Lista de novedades:</strong> solo quienes marcaron «Quiero recibir novedades». Descárgala en Excel o CSV para usarla en Mailchimp, Brevo u otra herramienta, o copia todos los correos de una vez.</li>
-        <li><strong>Correos automáticos:</strong> confirmación de correo, recuperación de contraseña, contraseña provisional e invitación de administración. Los envía la academia con Resend, con el diseño de la web. En «Correos» puedes ver cómo se ve cada uno.</li>
+        <li><strong>Correos automáticos:</strong> recuperación de contraseña y contraseña provisional (al crear un alumno). Al registrarse no se envía ningún correo: el alumno entra directo a su portal. Los envía la academia con Resend, con el diseño de la web. En «Correos» puedes ver cómo se ve cada uno.</li>
       </ul>
       <p className="manual-nota">Al escribir a varios alumnos desde tu correo, usa siempre «CCO» (copia oculta).</p>
     </section>
