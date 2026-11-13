@@ -134,3 +134,17 @@ Alternativa sin Resend: Diana se registra en `/registro` y se ejecuta en el SQL 
   `admin_*` que comprueban `es_admin()`. Un alumno no puede cambiar su propio rol.
 - **Reto:** se guarda con la función `reto_guardar` (también para visitantes sin cuenta) y se vincula a la
   cuenta con `reto_vincular` al registrarse en el mismo navegador.
+
+## Eventos privados y pagos con Stripe
+
+1. **Base de datos:** ejecuta [`supabase/eventos.sql`](../supabase/eventos.sql) en el SQL Editor de Supabase (crea los eventos,
+   las inscripciones y el taller «Antes de Comprar Ese Call o Ese Put»). Se puede ejecutar varias veces.
+2. **Clave de Stripe:** Stripe → Developers → API keys → *Secret key*. Súbela a Vercel como `STRIPE_SECRET_KEY`.
+3. **Avisos de pago (webhook):** Stripe → Developers → Webhooks → *Add destination*:
+   - Dirección: `https://www.dianagamboa.com/api/stripe/webhook`
+   - Eventos: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired`, `charge.refunded`
+   - Copia el *Signing secret* (`whsec_…`) y súbelo a Vercel como `STRIPE_WEBHOOK_SECRET`.
+4. Vuelve a desplegar en Vercel.
+
+Sin Stripe configurado, los alumnos pueden preinscribirse y la administración ve sus datos en **Eventos**.
+Recomendado: probar primero con las claves de prueba de Stripe (`sk_test_…`) y la tarjeta `4242 4242 4242 4242`.

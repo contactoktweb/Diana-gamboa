@@ -3,7 +3,7 @@ import SiteFooter from './SiteFooter';
 import { getContenido } from '@/lib/contenido';
 import { Enriquecido, parrafos } from '@/lib/contenido/texto';
 
-export default async function LegalPage({ title, campo }: { title: string; campo: 'terminos' | 'privacidad' }) {
+export default async function LegalPage({ title, campo }: { title: string; campo: 'terminos' | 'privacidad' | 'reembolsos' }) {
   const { legal } = await getContenido();
   return <>
     <SiteHeader />

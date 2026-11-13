@@ -147,8 +147,8 @@ export default function AuthForm({ mode, confirmacion, envioPropio = false }: { 
       {cargando ? 'Un momento…' : mode === 'registro' ? 'Crear mi cuenta gratis' : mode === 'ingresar' ? 'Iniciar sesión' : mode === 'recuperar' ? 'Enviar enlace' : 'Guardar contraseña'} <ArrowRight aria-hidden="true" />
     </button>
     <p className="auth-switch">
-      {mode === 'registro' && <>¿Ya eres alumno? <Link href="/ingresar">Iniciar sesión</Link></>}
-      {mode === 'ingresar' && <>¿Aún no tienes cuenta? <Link href="/registro">Regístrate gratis</Link></>}
+      {mode === 'registro' && <>¿Ya eres alumno? <Link href={params.get('next') ? `/ingresar?next=${encodeURIComponent(next)}` : '/ingresar'}>Iniciar sesión</Link></>}
+      {mode === 'ingresar' && <>¿Aún no tienes cuenta? <Link href={params.get('next') ? `/registro?next=${encodeURIComponent(next)}` : '/registro'}>Regístrate gratis</Link></>}
       {mode === 'recuperar' && <><Link href="/ingresar">Volver a iniciar sesión</Link></>}
     </p>
   </form>;

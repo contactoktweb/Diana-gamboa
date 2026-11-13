@@ -268,11 +268,12 @@ export const SECCIONES: DefSeccion[] = [
     ],
   },
   {
-    id: 'legal', titulo: 'Términos y privacidad', ver: '/privacidad',
+    id: 'legal', titulo: 'Términos, privacidad y reembolsos', ver: '/privacidad',
     descripcion: 'Textos legales de la academia.',
     campos: [
       { clave: 'terminos', etiqueta: 'Términos y condiciones', tipo: 'largo', ayuda: FORMATO + ' Las líneas que empiezan con «# » se muestran como subtítulo.' },
       { clave: 'privacidad', etiqueta: 'Política de privacidad', tipo: 'largo', ayuda: FORMATO + ' Las líneas que empiezan con «# » se muestran como subtítulo.' },
+      { clave: 'reembolsos', etiqueta: 'Política de reembolsos', tipo: 'largo', ayuda: FORMATO + ' Las líneas que empiezan con «# » se muestran como subtítulo.' },
     ],
   },
 ];

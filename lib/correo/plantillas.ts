@@ -117,3 +117,25 @@ export function correoBienvenida({ sitio, nombre }: { sitio: string; nombre: str
     texto: textoPlano(titulo, parrafos, [`Entra a tu portal: ${enlace}`]),
   };
 }
+
+/** Aviso para la administradora: alguien compró un cupo. */
+export function correoNuevoCupo({ sitio, evento, nombre, correo, monto, ocupados, cupos, enlace }: { sitio: string; evento: string; nombre: string; correo: string; monto: string; ocupados: number; cupos: number; enlace: string }) {
+  const titulo = 'Nuevo cupo comprado';
+  const parrafos = [`<strong>${esc(nombre || correo)}</strong> (${esc(correo)}) compró un cupo para <strong>${esc(evento)}</strong>.`, `Pago recibido: <strong>${esc(monto)}</strong>. Cupos ocupados: <strong>${ocupados} de ${cupos}</strong>.`];
+  return {
+    asunto: `Nuevo cupo comprado · ${evento}`,
+    html: marco({ sitio, previa: `${nombre || correo} compró un cupo.`, etiqueta: 'Nueva inscripción', titulo, parrafos, boton: { texto: 'Ver inscritos', enlace }, nota: 'El pago se procesó con Stripe. Puedes ver el detalle del pago en tu panel de Stripe.' }),
+    texto: textoPlano(titulo, parrafos, [`Ver inscritos: ${enlace}`]),
+  };
+}
+
+/** Agradecimiento para la persona que pagó su cupo. */
+export function correoGraciasEvento({ sitio, nombre, evento, fecha, horario, enlace }: { sitio: string; nombre: string; evento: string; fecha: string; horario: string; enlace: string }) {
+  const titulo = `¡Gracias por tu participación${nombre ? `, ${nombre}` : ''}!`;
+  const parrafos = [`Tu pago fue aprobado y ya tienes tu cupo en <strong>${esc(evento)}</strong>.`, `<strong>Fecha:</strong> ${esc(fecha)}${horario ? `<br><strong>Horario:</strong> ${esc(horario)}` : ''}`, 'En tu portal encontrarás toda la información del evento. Antes de la primera clase publicaremos allí el enlace de acceso y te avisaremos por correo.'];
+  return {
+    asunto: `Tu cupo está confirmado · ${evento}`,
+    html: marco({ sitio, previa: 'Tu pago fue aprobado. Ya tienes tu cupo.', etiqueta: 'Inscripción confirmada', titulo, parrafos, boton: { texto: 'Ver el evento en mi portal', enlace }, nota: `Si necesitas pedir un reembolso, revisa la política en ${sitio}/reembolsos.` }),
+    texto: textoPlano(titulo, parrafos, [`Ver el evento: ${enlace}`]),
+  };
+}

@@ -33,6 +33,7 @@ export default async function SiteFooter() {
         <ul>
           <li><Link href="/terminos">Términos y condiciones</Link></li>
           <li><Link href="/privacidad">Política de privacidad</Link></li>
+          <li><Link href="/reembolsos">Política de reembolsos</Link></li>
         </ul>
       </div>
     </div>
