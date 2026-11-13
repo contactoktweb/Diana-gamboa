@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { AlertTriangle, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3 } from 'lucide-react';
 import Inscripcion, { type EstadoUsuario } from '@/components/eventos/Inscripcion';
 import TextoEvento from '@/components/eventos/TextoEvento';
+import HoraLocal from '@/components/eventos/HoraLocal';
 import { Parrafos } from '@/lib/contenido/texto';
 import { supabaseServidor } from '@/lib/supabase/servidor';
 import { getSesion } from '@/lib/sesion';
@@ -65,6 +66,7 @@ export default async function EventoPage({ params, searchParams }: Props) {
         <ul className="evento-datos">
           <li><CalendarDays size={18} aria-hidden="true" /> {fechaEvento(evento)}</li>
           {evento.horario && <li><Clock3 size={18} aria-hidden="true" /> {evento.horario}</li>}
+          {evento.hora_inicio && <HoraLocal iso={evento.hora_inicio} />}
         </ul>
         {q.pago === 'ok' && estado === 'pagada' && <p className="auth-ok evento-aviso" role="status"><CheckCircle2 size={18} aria-hidden="true" /> ¡Pago aprobado! Ya tienes tu cupo. Te enviamos la confirmación por correo.</p>}
         {q.pago === 'ok' && estado !== 'pagada' && <p className="auth-ok evento-aviso" role="status">Estamos confirmando tu pago con Stripe. Si en unos minutos no aparece tu cupo, recarga esta página. {errorPago}</p>}

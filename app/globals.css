@@ -992,7 +992,7 @@ button{font:inherit;cursor:pointer}
 .evento-estado.es-cerrado{background:#EEF1EF;color:var(--muted)}
 .evento-nota{display:flex;gap:8px;align-items:flex-start;color:var(--muted);font-size:.95rem;max-width:40em}
 .evento-nota svg{flex-shrink:0;margin-top:3px}
-.evento-pago{display:grid;gap:12px;width:100%;max-width:520px;background:var(--white);border:1.5px solid var(--gold);border-radius:20px;padding:22px;box-shadow:var(--shadow)}
+.evento-pago{display:grid;gap:14px;width:100%;max-width:880px;background:var(--white);border:1.5px solid var(--gold);border-radius:20px;padding:22px;box-shadow:var(--shadow)}
 .evento-pago-etiqueta{font-family:var(--font-accent);letter-spacing:.14em;text-transform:uppercase;font-size:.8rem;color:var(--green-700)}
 .evento-pago-precio{font-size:2.2rem;font-weight:700;color:var(--green-900);line-height:1.1}
 .evento-pago-precio small{font-size:.95rem;font-weight:400;color:var(--muted)}
@@ -1040,12 +1040,27 @@ button{font:inherit;cursor:pointer}
 }
 
 .evento-estado.es-verificacion{background:#FBF5E3;color:var(--gold-text)}
-.evento-pasos{margin:4px 0 6px;padding-left:22px;display:grid;gap:18px;color:var(--muted)}
-.evento-pasos li{display:grid;gap:10px;justify-items:start;line-height:1.55}
-.evento-pasos strong{color:var(--green-900)}
+.evento-pasos{list-style:none;margin:4px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start}
+.evento-pasos>li{position:relative;display:flex;flex-direction:column;gap:12px;align-items:flex-start;background:var(--cream);border:1px solid var(--line);border-radius:18px;padding:22px 20px 20px}
+.evento-pasos h3{margin:0;font-size:1.15rem;color:var(--green-900);display:flex;align-items:center;min-height:36px;padding-left:48px}
+.evento-pasos p{margin:0;color:var(--muted);line-height:1.55}
+.evento-pasos small{color:var(--muted);font-size:.85rem}
+.evento-paso-num{position:absolute;top:20px;left:20px;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--green-900);color:var(--gold);font-weight:700;font-size:1.05rem}
+.evento-pasos .btn{width:100%;justify-content:center}
+.evento-pasos .evento-archivo{width:100%;justify-content:center;background:var(--white)}
+.evento-campo{width:100%}
+.evento-campo input{width:100%}
+.evento-check{font-size:.92rem}
+.evento-cancelar{justify-self:start}
 .btn.is-disabled{opacity:.55;cursor:not-allowed}
 .evento-archivo{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1.5px dashed var(--line);border-radius:12px;cursor:pointer;color:var(--green-900);font-weight:600;max-width:100%}
-.evento-archivo span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evento-archivo span{overflow-wrap:anywhere;text-align:center}
 .evento-archivo input{position:absolute;width:1px;height:1px;opacity:0}
 .evento-archivo:focus-within{outline:2px solid var(--gold);outline-offset:2px}
 .verif-acciones{display:flex;gap:8px;flex-wrap:wrap}
+.correo-pago{display:block;margin-top:4px;padding:3px 8px;border-radius:8px;background:#FBF5E3;color:var(--gold-text)!important;font-size:.82rem}
+.evento-consejos{list-style:none;margin:0;padding:0;display:grid;gap:8px;width:100%}
+.evento-consejos li{position:relative;padding:0 0 0 22px;background:none;border:0;border-radius:0;display:block;color:var(--muted);font-size:.93rem;line-height:1.45}
+.evento-consejos li::before{content:'';position:absolute;left:4px;top:.45em;width:9px;height:9px;border-radius:50%;background:var(--gold)}
+.admin-tabla td[data-titulo="Teléfono"] a{white-space:nowrap}
+.evento-hora-local{color:var(--green-700)!important;font-weight:600}

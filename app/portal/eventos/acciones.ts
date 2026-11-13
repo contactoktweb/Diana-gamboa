@@ -94,6 +94,10 @@ export async function avisarPagoRealizado(datosFormulario: FormData): Promise<Re
   if (!d) return { ok: false, error: 'Inicia sesión de nuevo.' };
   const { sesion, admin, evento, nombre } = d;
   if (!evento.enlace_pago) return { ok: false, error: 'Este evento no tiene enlace de pago.' };
+  const telefono = String(datosFormulario.get('telefono') ?? '').trim().slice(0, 30);
+  const correoPago = String(datosFormulario.get('correo_pago') ?? '').trim().toLowerCase().slice(0, 200);
+  if (!/^\+?[\d\s().-]{7,20}$/.test(telefono)) return { ok: false, error: 'Escribe un teléfono o WhatsApp válido.' };
+  if (correoPago && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correoPago)) return { ok: false, error: 'Revisa el correo que usaste en Stripe.' };
 
   let ruta = '';
   const archivo = datosFormulario.get('comprobante');
@@ -106,7 +110,7 @@ export async function avisarPagoRealizado(datosFormulario: FormData): Promise<Re
     if (error) return { ok: false, error: 'No se pudo subir el comprobante. Inténtalo de nuevo o continúa sin él.' };
   }
 
-  const { data, error } = await admin.rpc('registrar_verificacion', { p_evento: evento.id, p_usuario: sesion.id, p_nombre: nombre, p_correo: sesion.correo, p_comprobante: ruta });
+  const { data, error } = await admin.rpc('registrar_verificacion', { p_evento: evento.id, p_usuario: sesion.id, p_nombre: nombre, p_correo: sesion.correo, p_comprobante: ruta, p_telefono: telefono, p_correo_pago: correoPago && correoPago !== sesion.correo.toLowerCase() ? correoPago : null });
   const r = (data as { resultado: string; inscripcion: string | null }[] | null)?.[0];
   if (error || !r) return { ok: false, error: 'No se pudo registrar tu pago. Inténtalo de nuevo.' };
   if (r.resultado === 'ya_inscrito') return { ok: false, error: 'Ya tienes tu cupo o tu pago ya está en verificación.' };

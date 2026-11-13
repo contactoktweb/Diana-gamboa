@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { ExternalLink, Save, Trash2 } from 'lucide-react';
 import { eliminarEvento, guardarEvento, type DatosEvento } from '@/app/admin/eventos/acciones';
-import { fechaEvento, MESES } from '@/lib/eventos/formato';
+import { fechaEvento, MESES, ZONAS } from '@/lib/eventos/formato';
 
 const slugDe = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 
@@ -64,7 +64,13 @@ export default function FormEvento({ inicial }: { inicial: DatosEvento }) {
       <label className="check"><input type="radio" name="fecha_tipo" checked={d.fecha_tipo === 'aproximada'} onChange={() => cambiar({ fecha_tipo: 'aproximada' })} /> <span>Fecha aproximada (aún no se sabe el día)</span></label>
     </div>
     {d.fecha_tipo === 'exacta'
-      ? <label className="editor-campo"><span className="editor-etiqueta">Día</span><input type="date" value={d.fecha ?? ''} onChange={e => cambiar({ fecha: e.target.value })} /></label>
+      ? <div className="form-evento-fila">
+        <label className="editor-campo"><span className="editor-etiqueta">Primer día</span><input type="date" value={d.fecha ?? ''} onChange={e => cambiar({ fecha: e.target.value })} /></label>
+        <label className="editor-campo"><span className="editor-etiqueta">Último día (si dura varios días)</span><input type="date" value={d.fecha_fin ?? ''} min={d.fecha ?? undefined} onChange={e => cambiar({ fecha_fin: e.target.value || null })} /></label>
+        <label className="editor-campo"><span className="editor-etiqueta">Hora de inicio</span><input type="time" value={d.hora_local ?? ''} onChange={e => cambiar({ hora_local: e.target.value })} /></label>
+        <label className="editor-campo"><span className="editor-etiqueta">Zona horaria de esa hora</span>
+          <select value={d.zona ?? 'America/New_York'} onChange={e => cambiar({ zona: e.target.value })}>{ZONAS.map(z => <option key={z.zona} value={z.zona}>{z.nombre}</option>)}</select></label>
+      </div>
       : <div className="form-evento-fila">
         <label className="editor-campo"><span className="editor-etiqueta">Momento del mes</span>
           <select value={d.fecha_periodo ?? ''} onChange={e => cambiar({ fecha_periodo: (e.target.value || null) as DatosEvento['fecha_periodo'] })}>
@@ -79,8 +85,8 @@ export default function FormEvento({ inicial }: { inicial: DatosEvento }) {
             {[anio, anio + 1, anio + 2].map(a => <option key={a} value={a}>{a}</option>)}
           </select></label>
       </div>}
-    <p className="admin-nota">Los alumnos verán: <strong>{fechaEvento(d)}</strong></p>
-    {campo('horario', 'Horario y duración', { placeholder: 'Ej.: Día 1: 28 nov · Día 2: 29 nov · 6:00 p. m. Pacífico / 9:00 p. m. Este · 2 horas por sesión' })}
+    <p className="admin-nota">Los alumnos verán: <strong>{fechaEvento(d)}</strong>{d.fecha_tipo === 'exacta' && d.hora_local ? <> y, debajo del horario, la hora convertida automáticamente a la zona horaria de cada alumno.</> : null}</p>
+    {campo('horario', 'Texto del horario', { placeholder: 'Ej.: 2:00 p. m. hora de Nueva York (hora del Este) · 2 horas por sesión', ayuda: 'Escribe la hora con su zona horaria (por ejemplo, «hora de Nueva York»). Con la hora de inicio de arriba, cada alumno ve además su hora local.' })}
 
     <h2>Cupos y pago</h2>
     <div className="form-evento-fila">

@@ -35,6 +35,9 @@ export default function Inscripcion({ eventoId, precio, hayCupo, abierta, modo, 
   const [acepta, setAcepta] = useState(false);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [abrioPago, setAbrioPago] = useState(false);
+  const [telefono, setTelefono] = useState('');
+  const [otroCorreo, setOtroCorreo] = useState(false);
+  const [correoPago, setCorreoPago] = useState('');
   const [listo, setListo] = useState<EstadoUsuario | null>(null);
   const [mensaje, setMensaje] = useState<{ ok: boolean; texto: string } | null>(null);
   const [pendiente, iniciar] = useTransition();
@@ -58,8 +61,12 @@ export default function Inscripcion({ eventoId, precio, hayCupo, abierta, modo, 
   }
 
   async function avisarPago() {
+    if (!/^\+?[\d\s().-]{7,20}$/.test(telefono.trim())) { setMensaje({ ok: false, texto: 'Escribe tu teléfono o WhatsApp con el indicativo del país (por ejemplo, +1 305 555 0123).' }); return; }
+    if (otroCorreo && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correoPago.trim())) { setMensaje({ ok: false, texto: 'Escribe el correo que usaste en la página de pago de Stripe.' }); return; }
     const datos = new FormData();
     datos.set('evento', eventoId);
+    datos.set('telefono', telefono.trim());
+    if (otroCorreo) datos.set('correo_pago', correoPago.trim());
     if (archivo) {
       const listoArchivo = await prepararComprobante(archivo);
       if (listoArchivo.size > 4 * 1024 * 1024) { setMensaje({ ok: false, texto: 'El comprobante pesa más de 4 MB. Sube una captura de pantalla o continúa sin él.' }); return; }
@@ -102,14 +109,29 @@ export default function Inscripcion({ eventoId, precio, hayCupo, abierta, modo, 
             {politica}
             <ol className="evento-pasos">
               <li>
-                <strong>Paga con Stripe.</strong> Se abre una página segura de pago en otra pestaña (tarjeta, Apple Pay o Google Pay).
+                <span className="evento-paso-num" aria-hidden="true">1</span>
+                <h3>Paga con Stripe</h3>
+                <p>Se abre una página segura de pago en otra pestaña: tarjeta, Apple Pay o Google Pay.</p>
+                <ul className="evento-consejos">
+                  <li>Stripe te envía el recibo a tu correo.</li>
+                  <li>Si pagas con otro correo, indícalo en el paso 2.</li>
+                  <li>Al terminar, vuelve a esta pestaña y completa el paso 2.</li>
+                </ul>
                 <a className={`btn btn-green ${acepta ? '' : 'is-disabled'}`} href={acepta ? enlace : undefined} aria-disabled={!acepta} target="_blank" rel="noopener noreferrer"
                   onClick={e => { if (!acepta) { e.preventDefault(); setMensaje({ ok: false, texto: 'Primero acepta la política de reembolsos.' }); } else { setAbrioPago(true); setMensaje(null); } }}>
                   Pagar {precio} con Stripe <ExternalLink size={18} aria-hidden="true" />
                 </a>
+                {!acepta && <small>Acepta la política de reembolsos para continuar.</small>}
               </li>
               <li>
-                <strong>Avísanos que ya pagaste.</strong> Si quieres, sube el comprobante (captura o PDF del recibo de Stripe). Tu cupo queda apartado mientras verificamos la compra.
+                <span className="evento-paso-num" aria-hidden="true">2</span>
+                <h3>Avísanos que ya pagaste</h3>
+                <p>Tu cupo queda apartado mientras verificamos la compra.</p>
+                <label className="editor-campo evento-campo"><span className="editor-etiqueta">Teléfono o WhatsApp</span>
+                  <input type="tel" inputMode="tel" autoComplete="tel" placeholder="+1 305 555 0123" value={telefono} onChange={e => setTelefono(e.target.value)} /></label>
+                <label className="check evento-check"><input type="checkbox" checked={otroCorreo} onChange={e => setOtroCorreo(e.target.checked)} /> <span>En Stripe pagué con otro correo{correo ? <> (no con {correo})</> : ''}</span></label>
+                {otroCorreo && <label className="editor-campo evento-campo"><span className="editor-etiqueta">Correo que usaste en Stripe</span>
+                  <input type="email" inputMode="email" autoComplete="email" placeholder="correo@ejemplo.com" value={correoPago} onChange={e => setCorreoPago(e.target.value)} /></label>}
                 <label className="evento-archivo">
                   <Upload size={18} aria-hidden="true" />
                   <span>{archivo ? archivo.name : 'Subir comprobante (opcional)'}</span>
@@ -118,10 +140,10 @@ export default function Inscripcion({ eventoId, precio, hayCupo, abierta, modo, 
                 <button type="button" className="btn btn-gold" disabled={!acepta || pendiente} onClick={avisarPago}>
                   {pendiente ? 'Enviando…' : 'Ya pagué, confirmar mi cupo'} <CheckCircle2 size={18} aria-hidden="true" />
                 </button>
-                {!abrioPago && <small className="evento-nota">Usa este botón solo después de completar el pago.</small>}
+                {!abrioPago && <small>Usa este botón solo después de completar el pago.</small>}
               </li>
             </ol>
-            <button type="button" className="btn btn-outline btn-sm" onClick={() => setAbiertoPanel(false)} disabled={pendiente}>Cancelar</button>
+            <button type="button" className="btn btn-outline btn-sm evento-cancelar" onClick={() => setAbiertoPanel(false)} disabled={pendiente}>Cancelar</button>
           </>}
 
           {modo === 'preinscripcion' && <>

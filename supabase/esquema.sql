@@ -526,7 +526,12 @@ create table if not exists public.inscripciones (
 );
 -- Columnas y estados añadidos después (pago por enlace con comprobante en verificación).
 alter table public.inscripciones add column if not exists comprobante text;
+alter table public.inscripciones add column if not exists telefono text;
+alter table public.inscripciones add column if not exists correo_pago text;
 alter table public.eventos_privados add column if not exists enlace_pago text not null default '';
+-- Último día (eventos de varios días) y hora de inicio exacta (se muestra en la hora local de cada alumno).
+alter table public.eventos_privados add column if not exists fecha_fin date;
+alter table public.eventos_privados add column if not exists hora_inicio timestamptz;
 alter table public.inscripciones drop constraint if exists inscripciones_estado_check;
 alter table public.inscripciones add constraint inscripciones_estado_check
   check (estado in ('pendiente', 'verificacion', 'pagada', 'preinscrita', 'espera', 'cancelada', 'reembolsada'));
@@ -717,7 +722,9 @@ on conflict (slug) do nothing;
 -- su comprobante y la compra queda «en verificación» (aparta el cupo) hasta que
 -- la administración la aprueba.
 -- ---------------------------------------------------------------------
-create or replace function public.registrar_verificacion(p_evento uuid, p_usuario uuid, p_nombre text, p_correo text, p_comprobante text)
+drop function if exists public.registrar_verificacion(uuid, uuid, text, text, text);
+create or replace function public.registrar_verificacion(p_evento uuid, p_usuario uuid, p_nombre text, p_correo text, p_comprobante text,
+  p_telefono text default null, p_correo_pago text default null)
 returns table (resultado text, inscripcion uuid)
 language plpgsql security definer set search_path = public as $$
 declare
@@ -735,13 +742,14 @@ begin
   select count(*) into v_usados from public.inscripciones
   where evento_id = p_evento and (estado in ('pagada', 'verificacion') or (estado = 'pendiente' and expira_en > now()));
   if v_usados >= v_evento.cupos then return query select 'agotado'::text, null::uuid; return; end if;
-  insert into public.inscripciones (evento_id, usuario_id, nombre, correo, estado, monto_centavos, comprobante)
-  values (p_evento, p_usuario, left(p_nombre, 120), lower(left(p_correo, 200)), 'verificacion', v_evento.precio_centavos, nullif(p_comprobante, ''))
+  insert into public.inscripciones (evento_id, usuario_id, nombre, correo, estado, monto_centavos, comprobante, telefono, correo_pago)
+  values (p_evento, p_usuario, left(p_nombre, 120), lower(left(p_correo, 200)), 'verificacion', v_evento.precio_centavos, nullif(p_comprobante, ''),
+          nullif(left(p_telefono, 30), ''), nullif(lower(left(p_correo_pago, 200)), ''))
   returning id into v_id;
   return query select 'ok'::text, v_id;
 end $$;
-revoke all on function public.registrar_verificacion(uuid, uuid, text, text, text) from public, anon, authenticated;
-grant execute on function public.registrar_verificacion(uuid, uuid, text, text, text) to service_role;
+revoke all on function public.registrar_verificacion(uuid, uuid, text, text, text, text, text) from public, anon, authenticated;
+grant execute on function public.registrar_verificacion(uuid, uuid, text, text, text, text, text) to service_role;
 
 -- Comprobantes: espacio privado. Solo el servidor los guarda y la administración los ve con enlaces temporales.
 insert into storage.buckets (id, name, public) values ('comprobantes', 'comprobantes', false)
@@ -754,6 +762,15 @@ where slug = 'call-o-put' and enlace_pago = '';
 -- Valor del taller: US$99.00 (igual al enlace de pago de Stripe).
 update public.eventos_privados set precio_centavos = 9900, visible = true
 where slug = 'call-o-put' and precio_centavos = 9899;
+
+-- Fechas del taller: sábado 28 y domingo 29 de noviembre de 2026, 2:00 p. m. hora de Nueva York (Este, EST = UTC-5).
+-- Solo si aún tiene la fecha aproximada original (no pisa cambios hechos desde la administración).
+update public.eventos_privados set
+  fecha_tipo = 'exacta', fecha = '2026-11-28', fecha_fin = '2026-11-29',
+  fecha_periodo = null, fecha_mes = null, fecha_anio = null,
+  hora_inicio = '2026-11-28 14:00:00-05',
+  horario = '2:00 p. m. hora de Nueva York (hora del Este) · Duración por confirmar'
+where slug = 'call-o-put' and fecha_tipo = 'aproximada';
 
 -- Fin. Siguiente paso: registrar la cuenta de Diana en la web y ejecutar
 --   select public.hacer_admin('correo-de-diana@ejemplo.com');

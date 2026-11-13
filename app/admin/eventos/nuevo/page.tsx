@@ -12,7 +12,7 @@ export default function NuevoEventoPage() {
     <FormEvento inicial={{
       slug: '', titulo: '', subtitulo: '', detalles: '', resumen: '', contenido: '', acceso: '', aviso: AVISO,
       fecha_tipo: 'aproximada', fecha: null, fecha_periodo: null, fecha_mes: hoy.getMonth() + 1, fecha_anio: hoy.getFullYear(),
-      horario: '', precio: '', cupos: 50, inscripcion_abierta: true, visible: false, enlace_pago: '',
+      horario: '', precio: '', cupos: 50, inscripcion_abierta: true, visible: false, enlace_pago: '', fecha_fin: null, hora_inicio: null, hora_local: '', zona: 'America/New_York',
     }} />
   </>;
 }

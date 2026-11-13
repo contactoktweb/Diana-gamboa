@@ -3,11 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { getSesion } from '@/lib/sesion';
 import { supabaseServidor } from '@/lib/supabase/servidor';
-import type { Evento } from '@/lib/eventos/formato';
+import { aInstante, ZONAS, type Evento } from '@/lib/eventos/formato';
 import { avisarInscripcion } from '@/lib/eventos/pago';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-export type DatosEvento = Omit<Evento, 'id' | 'precio_centavos'> & { id?: string; precio: string };
+export type DatosEvento = Omit<Evento, 'id' | 'precio_centavos'> & { id?: string; precio: string; hora_local?: string; zona?: string };
 type Resultado = { ok: true; id: string } | { ok: false; error: string };
 
 async function clienteAdmin() {
@@ -36,13 +36,19 @@ export async function guardarEvento(d: DatosEvento): Promise<Resultado> {
   const exacta = d.fecha_tipo === 'exacta';
   if (exacta && !d.fecha) return { ok: false, error: 'Elige la fecha exacta o cambia a «Fecha aproximada».' };
   if (!exacta && (!d.fecha_mes || !d.fecha_anio)) return { ok: false, error: 'Elige el mes y el año del evento.' };
+  const fechaFin = exacta && d.fecha_fin ? d.fecha_fin : null;
+  if (fechaFin && d.fecha && fechaFin < d.fecha) return { ok: false, error: 'El último día no puede ser anterior al primero.' };
+  const horaLocal = exacta ? String(d.hora_local ?? '').trim() : '';
+  if (horaLocal && !/^\d{2}:\d{2}$/.test(horaLocal)) return { ok: false, error: 'Revisa la hora de inicio.' };
+  const zona = ZONAS.some(z => z.zona === d.zona) ? d.zona! : 'America/New_York';
+  const horaInicio = horaLocal && d.fecha ? aInstante(d.fecha, horaLocal, zona) : null;
 
   const fila = {
     slug, titulo,
     subtitulo: recortar(d.subtitulo, 300), detalles: recortar(d.detalles, 300), resumen: recortar(d.resumen, 600),
     contenido: recortar(d.contenido, 40000), acceso: recortar(d.acceso, 10000), aviso: recortar(d.aviso, 4000),
     fecha_tipo: exacta ? 'exacta' : 'aproximada',
-    fecha: exacta ? d.fecha : null,
+    fecha: exacta ? d.fecha : null, fecha_fin: fechaFin, hora_inicio: horaInicio,
     fecha_periodo: exacta ? null : d.fecha_periodo || null,
     fecha_mes: exacta ? null : Number(d.fecha_mes), fecha_anio: exacta ? null : Number(d.fecha_anio),
     horario: recortar(d.horario, 300), precio_centavos: precio, cupos,

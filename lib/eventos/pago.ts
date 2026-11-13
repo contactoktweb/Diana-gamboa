@@ -36,7 +36,7 @@ export async function procesarSesionPagada(sessionId: string) {
 export async function avisarInscripcion(inscripcionId: string, enviar: { admin?: boolean; alumno?: boolean; porVerificar?: boolean }) {
   const admin = supabaseAdmin();
   if (!admin) return;
-  const { data: i } = await admin.from('inscripciones').select('nombre, correo, monto_centavos, evento_id').eq('id', inscripcionId).maybeSingle();
+  const { data: i } = await admin.from('inscripciones').select('nombre, correo, monto_centavos, evento_id, telefono, correo_pago').eq('id', inscripcionId).maybeSingle();
   if (!i) return;
   const { data: e } = await admin.from('eventos_privados').select('*').eq('id', i.evento_id).maybeSingle<Evento>();
   if (!e) return;
@@ -45,7 +45,7 @@ export async function avisarInscripcion(inscripcionId: string, enviar: { admin?:
   const envios: Promise<unknown>[] = [];
   if (enviar.admin) envios.push(enviarCorreo({
     para: CORREO_ADMINISTRADORA,
-    ...correoNuevoCupo({ sitio, evento: e.titulo, nombre: i.nombre, correo: i.correo, monto: precioTexto(i.monto_centavos ?? e.precio_centavos), ocupados: count ?? 0, cupos: e.cupos, enlace: `${sitio}/admin/eventos/${e.id}`, porVerificar: enviar.porVerificar }),
+    ...correoNuevoCupo({ sitio, evento: e.titulo, nombre: i.nombre, correo: i.correo, monto: precioTexto(i.monto_centavos ?? e.precio_centavos), ocupados: count ?? 0, cupos: e.cupos, enlace: `${sitio}/admin/eventos/${e.id}`, porVerificar: enviar.porVerificar, telefono: i.telefono, correoPago: i.correo_pago }),
   }));
   if (enviar.alumno) envios.push(enviarCorreo({
     para: i.correo,
