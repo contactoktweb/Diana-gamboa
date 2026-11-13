@@ -708,7 +708,7 @@ Después de cada clase encontrarás aquí la grabación y la hoja de chequeo.$tx
   $txt$Este taller es educativo y no es una recomendación de inversión ni asesoría financiera. Operar opciones tiene alto riesgo y puedes perder el 100% de lo que pagas por un contrato. Los casos que veremos son de sesiones anteriores y se usan solo con fines educativos. Los resultados pasados no garantizan resultados futuros. Cada persona es responsable de sus propias decisiones.$txt$,
   'aproximada', 'finales', 11, 2026,
   'Día 1 y Día 2: fechas por confirmar · Horario por confirmar (hora del Pacífico / hora del Este) · Duración por confirmar',
-  9899, 50, true, true
+  9900, 50, true, true
 )
 on conflict (slug) do nothing;
 
@@ -750,6 +750,10 @@ on conflict (id) do update set public = false;
 -- Enlace de pago provisional del primer evento (solo si aún no tiene uno).
 update public.eventos_privados set enlace_pago = 'https://buy.stripe.com/eVqaEXc9D8fA83TenIejK00'
 where slug = 'call-o-put' and enlace_pago = '';
+
+-- Valor del taller: US$99.00 (igual al enlace de pago de Stripe).
+update public.eventos_privados set precio_centavos = 9900, visible = true
+where slug = 'call-o-put' and precio_centavos = 9899;
 
 -- Fin. Siguiente paso: registrar la cuenta de Diana en la web y ejecutar
 --   select public.hacer_admin('correo-de-diana@ejemplo.com');
