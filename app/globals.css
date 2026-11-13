@@ -1038,3 +1038,14 @@ button{font:inherit;cursor:pointer}
   .evento-acceso,.evento-reserva,.evento-tarjeta{padding:18px}
   .form-evento-slug>span{display:none}
 }
+
+.evento-estado.es-verificacion{background:#FBF5E3;color:var(--gold-text)}
+.evento-pasos{margin:4px 0 6px;padding-left:22px;display:grid;gap:18px;color:var(--muted)}
+.evento-pasos li{display:grid;gap:10px;justify-items:start;line-height:1.55}
+.evento-pasos strong{color:var(--green-900)}
+.btn.is-disabled{opacity:.55;cursor:not-allowed}
+.evento-archivo{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1.5px dashed var(--line);border-radius:12px;cursor:pointer;color:var(--green-900);font-weight:600;max-width:100%}
+.evento-archivo span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evento-archivo input{position:absolute;width:1px;height:1px;opacity:0}
+.evento-archivo:focus-within{outline:2px solid var(--gold);outline-offset:2px}
+.verif-acciones{display:flex;gap:8px;flex-wrap:wrap}

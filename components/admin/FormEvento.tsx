@@ -87,6 +87,7 @@ export default function FormEvento({ inicial }: { inicial: DatosEvento }) {
       <label className="editor-campo"><span className="editor-etiqueta">Valor (USD)</span><input inputMode="decimal" value={d.precio} onChange={e => cambiar({ precio: e.target.value })} placeholder="98.99" /></label>
       <label className="editor-campo"><span className="editor-etiqueta">Cupos</span><input type="number" min={1} value={d.cupos} onChange={e => cambiar({ cupos: Number(e.target.value) })} /></label>
     </div>
+    {campo('enlace_pago', 'Enlace de pago de Stripe (provisional)', { placeholder: 'https://buy.stripe.com/…', ayuda: 'Mientras no estén conectadas las claves de Stripe, el botón de pago abre este enlace y el alumno avisa que pagó (con comprobante opcional). Tú apruebas cada compra aquí. El valor del enlace en Stripe debe coincidir con el de arriba.' })}
     <small className="editor-ayuda">El valor solo se muestra cuando el alumno pulsa «Reserva tu lugar». Los alumnos nunca ven cuántos cupos quedan: solo si hay o no.</small>
     <label className="check"><input type="checkbox" checked={d.inscripcion_abierta} onChange={e => cambiar({ inscripcion_abierta: e.target.checked })} /> <span>Inscripciones abiertas</span></label>
     <label className="check"><input type="checkbox" checked={d.visible} onChange={e => cambiar({ visible: e.target.checked })} /> <span>Visible para los alumnos en «Eventos»</span></label>

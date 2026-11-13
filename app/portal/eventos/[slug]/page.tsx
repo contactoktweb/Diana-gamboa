@@ -38,14 +38,16 @@ export default async function EventoPage({ params, searchParams }: Props) {
 
   let estado: EstadoUsuario = 'ninguno';
   if (sesion) {
-    const { data: mias } = await supabase.from('inscripciones').select('estado').eq('evento_id', evento.id).eq('usuario_id', sesion.id).in('estado', ['pagada', 'preinscrita', 'espera']);
+    const { data: mias } = await supabase.from('inscripciones').select('estado').eq('evento_id', evento.id).eq('usuario_id', sesion.id).in('estado', ['pagada', 'verificacion', 'preinscrita', 'espera']);
     const estados = (mias ?? []).map(m => m.estado as string);
-    estado = estados.includes('pagada') ? 'pagada' : estados.includes('preinscrita') ? 'preinscrita' : estados.includes('espera') ? 'espera' : 'ninguno';
+    estado = estados.includes('pagada') ? 'pagada' : estados.includes('verificacion') ? 'verificacion' : estados.includes('preinscrita') ? 'preinscrita' : estados.includes('espera') ? 'espera' : 'ninguno';
   }
   const { data: hayCupo } = await supabase.rpc('evento_hay_cupo', { p_evento: evento.id });
   const precio = precioTexto(evento.precio_centavos);
+  // Con claves de Stripe: pago automático. Sin claves pero con enlace de pago: pago por enlace y verificación.
+  const modo = stripeActivo ? 'stripe' : evento.enlace_pago ? 'enlace' : 'preinscripcion';
   const inscripcion = (boton?: string) => <Inscripcion eventoId={evento.id} precio={precio} hayCupo={Boolean(hayCupo)} abierta={evento.inscripcion_abierta}
-    pagosActivos={stripeActivo} estado={estado} boton={boton} />;
+    modo={modo} enlacePago={evento.enlace_pago} correo={sesion?.correo} estado={estado} boton={boton} />;
 
   return <>
     <section className="lesson-head evento-head">

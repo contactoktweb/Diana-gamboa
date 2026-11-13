@@ -30,7 +30,7 @@ export default async function EventosAdminPage() {
     </header>
     {stripeActivo
       ? <p className="correos-estado es-ok">Stripe está conectado: los alumnos pagan directamente en la página del evento.</p>
-      : <p className="correos-estado es-pendiente">Stripe aún no está conectado: los alumnos pueden preinscribirse y verás sus datos aquí para enviarles el enlace de pago.</p>}
+      : <p className="correos-estado es-pendiente">Stripe aún no está conectado. Los eventos con «Enlace de pago de Stripe» se pagan con ese enlace y cada compra queda por verificar aquí; los que no lo tienen reciben preinscripciones.</p>}
     {falta && <p className="admin-aviso" role="status">Falta crear las tablas de eventos en Supabase: ejecuta el archivo <code>supabase/eventos.sql</code> en el SQL Editor.</p>}
 
     <div className="admin-barra-tabla">
@@ -40,7 +40,7 @@ export default async function EventosAdminPage() {
 
     {eventos.length === 0 ? <p className="admin-vacio">Aún no hay eventos.</p>
       : <div className="admin-tabla-contenedor"><table className="admin-tabla">
-        <thead><tr><th>Evento</th><th>Fecha</th><th>Valor</th><th>Cupos pagados</th><th>Preinscritos / espera</th><th>Estado</th></tr></thead>
+        <thead><tr><th>Evento</th><th>Fecha</th><th>Valor</th><th>Cupos pagados</th><th>Por verificar</th><th>Preinscritos / espera</th><th>Estado</th></tr></thead>
         <tbody>{eventos.map(e => {
           const c = cuenta.get(e.id) ?? {};
           return <tr key={e.id}>
@@ -48,6 +48,7 @@ export default async function EventosAdminPage() {
             <td data-titulo="Fecha">{fechaEvento(e)}</td>
             <td data-titulo="Valor">{precioTexto(e.precio_centavos)}</td>
             <td data-titulo="Cupos pagados"><strong>{c.pagada ?? 0}</strong> de {e.cupos}</td>
+            <td data-titulo="Por verificar">{c.verificacion ? <strong>{c.verificacion}</strong> : 0}</td>
             <td data-titulo="Preinscritos / espera">{c.preinscrita ?? 0} / {c.espera ?? 0}</td>
             <td data-titulo="Estado">{!e.visible ? <span className="admin-tenue">Oculto</span> : e.inscripcion_abierta ? 'Inscripciones abiertas' : 'Inscripciones cerradas'}</td>
           </tr>;

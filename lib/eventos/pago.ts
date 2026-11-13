@@ -23,29 +23,33 @@ export async function procesarSesionPagada(sessionId: string) {
   const pago = typeof sesion.payment_intent === 'string' ? sesion.payment_intent : sesion.payment_intent?.id ?? null;
   const { data: nueva, error } = await admin.rpc('confirmar_pago', { p_inscripcion: inscripcion, p_session: sesion.id, p_pago: pago, p_monto: sesion.amount_total });
   if (error) throw new Error('No se pudo registrar el pago: ' + error.message);
-  if (nueva) await avisarPago(inscripcion);
+  if (nueva) await avisarInscripcion(inscripcion, { admin: true, alumno: true });
   return { pagada: true };
 }
 
-/** Correo a la administradora (nuevo cupo comprado) y a la persona inscrita (agradecimiento). */
-async function avisarPago(inscripcionId: string) {
-  const admin = supabaseAdmin()!;
+/**
+ * Correos de una inscripción:
+ * - admin: aviso de nuevo cupo (o «por verificar» si la compra espera revisión).
+ * - alumno: agradecimiento por su participación (cuando el pago está aprobado).
+ * Un correo que falle (por ejemplo, por la cuota diaria) no deshace la inscripción.
+ */
+export async function avisarInscripcion(inscripcionId: string, enviar: { admin?: boolean; alumno?: boolean; porVerificar?: boolean }) {
+  const admin = supabaseAdmin();
+  if (!admin) return;
   const { data: i } = await admin.from('inscripciones').select('nombre, correo, monto_centavos, evento_id').eq('id', inscripcionId).maybeSingle();
   if (!i) return;
   const { data: e } = await admin.from('eventos_privados').select('*').eq('id', i.evento_id).maybeSingle<Evento>();
   if (!e) return;
-  const { count } = await admin.from('inscripciones').select('id', { count: 'exact', head: true }).eq('evento_id', e.id).eq('estado', 'pagada');
+  const { count } = await admin.from('inscripciones').select('id', { count: 'exact', head: true }).eq('evento_id', e.id).in('estado', ['pagada', 'verificacion']);
   const sitio = await urlDelSitio();
-  const envios = [
-    enviarCorreo({
-      para: CORREO_ADMINISTRADORA,
-      ...correoNuevoCupo({ sitio, evento: e.titulo, nombre: i.nombre, correo: i.correo, monto: precioTexto(i.monto_centavos ?? e.precio_centavos), ocupados: count ?? 0, cupos: e.cupos, enlace: `${sitio}/admin/eventos/${e.id}` }),
-    }),
-    enviarCorreo({
-      para: i.correo,
-      ...correoGraciasEvento({ sitio, nombre: (i.nombre || '').split(' ')[0], evento: e.titulo, fecha: fechaEvento(e), horario: e.horario, enlace: `${sitio}/portal/eventos/${e.slug}` }),
-    }),
-  ];
-  // Un correo que falle (por ejemplo, por la cuota diaria) no deshace la inscripción.
+  const envios: Promise<unknown>[] = [];
+  if (enviar.admin) envios.push(enviarCorreo({
+    para: CORREO_ADMINISTRADORA,
+    ...correoNuevoCupo({ sitio, evento: e.titulo, nombre: i.nombre, correo: i.correo, monto: precioTexto(i.monto_centavos ?? e.precio_centavos), ocupados: count ?? 0, cupos: e.cupos, enlace: `${sitio}/admin/eventos/${e.id}`, porVerificar: enviar.porVerificar }),
+  }));
+  if (enviar.alumno) envios.push(enviarCorreo({
+    para: i.correo,
+    ...correoGraciasEvento({ sitio, nombre: (i.nombre || '').split(' ')[0], evento: e.titulo, fecha: fechaEvento(e), horario: e.horario, enlace: `${sitio}/portal/eventos/${e.slug}` }),
+  }));
   for (const r of await Promise.allSettled(envios)) if (r.status === 'rejected') console.error('Correo de evento no enviado:', r.reason);
 }

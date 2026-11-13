@@ -36,7 +36,7 @@ create table if not exists public.inscripciones (
   usuario_id         uuid references auth.users (id) on delete set null,
   nombre             text not null default '',
   correo             text not null default '',
-  estado             text not null check (estado in ('pendiente', 'pagada', 'preinscrita', 'espera', 'cancelada', 'reembolsada')),
+  estado             text not null,
   expira_en          timestamptz,
   monto_centavos     integer,
   stripe_session_id  text unique,
@@ -45,10 +45,17 @@ create table if not exists public.inscripciones (
   pagado_en          timestamptz,
   actualizado_en     timestamptz not null default now()
 );
+-- Columnas y estados añadidos después (pago por enlace con comprobante en verificación).
+alter table public.inscripciones add column if not exists comprobante text;
+alter table public.eventos_privados add column if not exists enlace_pago text not null default '';
+alter table public.inscripciones drop constraint if exists inscripciones_estado_check;
+alter table public.inscripciones add constraint inscripciones_estado_check
+  check (estado in ('pendiente', 'verificacion', 'pagada', 'preinscrita', 'espera', 'cancelada', 'reembolsada'));
 create index if not exists inscripciones_evento_idx on public.inscripciones (evento_id, estado);
 -- Una sola inscripción activa por persona y evento.
-create unique index if not exists inscripciones_activa_idx on public.inscripciones (evento_id, usuario_id)
-  where estado in ('pendiente', 'pagada', 'preinscrita', 'espera');
+drop index if exists public.inscripciones_activa_idx;
+create unique index inscripciones_activa_idx on public.inscripciones (evento_id, usuario_id)
+  where estado in ('pendiente', 'verificacion', 'pagada', 'preinscrita', 'espera');
 alter table public.inscripciones enable row level security;
 
 drop policy if exists eventos_leer on public.eventos_privados;
@@ -72,7 +79,7 @@ create or replace function public.evento_hay_cupo(p_evento uuid)
 returns boolean language sql stable security definer set search_path = public as $$
   select e.inscripcion_abierta and (
     select count(*) from public.inscripciones i
-    where i.evento_id = e.id and (i.estado = 'pagada' or (i.estado = 'pendiente' and i.expira_en > now()))
+    where i.evento_id = e.id and (i.estado in ('pagada', 'verificacion') or (i.estado = 'pendiente' and i.expira_en > now()))
   ) < e.cupos
   from public.eventos_privados e where e.id = p_evento and e.visible;
 $$;
@@ -89,7 +96,7 @@ declare
 begin
   select * into v_evento from public.eventos_privados where id = p_evento for update;
   if not found or not v_evento.visible then return query select 'no_existe'::text, null::uuid; return; end if;
-  if exists (select 1 from public.inscripciones where evento_id = p_evento and usuario_id = p_usuario and estado = 'pagada') then
+  if exists (select 1 from public.inscripciones where evento_id = p_evento and usuario_id = p_usuario and estado in ('pagada', 'verificacion')) then
     return query select 'ya_inscrito'::text, null::uuid; return;
   end if;
   if not v_evento.inscripcion_abierta then return query select 'cerrado'::text, null::uuid; return; end if;
@@ -97,7 +104,7 @@ begin
   update public.inscripciones set estado = 'cancelada', actualizado_en = now()
   where evento_id = p_evento and usuario_id = p_usuario and estado in ('pendiente', 'preinscrita', 'espera');
   select count(*) into v_usados from public.inscripciones
-  where evento_id = p_evento and (estado = 'pagada' or (estado = 'pendiente' and expira_en > now()));
+  where evento_id = p_evento and (estado in ('pagada', 'verificacion') or (estado = 'pendiente' and expira_en > now()));
   if v_usados >= v_evento.cupos then return query select 'agotado'::text, null::uuid; return; end if;
   insert into public.inscripciones (evento_id, usuario_id, nombre, correo, estado, expira_en, monto_centavos)
   values (p_evento, p_usuario, left(p_nombre, 120), lower(left(p_correo, 200)), 'pendiente', now() + make_interval(mins => p_minutos), v_evento.precio_centavos)
@@ -225,3 +232,42 @@ Después de cada clase encontrarás aquí la grabación y la hoja de chequeo.$tx
   9899, 50, true, true
 )
 on conflict (slug) do nothing;
+
+-- ---------------------------------------------------------------------
+-- Pago por enlace de Stripe (provisional): la persona avisa que pagó, puede subir
+-- su comprobante y la compra queda «en verificación» (aparta el cupo) hasta que
+-- la administración la aprueba.
+-- ---------------------------------------------------------------------
+create or replace function public.registrar_verificacion(p_evento uuid, p_usuario uuid, p_nombre text, p_correo text, p_comprobante text)
+returns table (resultado text, inscripcion uuid)
+language plpgsql security definer set search_path = public as $$
+declare
+  v_evento  public.eventos_privados%rowtype;
+  v_usados  integer;
+  v_id      uuid;
+begin
+  select * into v_evento from public.eventos_privados where id = p_evento for update;
+  if not found or not v_evento.visible then return query select 'no_existe'::text, null::uuid; return; end if;
+  if exists (select 1 from public.inscripciones where evento_id = p_evento and usuario_id = p_usuario and estado in ('pagada', 'verificacion')) then
+    return query select 'ya_inscrito'::text, null::uuid; return;
+  end if;
+  update public.inscripciones set estado = 'cancelada', actualizado_en = now()
+  where evento_id = p_evento and usuario_id = p_usuario and estado in ('pendiente', 'preinscrita', 'espera');
+  select count(*) into v_usados from public.inscripciones
+  where evento_id = p_evento and (estado in ('pagada', 'verificacion') or (estado = 'pendiente' and expira_en > now()));
+  if v_usados >= v_evento.cupos then return query select 'agotado'::text, null::uuid; return; end if;
+  insert into public.inscripciones (evento_id, usuario_id, nombre, correo, estado, monto_centavos, comprobante)
+  values (p_evento, p_usuario, left(p_nombre, 120), lower(left(p_correo, 200)), 'verificacion', v_evento.precio_centavos, nullif(p_comprobante, ''))
+  returning id into v_id;
+  return query select 'ok'::text, v_id;
+end $$;
+revoke all on function public.registrar_verificacion(uuid, uuid, text, text, text) from public, anon, authenticated;
+grant execute on function public.registrar_verificacion(uuid, uuid, text, text, text) to service_role;
+
+-- Comprobantes: espacio privado. Solo el servidor los guarda y la administración los ve con enlaces temporales.
+insert into storage.buckets (id, name, public) values ('comprobantes', 'comprobantes', false)
+on conflict (id) do update set public = false;
+
+-- Enlace de pago provisional del primer evento (solo si aún no tiene uno).
+update public.eventos_privados set enlace_pago = 'https://buy.stripe.com/eVqaEXc9D8fA83TenIejK00'
+where slug = 'call-o-put' and enlace_pago = '';

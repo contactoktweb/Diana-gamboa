@@ -19,7 +19,7 @@ export default async function EventosPage() {
     eventos = (data as Evento[]) ?? [];
     await Promise.all(eventos.map(async e => { const { data: hay } = await supabase.rpc('evento_hay_cupo', { p_evento: e.id }); cupo.set(e.id, Boolean(hay)); }));
     if (sesion && eventos.length) {
-      const { data: mias } = await supabase.from('inscripciones').select('evento_id').eq('usuario_id', sesion.id).eq('estado', 'pagada');
+      const { data: mias } = await supabase.from('inscripciones').select('evento_id').eq('usuario_id', sesion.id).in('estado', ['pagada', 'verificacion']);
       for (const m of mias ?? []) inscrito.add(m.evento_id as string);
     }
   }
@@ -47,7 +47,7 @@ export default async function EventosPage() {
           {e.resumen && <p>{e.resumen}</p>}
           <div className="evento-tarjeta-pie">
             {inscrito.has(e.id)
-              ? <span className="evento-estado es-ok"><CheckCircle2 size={18} aria-hidden="true" /> Ya tienes tu cupo</span>
+              ? <span className="evento-estado es-ok"><CheckCircle2 size={18} aria-hidden="true" /> Tu cupo está apartado</span>
               : !e.inscripcion_abierta ? <span className="evento-estado es-cerrado">Inscripciones cerradas</span>
                 : cupo.get(e.id) ? <span className="evento-estado es-disponible">Cupos disponibles</span>
                   : <span className="evento-estado es-agotado">Cupos agotados</span>}

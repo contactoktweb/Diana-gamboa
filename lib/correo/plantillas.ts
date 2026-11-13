@@ -119,7 +119,8 @@ export function correoBienvenida({ sitio, nombre }: { sitio: string; nombre: str
 }
 
 /** Aviso para la administradora: alguien compró un cupo. */
-export function correoNuevoCupo({ sitio, evento, nombre, correo, monto, ocupados, cupos, enlace }: { sitio: string; evento: string; nombre: string; correo: string; monto: string; ocupados: number; cupos: number; enlace: string }) {
+export function correoNuevoCupo({ sitio, evento, nombre, correo, monto, ocupados, cupos, enlace, porVerificar = false }: { sitio: string; evento: string; nombre: string; correo: string; monto: string; ocupados: number; cupos: number; enlace: string; porVerificar?: boolean }) {
+  if (porVerificar) return correoPorVerificar({ sitio, evento, nombre, correo, monto, ocupados, cupos, enlace });
   const titulo = 'Nuevo cupo comprado';
   const parrafos = [`<strong>${esc(nombre || correo)}</strong> (${esc(correo)}) compró un cupo para <strong>${esc(evento)}</strong>.`, `Pago recibido: <strong>${esc(monto)}</strong>. Cupos ocupados: <strong>${ocupados} de ${cupos}</strong>.`];
   return {
@@ -137,5 +138,16 @@ export function correoGraciasEvento({ sitio, nombre, evento, fecha, horario, enl
     asunto: `Tu cupo está confirmado · ${evento}`,
     html: marco({ sitio, previa: 'Tu pago fue aprobado. Ya tienes tu cupo.', etiqueta: 'Inscripción confirmada', titulo, parrafos, boton: { texto: 'Ver el evento en mi portal', enlace }, nota: `Si necesitas pedir un reembolso, revisa la política en ${sitio}/reembolsos.` }),
     texto: textoPlano(titulo, parrafos, [`Ver el evento: ${enlace}`]),
+  };
+}
+
+/** Aviso para la administradora: alguien dice que pagó con el enlace y espera verificación. */
+function correoPorVerificar({ sitio, evento, nombre, correo, monto, ocupados, cupos, enlace }: { sitio: string; evento: string; nombre: string; correo: string; monto: string; ocupados: number; cupos: number; enlace: string }) {
+  const titulo = 'Nuevo cupo comprado: por verificar';
+  const parrafos = [`<strong>${esc(nombre || correo)}</strong> (${esc(correo)}) avisó que pagó <strong>${esc(monto)}</strong> por <strong>${esc(evento)}</strong>.`, 'Revisa el pago en tu panel de Stripe (y el comprobante, si lo subió) y apruébalo en la administración. Mientras tanto, su cupo queda apartado.', `Cupos ocupados (pagados y por verificar): <strong>${ocupados} de ${cupos}</strong>.`];
+  return {
+    asunto: `Nuevo cupo por verificar · ${evento}`,
+    html: marco({ sitio, previa: `${nombre || correo} pagó y espera verificación.`, etiqueta: 'Compra por verificar', titulo, parrafos, boton: { texto: 'Verificar la compra', enlace }, nota: 'Al aprobarla, la persona recibe su correo de confirmación. Si el pago no aparece en Stripe, recházala y el cupo se libera.' }),
+    texto: textoPlano(titulo, parrafos, [`Verificar: ${enlace}`]),
   };
 }

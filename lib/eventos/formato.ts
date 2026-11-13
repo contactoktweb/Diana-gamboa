@@ -5,9 +5,11 @@ export interface Evento {
   fecha_tipo: 'exacta' | 'aproximada'; fecha: string | null;
   fecha_periodo: 'inicio' | 'mediados' | 'finales' | null; fecha_mes: number | null; fecha_anio: number | null;
   horario: string; precio_centavos: number; cupos: number; inscripcion_abierta: boolean; visible: boolean;
+  /** Enlace de pago de Stripe (provisional, mientras no estén las claves). */
+  enlace_pago: string;
 }
 
-export type EstadoInscripcion = 'pendiente' | 'pagada' | 'preinscrita' | 'espera' | 'cancelada' | 'reembolsada';
+export type EstadoInscripcion = 'pendiente' | 'verificacion' | 'pagada' | 'preinscrita' | 'espera' | 'cancelada' | 'reembolsada';
 
 export const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const PERIODO = { inicio: 'Inicios', mediados: 'Mediados', finales: 'Finales' } as const;
