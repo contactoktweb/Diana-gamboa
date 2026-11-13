@@ -16,7 +16,15 @@ export async function proxy(request: NextRequest) {
       },
     },
   });
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+  // Sin sesión: a iniciar sesión, recordando la página exacta (por ejemplo, el enlace de un evento).
+  const ruta = request.nextUrl.pathname;
+  if (!user && (ruta.startsWith('/portal') || ruta.startsWith('/admin'))) {
+    const destino = request.nextUrl.clone();
+    destino.pathname = '/ingresar';
+    destino.search = `?next=${encodeURIComponent(ruta + request.nextUrl.search)}`;
+    return NextResponse.redirect(destino);
+  }
   return response;
 }
 
