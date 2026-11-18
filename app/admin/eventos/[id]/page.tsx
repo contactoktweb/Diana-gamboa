@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import AccionesCompra from '@/components/admin/AccionesCompra';
+import AprobarPagos from '@/components/admin/AprobarPagos';
 import CopiarTexto from '@/components/admin/CopiarTexto';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import FormEvento from '@/components/admin/FormEvento';
@@ -51,6 +52,8 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
       <div className="cifra"><span>Preinscritos</span><strong>{filas.filter(f => f.estado === 'preinscrita').length}</strong><small>Sin pagar</small></div>
       <div className="cifra"><span>Lista de espera</span><strong>{filas.filter(f => f.estado === 'espera').length}</strong><small>Con cupos agotados</small></div>
     </section>
+
+    <AprobarPagos eventoId={e.id} />
 
     {GRUPOS.map(g => {
       const lista = filas.filter(f => f.estado === g.estado);

@@ -6,6 +6,9 @@ import { supabaseServidor } from '@/lib/supabase/servidor';
 import { aInstante, ZONAS, type Evento } from '@/lib/eventos/formato';
 import { avisarInscripcion } from '@/lib/eventos/pago';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { enviarCorreosLote } from '@/lib/correo/enviar';
+import { correoCupoAprobado } from '@/lib/correo/plantillas';
+import { urlDelSitio } from '@/lib/sitio';
 
 export type DatosEvento = Omit<Evento, 'id' | 'precio_centavos'> & { id?: string; precio: string; hora_local?: string; zona?: string };
 type Resultado = { ok: true; id: string } | { ok: false; error: string };
@@ -98,4 +101,71 @@ export async function rechazarCompra(inscripcionId: string): Promise<{ ok: true 
   if (error) return { ok: false, error: 'No se pudo rechazar: ' + error.message };
   revalidatePath('/admin/eventos', 'layout');
   return { ok: true };
+}
+
+export type FilaImportada = { correo: string; nombre: string; resultado: 'aprobado' | 'aprobado_verificacion' | 'ya_aprobado' | 'repetido' | 'no_valido' | 'error' };
+
+/**
+ * «Aprobar pagos de Stripe»: recibe una lista (una persona por línea: «Nombre, correo» o solo el correo),
+ * deja a cada persona con su cupo pagado y, si se pide, les envía el correo de «pago comprobado».
+ * Cuando esa persona entre a la web con el mismo correo, verá el evento como inscrita.
+ */
+export async function aprobarPagosStripe(eventoId: string, texto: string, enviar: boolean):
+  Promise<{ ok: true; filas: FilaImportada[]; enviados: number; fallidos: string[] } | { ok: false; error: string }> {
+  const servidor = (await clienteAdmin()) && supabaseAdmin();
+  if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
+  const { data: evento } = await servidor.from('eventos_privados').select('id, titulo, precio_centavos').eq('id', eventoId).maybeSingle();
+  if (!evento) return { ok: false, error: 'No se encontró el evento.' };
+
+  const lineas = texto.split(/\r?\n/).map(l => l.trim()).filter(Boolean).slice(0, 300);
+  if (!lineas.length) return { ok: false, error: 'Pega al menos un correo.' };
+
+  const filas: FilaImportada[] = [];
+  const vistos = new Set<string>();
+  const nuevos: { correo: string; nombre: string }[] = [];
+  const ahora = new Date().toISOString();
+
+  for (const linea of lineas) {
+    const original = linea.match(/[^\s,;<>"']+@[^\s,;<>"']+\.[^\s,;<>"']{2,}/)?.[0] ?? '';
+    const correo = original.toLowerCase();
+    const nombre = linea.replace(original, '').replace(/[,;\t<>"]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+    if (!correo) { filas.push({ correo: linea.slice(0, 80), nombre: '', resultado: 'no_valido' }); continue; }
+    if (vistos.has(correo)) { filas.push({ correo, nombre, resultado: 'repetido' }); continue; }
+    vistos.add(correo);
+
+    const { data: actual } = await servidor.from('inscripciones').select('id, estado').eq('evento_id', evento.id).eq('correo', correo).in('estado', ['pagada', 'verificacion']).limit(1).maybeSingle();
+    if (actual?.estado === 'pagada') { filas.push({ correo, nombre, resultado: 'ya_aprobado' }); continue; }
+    if (actual?.estado === 'verificacion') {
+      const { error } = await servidor.from('inscripciones').update({ estado: 'pagada', pagado_en: ahora, actualizado_en: ahora }).eq('id', actual.id);
+      filas.push({ correo, nombre, resultado: error ? 'error' : 'aprobado_verificacion' });
+      if (!error) nuevos.push({ correo, nombre });
+      continue;
+    }
+    // Si ya tiene cuenta en la web, la inscripción queda unida a su cuenta desde ya.
+    const { data: perfil } = await servidor.from('perfiles').select('id, nombre').eq('correo', correo).maybeSingle();
+    if (perfil) await servidor.from('inscripciones').update({ estado: 'cancelada', actualizado_en: ahora })
+      .eq('evento_id', evento.id).eq('usuario_id', perfil.id).in('estado', ['pendiente', 'preinscrita', 'espera']);
+    const { error } = await servidor.from('inscripciones').insert({
+      evento_id: evento.id, usuario_id: perfil?.id ?? null, nombre: nombre || (perfil?.nombre as string) || '', correo,
+      estado: 'pagada', monto_centavos: evento.precio_centavos, pagado_en: ahora,
+    });
+    filas.push({ correo, nombre, resultado: error ? 'error' : 'aprobado' });
+    if (!error) nuevos.push({ correo, nombre: nombre || (perfil?.nombre as string) || '' });
+  }
+
+  let enviados = 0;
+  let fallidos: string[] = [];
+  if (enviar && nuevos.length) {
+    const sitio = await urlDelSitio();
+    const r = await enviarCorreosLote(nuevos.map(n => ({ para: n.correo, ...correoCupoAprobado({ sitio, nombre: primerNombre(n.nombre), evento: evento.titulo as string }) })));
+    enviados = r.enviados; fallidos = r.fallidos;
+  }
+  revalidatePath('/admin/eventos', 'layout');
+  return { ok: true, filas, enviados, fallidos };
+}
+
+/** «MARIA DEL ROSARIO NIEVES» → «Maria»; «(sin nombre)» → «». */
+function primerNombre(nombre: string) {
+  const p = nombre.replace(/\(.*?\)/g, '').trim().split(/\s+/)[0] ?? '';
+  return p ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : '';
 }

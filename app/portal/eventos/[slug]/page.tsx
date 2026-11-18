@@ -9,7 +9,7 @@ import { Parrafos } from '@/lib/contenido/texto';
 import { supabaseServidor } from '@/lib/supabase/servidor';
 import { getSesion } from '@/lib/sesion';
 import { stripeActivo } from '@/lib/stripe';
-import { procesarSesionPagada } from '@/lib/eventos/pago';
+import { procesarSesionPagada, vincularPorCorreo } from '@/lib/eventos/pago';
 import { fechaEvento, precioTexto, type Evento } from '@/lib/eventos/formato';
 
 export const dynamic = 'force-dynamic';
@@ -37,6 +37,8 @@ export default async function EventoPage({ params, searchParams }: Props) {
     try { await procesarSesionPagada(q.session_id); } catch (e) { errorPago = (e as Error).message; }
   }
 
+  // Cupos aprobados desde la administración con el correo de esta cuenta.
+  if (sesion) await vincularPorCorreo(sesion.id, sesion.correo);
   let estado: EstadoUsuario = 'ninguno';
   if (sesion) {
     const { data: mias } = await supabase.from('inscripciones').select('estado').eq('evento_id', evento.id).eq('usuario_id', sesion.id).in('estado', ['pagada', 'verificacion', 'preinscrita', 'espera']);

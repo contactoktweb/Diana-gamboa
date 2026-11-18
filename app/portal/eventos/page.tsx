@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowRight, CalendarDays, CheckCircle2, ChevronRight } from 'lucide-react';
 import { supabaseServidor } from '@/lib/supabase/servidor';
 import { getSesion } from '@/lib/sesion';
+import { vincularPorCorreo } from '@/lib/eventos/pago';
 import { fechaEvento, type Evento } from '@/lib/eventos/formato';
 
 export const metadata: Metadata = { title: 'Eventos | Portal del Alumno' };
@@ -14,6 +15,8 @@ export default async function EventosPage() {
   let eventos: Evento[] = [];
   const cupo = new Map<string, boolean>();
   const inscrito = new Set<string>();
+  // Cupos aprobados desde la administración con el correo de esta cuenta.
+  if (sesion) await vincularPorCorreo(sesion.id, sesion.correo);
   if (supabase) {
     const { data } = await supabase.from('eventos_privados').select('*').eq('visible', true).order('creado_en', { ascending: false });
     eventos = (data as Evento[]) ?? [];

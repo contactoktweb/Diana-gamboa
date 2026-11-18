@@ -198,3 +198,18 @@ export function correoBienvenidaTaller({ sitio, nombre, evento, fechas, hora, du
       [enlaceZoom ? `Enlace de Zoom: ${enlaceZoom}` : 'Te enviaremos el enlace de Zoom antes de la primera clase.', 'Entra 10 minutos antes y escribe tu nombre completo en Zoom.']),
   };
 }
+
+/** Aviso corto: el pago fue comprobado y la persona quedó aceptada en el curso. */
+export function correoCupoAprobado({ sitio, nombre, evento }: { sitio: string; nombre: string; evento: string }) {
+  const titulo = `¡Estás dentro${nombre ? `, ${nombre}` : ''}!`;
+  const parrafos = [
+    `Comprobamos tu pago y tu cupo en el curso <strong>${esc(evento)}</strong> quedó aprobado. ¡Ya formas parte del curso!`,
+    'Antes del inicio te enviaremos por correo los detalles para conectarte.',
+  ];
+  return {
+    asunto: `Pago comprobado: estás dentro de ${evento}`,
+    html: marco({ sitio, previa: 'Comprobamos tu pago: tu cupo en el curso quedó aprobado.', etiqueta: 'Pago comprobado', titulo, parrafos,
+      nota: '¿Tienes alguna duda? Responde a este correo o escríbenos a hola@dianagamboa.com.' }),
+    texto: textoPlano(titulo, parrafos, []),
+  };
+}

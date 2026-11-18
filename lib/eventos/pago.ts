@@ -53,3 +53,20 @@ export async function avisarInscripcion(inscripcionId: string, enviar: { admin?:
   }));
   for (const r of await Promise.allSettled(envios)) if (r.status === 'rejected') console.error('Correo de evento no enviado:', r.reason);
 }
+
+/**
+ * Cupos aprobados desde la administración para un correo que aún no tenía cuenta:
+ * cuando la persona entra a la web con ese correo, se le asignan a su cuenta.
+ */
+export async function vincularPorCorreo(usuarioId: string, correo: string) {
+  const admin = supabaseAdmin();
+  if (!admin || !correo) return;
+  const { data: sueltas } = await admin.from('inscripciones').select('id, evento_id')
+    .eq('correo', correo.toLowerCase()).is('usuario_id', null).in('estado', ['pagada', 'verificacion']);
+  for (const fila of sueltas ?? []) {
+    // Si tenía una preinscripción o lista de espera en ese evento, la reemplaza el cupo aprobado.
+    await admin.from('inscripciones').update({ estado: 'cancelada', actualizado_en: new Date().toISOString() })
+      .eq('evento_id', fila.evento_id).eq('usuario_id', usuarioId).in('estado', ['pendiente', 'preinscrita', 'espera']);
+    await admin.from('inscripciones').update({ usuario_id: usuarioId, actualizado_en: new Date().toISOString() }).eq('id', fila.id);
+  }
+}

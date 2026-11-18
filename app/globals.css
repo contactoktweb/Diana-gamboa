@@ -1064,3 +1064,8 @@ button{font:inherit;cursor:pointer}
 .evento-consejos li::before{content:'';position:absolute;left:4px;top:.45em;width:9px;height:9px;border-radius:50%;background:var(--gold)}
 .admin-tabla td[data-titulo="Teléfono"] a{white-space:nowrap}
 .evento-hora-local{color:var(--green-700)!important;font-weight:600}
+.aprobar-pagos textarea{width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:12px;font-family:ui-monospace,Menlo,monospace;font-size:.9rem}
+.aprobar-pagos code{background:#F4F6F5;padding:1px 6px;border-radius:6px}
+.resultado-aprobado,.resultado-aprobado_verificacion{color:var(--green-700);font-weight:600}
+.resultado-error,.resultado-no_valido{color:var(--alert);font-weight:600}
+.resultado-ya_aprobado,.resultado-repetido{color:var(--muted)}
