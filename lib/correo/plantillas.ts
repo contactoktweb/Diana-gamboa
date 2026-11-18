@@ -152,3 +152,49 @@ function correoPorVerificar({ sitio, evento, nombre, correo, monto, ocupados, cu
     texto: textoPlano(titulo, parrafos, [`Verificar: ${enlace}`]),
   };
 }
+
+/**
+ * Bienvenida al taller: se envía antes de la primera clase a todas las personas con su cupo pagado.
+ * Si aún no hay enlace de Zoom, el correo avisa que llegará antes de la clase.
+ */
+export function correoBienvenidaTaller({ sitio, nombre, evento, fechas, hora, duracion, enlaceZoom, enlacePortal }: {
+  sitio: string; nombre: string; evento: string; fechas: string; hora: string; duracion?: string; enlaceZoom?: string; enlacePortal: string;
+}) {
+  const titulo = `¡Te damos la bienvenida${nombre ? `, ${nombre}` : ''}!`;
+  const fila = (lugar: string, h: string) => `<tr><td style="padding:6px 10px;border-bottom:1px solid #E3E8E5;color:#4A5952">${lugar}</td><td style="padding:6px 10px;border-bottom:1px solid #E3E8E5;color:#0F4131;font-weight:bold;text-align:right;white-space:nowrap">${h}</td></tr>`;
+  const zonas = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E3E8E5;border-radius:12px;border-collapse:separate;font-size:14px;background:#FAFBFA">
+    ${fila('Nueva York, Miami (hora del Este)', '2:00 p. m.')}
+    ${fila('Chicago, Texas · Ciudad de México', '1:00 p. m.')}
+    ${fila('Denver, Arizona (hora de la Montaña)', '12:00 m.')}
+    ${fila('Los Ángeles, Oregón (hora del Pacífico)', '11:00 a. m.')}
+    ${fila('Colombia · Perú · Ecuador · Panamá', '2:00 p. m.')}
+    ${fila('Venezuela · Puerto Rico · Rep. Dominicana', '3:00 p. m.')}
+    ${fila('Argentina · Chile', '4:00 p. m.')}
+    ${fila('España', '8:00 p. m.')}
+  </table>`;
+  const lista = (items: string[]) => `<ul style="margin:8px 0 0;padding-left:20px;color:#4A5952;font-size:16px;line-height:1.6">${items.map(i => `<li style="margin:0 0 6px;color:#4A5952;font-size:16px">${i}</li>`).join('')}</ul>`;
+  const parrafos = [
+    `Tu cupo en <strong>${esc(evento)}</strong> está confirmado. Gracias por tu confianza: nos vemos muy pronto en clase.`,
+    `<strong>Fechas:</strong> ${esc(fechas)}<br><strong>Hora:</strong> ${esc(hora)}${duracion ? `<br><strong>Duración:</strong> ${esc(duracion)}` : ''}`,
+    `<strong>La hora en tu país</strong> (las dos clases empiezan a la misma hora):${zonas}`,
+    `<strong>Cómo entrar a la clase</strong>${lista([
+      enlaceZoom ? 'Pulsa el botón «Entrar a la clase por Zoom» de este correo. Es el mismo enlace para los dos días.' : 'Te enviaremos el enlace de Zoom por correo antes de la primera clase.',
+      'Entra 10 minutos antes para probar tu audio y tu video.',
+      'Escribe tu nombre completo en Zoom: así te reconocemos en la sala de espera y te damos paso.',
+    ])}`,
+    `<strong>Ten a mano</strong>${lista([
+      'Tu plataforma de opciones, por si quieres ubicar la cadena de opciones mientras explicamos.',
+      'Un cuaderno o tus notas para los ejercicios de comparación.',
+      'Un computador y una conexión estable: así verás bien las gráficas y las cadenas de opciones.',
+    ])}`,
+    'Si no puedes estar en vivo, recibirás la grabación de las dos clases.',
+  ];
+  return {
+    asunto: `Bienvenida al taller · ${evento}`,
+    html: marco({ sitio, previa: `Tu cupo está confirmado. ${fechas}, ${hora}.`, etiqueta: 'Bienvenida al taller', titulo, parrafos,
+      boton: enlaceZoom ? { texto: 'Entrar a la clase por Zoom', enlace: enlaceZoom } : { texto: 'Ver el taller en mi portal', enlace: enlacePortal },
+      nota: '¿Tienes alguna duda? Responde a este correo o escríbenos a hola@dianagamboa.com.<br><br>Este taller es educativo y no es una recomendación de inversión ni asesoría financiera. Operar opciones tiene alto riesgo.' }),
+    texto: textoPlano(titulo, [parrafos[0], parrafos[1], 'Hora en tu país: Nueva York 2:00 p. m. · Ciudad de México 1:00 p. m. · Oregón 11:00 a. m. · Colombia 2:00 p. m. · Venezuela 3:00 p. m. · Argentina y Chile 4:00 p. m. · España 8:00 p. m.'],
+      [enlaceZoom ? `Enlace de Zoom: ${enlaceZoom}` : 'Te enviaremos el enlace de Zoom antes de la primera clase.', 'Entra 10 minutos antes y escribe tu nombre completo en Zoom.']),
+  };
+}
