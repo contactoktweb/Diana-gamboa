@@ -29,18 +29,26 @@ export async function enviarCorreo({ para, asunto, html, texto }: { para: string
 export async function enviarCorreosLote(correos: { para: string; asunto: string; html: string; texto: string }[]) {
   let enviados = 0;
   const fallidos: string[] = [];
+  let detalle = '';
   for (let i = 0; i < correos.length; i += 100) {
+    if (i) await new Promise(r => setTimeout(r, 600)); // Resend admite pocas peticiones por segundo.
     const lote = correos.slice(i, i + 100);
     const r = await fetch('https://api.resend.com/emails/batch', {
       method: 'POST',
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(lote.map(c => ({ from: REMITENTE, to: [c.para], subject: c.asunto, html: c.html, text: c.texto }))),
-    }).catch(e => { console.error('Resend no respondió', e); return null; });
+    }).catch(e => { console.error('Resend no respondió', e); detalle ||= 'Resend no respondió (conexión).'; return null; });
     if (r?.ok) enviados += lote.length;
     else {
-      if (r) console.error('Resend rechazó el lote', r.status, await r.text().catch(() => ''));
+      if (r) {
+        const texto = await r.text().catch(() => '');
+        console.error('Resend rechazó el lote', r.status, texto);
+        let motivo = texto;
+        try { motivo = (JSON.parse(texto) as { message?: string }).message ?? texto; } catch { /* texto plano */ }
+        detalle ||= `Resend respondió ${r.status}: ${motivo.slice(0, 200)}`;
+      }
       fallidos.push(...lote.map(c => c.para));
     }
   }
-  return { enviados, fallidos };
+  return { enviados, fallidos, detalle };
 }

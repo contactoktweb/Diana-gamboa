@@ -67,15 +67,16 @@ function armar(e: Evento, r: Recordatorio, sitio: string, nombre: string) {
  */
 export async function enviarRecordatorio(e: Evento, r: Recordatorio, sitio: string, opciones: { prueba?: boolean; manual?: boolean } = {}) {
   const admin = supabaseAdmin();
-  if (!admin || !envioPropio) return { enviados: 0, fallidos: [] as string[], total: 0, error: 'Falta configurar Resend o la clave secreta de Supabase.' };
+  if (!admin || !envioPropio) return { enviados: 0, fallidos: [] as string[], total: 0, detalle: '', error: 'Falta configurar Resend o la clave secreta de Supabase.' };
   const lista = opciones.prueba ? [{ correo: CORREO_ADMINISTRADORA, nombre: 'Diana' }] : await inscritos(admin, e.id);
-  if (!lista.length) return { enviados: 0, fallidos: [], total: 0, error: 'Todavía no hay inscritos con el pago aprobado.' };
+  if (!lista.length) return { enviados: 0, fallidos: [], total: 0, detalle: '', error: 'Todavía no hay inscritos con el pago aprobado.' };
   const correos = lista.map(p => {
     const c = armar(e, r, sitio, primerNombre(p.nombre));
     return { para: p.correo, ...c, asunto: opciones.prueba ? `[Prueba] ${c.asunto}` : c.asunto };
   });
   const res = await enviarCorreosLote(correos);
-  if (!opciones.prueba) {
+  // Un envío manual que no salió no se registra: así el automático de ese día sigue programado.
+  if (!opciones.prueba && (res.enviados || !opciones.manual)) {
     await admin.from('recordatorios_enviados').upsert({
       evento_id: e.id, clave: r.clave, enviados: res.enviados, fallidos: res.fallidos.length,
       manual: Boolean(opciones.manual), creado_en: new Date().toISOString(),

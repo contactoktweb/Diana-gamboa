@@ -28,7 +28,9 @@ export default function AprobarPagos({ eventoId }: { eventoId: string }) {
     if (!confirm(`¿Aprobar ${lineas} ${lineas === 1 ? 'pago' : 'pagos'}${enviar ? ' y enviar el correo de «pago comprobado»' : ''}? Solo pega pagos que ya comprobaste en Stripe.`)) return;
     setError(''); setRes(null);
     iniciar(async () => {
-      const r = await aprobarPagosStripe(eventoId, texto, enviar);
+      let r: Awaited<ReturnType<typeof aprobarPagosStripe>>;
+      try { r = await aprobarPagosStripe(eventoId, texto, enviar); }
+      catch { setError('No se pudo completar: se perdió la conexión o el servidor tardó demasiado. Recarga la página para ver quiénes quedaron aprobados antes de reintentar.'); return; }
       if (!r.ok) { setError(r.error); return; }
       setRes(r); setTexto('');
       router.refresh();
@@ -48,7 +50,7 @@ export default function AprobarPagos({ eventoId }: { eventoId: string }) {
     {error && <p className="auth-error" role="alert">{error}</p>}
     {res && <div role="status">
       <p className="auth-ok"><CheckCircle2 size={18} aria-hidden="true" /> {aprobados} {aprobados === 1 ? 'pago aprobado' : 'pagos aprobados'}{enviar ? ` · ${res.enviados} ${res.enviados === 1 ? 'correo enviado' : 'correos enviados'}` : ''}.</p>
-      {res.fallidos.length > 0 && <p className="auth-error">No se pudieron enviar {res.fallidos.length} correos (puede ser el límite diario de Resend). Esos pagos sí quedaron aprobados: {res.fallidos.join(', ')}</p>}
+      {res.fallidos.length > 0 && <p className="auth-error">No se pudieron enviar {res.fallidos.length} correos. Esos pagos sí quedaron aprobados: {res.fallidos.join(', ')}</p>}
       <div className="admin-tabla-contenedor"><table className="admin-tabla">
         <thead><tr><th>Correo</th><th>Nombre</th><th>Resultado</th></tr></thead>
         <tbody>{res.filas.map((f, i) => <tr key={i}>

@@ -9,8 +9,8 @@ import { fechaEvento, horarioCorreo, type Evento } from './formato';
 
 export type TipoAviso = 'lista_espera' | 'nuevo_grupo';
 
-/** Correos por envío (el plan gratuito de Resend permite 100 al día). Con un plan pago, súbelo con LIMITE_AVISOS_DIA. */
-export const LIMITE_AVISOS = Math.max(1, Number(process.env.LIMITE_AVISOS_DIA) || 90);
+/** Máximo de correos por envío (se puede cambiar con LIMITE_AVISOS_DIA). */
+export const LIMITE_AVISOS = Math.max(1, Number(process.env.LIMITE_AVISOS_DIA) || 1000);
 
 type Persona = { correo: string; nombre: string };
 const limpio = (c: unknown) => String(c ?? '').trim().toLowerCase();
@@ -83,7 +83,7 @@ function armar(e: Evento, tipo: TipoAviso, sitio: string, nombre: string) {
  */
 export async function enviarAviso(e: Evento, tipo: TipoAviso, sitio: string, prueba = false) {
   const admin = supabaseAdmin();
-  if (!admin || !envioPropio) return { enviados: 0, fallidos: [] as string[], pendientes: 0, error: 'Falta configurar Resend o la clave secreta de Supabase.' };
+  if (!admin || !envioPropio) return { enviados: 0, fallidos: [] as string[], pendientes: 0, detalle: '', error: 'Falta configurar Resend o la clave secreta de Supabase.' };
   if (prueba) {
     const c = armar(e, tipo, sitio, 'Diana');
     const r = await enviarCorreosLote([{ para: CORREO_ADMINISTRADORA, ...c, asunto: `[Prueba] ${c.asunto}` }]);
@@ -93,15 +93,15 @@ export async function enviarAviso(e: Evento, tipo: TipoAviso, sitio: string, pru
   const hechos = new Set(ya.map(f => f.correo));
   const faltan = (await destinatarios(e, tipo)).filter(p => !hechos.has(p.correo));
   const lote = faltan.slice(0, LIMITE_AVISOS);
-  if (!lote.length) return { enviados: 0, fallidos: [], pendientes: 0, error: '' };
+  if (!lote.length) return { enviados: 0, fallidos: [], pendientes: 0, detalle: '', error: '' };
   const r = await enviarCorreosLote(lote.map(p => ({ para: p.correo, ...armar(e, tipo, sitio, primerNombre(p.nombre)) })));
   const fallidos = new Set(r.fallidos);
   const ok = lote.filter(p => !fallidos.has(p.correo)).map(p => ({ evento_id: e.id, tipo, correo: p.correo }));
   if (ok.length) await admin.from('avisos_enviados').upsert(ok, { ignoreDuplicates: true });
-  return { enviados: r.enviados, fallidos: r.fallidos, pendientes: faltan.length - ok.length, error: '' };
+  return { enviados: r.enviados, fallidos: r.fallidos, pendientes: faltan.length - ok.length, detalle: r.detalle, error: '' };
 }
 
-/** La tarea diaria sigue enviando el aviso del nuevo grupo a quienes falten (por el límite diario de Resend). */
+/** La tarea diaria sigue enviando el aviso del nuevo grupo a quienes falten (si quedó alguno pendiente). */
 export async function continuarAvisos(sitio: string) {
   const admin = supabaseAdmin();
   if (!admin || !envioPropio) return [];

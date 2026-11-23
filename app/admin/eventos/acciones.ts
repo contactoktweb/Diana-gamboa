@@ -88,7 +88,7 @@ export async function eliminarEvento(id: string): Promise<{ ok: true } | { ok: f
 }
 
 /** Compra por enlace verificada en Stripe: la persona queda inscrita y recibe su correo de agradecimiento. */
-export async function aprobarCompra(inscripcionId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function aprobarCompra(inscripcionId: string): Promise<{ ok: true; aviso?: string } | { ok: false; error: string }> {
   // Las inscripciones solo las modifica el servidor, después de comprobar que es la administradora.
   const servidor = (await clienteAdmin()) && supabaseAdmin();
   if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
@@ -96,19 +96,21 @@ export async function aprobarCompra(inscripcionId: string): Promise<{ ok: true }
     .eq('id', inscripcionId).eq('estado', 'verificacion').select('id');
   if (error) return { ok: false, error: 'No se pudo aprobar: ' + error.message };
   if (!data?.length) return { ok: false, error: 'Esta compra ya no está en verificación.' };
-  await avisarInscripcion(inscripcionId, { alumno: true });
+  const llego = await avisarInscripcion(inscripcionId, { alumno: true }).catch(() => false);
   revalidatePath('/admin/eventos', 'layout');
-  return { ok: true };
+  return llego
+    ? { ok: true, aviso: 'Aprobado. Se envió su correo «Gracias por tu confianza».' }
+    : { ok: false, error: 'La compra quedó aprobada, pero el correo de confirmación no salió. Revisa Resend → Emails; puedes enviarle la bienvenida desde «Correos a los inscritos».' };
 }
 
 /** El pago no aparece en Stripe: se rechaza y el cupo se libera. */
-export async function rechazarCompra(inscripcionId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+export async function rechazarCompra(inscripcionId: string): Promise<{ ok: true; aviso?: string } | { ok: false; error: string }> {
   const servidor = (await clienteAdmin()) && supabaseAdmin();
   if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
   const { error } = await servidor.from('inscripciones').update({ estado: 'cancelada', actualizado_en: new Date().toISOString() }).eq('id', inscripcionId).eq('estado', 'verificacion');
   if (error) return { ok: false, error: 'No se pudo rechazar: ' + error.message };
   revalidatePath('/admin/eventos', 'layout');
-  return { ok: true };
+  return { ok: true, aviso: 'Compra rechazada: el cupo quedó libre.' };
 }
 
 export type FilaImportada = { correo: string; nombre: string; resultado: 'aprobado' | 'aprobado_verificacion' | 'ya_aprobado' | 'repetido' | 'no_valido' | 'error' };
@@ -174,6 +176,14 @@ export async function aprobarPagosStripe(eventoId: string, texto: string, enviar
 
 type Simple = { ok: true; aviso?: string } | { ok: false; error: string };
 
+/** Si algo falla en el servidor, la administración ve el motivo en lugar de un botón que «no hace nada». */
+async function protegida(fn: () => Promise<Simple>): Promise<Simple> {
+  try { return await fn(); } catch (e) {
+    console.error('Acción de eventos', e);
+    return { ok: false, error: `Ocurrió un error y no se completó: ${(e as Error).message || 'error desconocido'}.` };
+  }
+}
+
 async function servidorAdmin() {
   return (await clienteAdmin()) && supabaseAdmin();
 }
@@ -224,6 +234,9 @@ export async function quitarSalaZoom(eventoId: string): Promise<Simple> {
 
 /** Envía ahora un correo programado (bienvenida o recordatorio). Con «prueba», solo a la administradora. */
 export async function enviarRecordatorioAhora(eventoId: string, clave: string, prueba: boolean): Promise<Simple> {
+  return protegida(() => enviarRecordatorioAhoraSin(eventoId, clave, prueba));
+}
+async function enviarRecordatorioAhoraSin(eventoId: string, clave: string, prueba: boolean): Promise<Simple> {
   const servidor = await servidorAdmin();
   if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
   const { data: e } = await servidor.from('eventos_privados').select('*').eq('id', eventoId).maybeSingle<Evento>();
@@ -233,14 +246,17 @@ export async function enviarRecordatorioAhora(eventoId: string, clave: string, p
   const res = await enviarRecordatorio(e, r, await urlDelSitio(), { prueba, manual: true });
   if (res.error) return { ok: false, error: res.error };
   revalidatePath('/admin/eventos', 'layout');
-  if (prueba) return res.enviados ? { ok: true, aviso: `Prueba enviada a ${CORREO_ADMINISTRADORA}.` } : { ok: false, error: 'No se pudo enviar la prueba (revisa la cuota de Resend).' };
+  if (prueba) return res.enviados ? { ok: true, aviso: `Prueba enviada a ${CORREO_ADMINISTRADORA}. Revisa la bandeja de entrada (y spam).` } : { ok: false, error: `No se pudo enviar la prueba. ${res.detalle || ''}`.trim() };
   return res.fallidos.length
-    ? { ok: false, error: `Se enviaron ${res.enviados} de ${res.total}. No llegaron ${res.fallidos.length} (puede ser el límite diario de Resend): ${res.fallidos.slice(0, 20).join(', ')}${res.fallidos.length > 20 ? '…' : ''}` }
+    ? { ok: false, error: `Se enviaron ${res.enviados} de ${res.total}. No salieron ${res.fallidos.length}${res.detalle ? ` (${res.detalle})` : ''}: ${res.fallidos.slice(0, 20).join(', ')}${res.fallidos.length > 20 ? '…' : ''}` }
     : { ok: true, aviso: `Enviado a ${res.enviados} ${res.enviados === 1 ? 'persona' : 'personas'}.` };
 }
 
 /** Envía el correo de la lista de espera o el aviso del nuevo grupo (a quienes falten). */
 export async function enviarAvisoAhora(eventoId: string, tipo: TipoAviso, prueba: boolean): Promise<Simple> {
+  return protegida(() => enviarAvisoAhoraSin(eventoId, tipo, prueba));
+}
+async function enviarAvisoAhoraSin(eventoId: string, tipo: TipoAviso, prueba: boolean): Promise<Simple> {
   const servidor = await servidorAdmin();
   if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
   const { data: e } = await servidor.from('eventos_privados').select('*').eq('id', eventoId).maybeSingle<Evento>();
@@ -249,16 +265,19 @@ export async function enviarAvisoAhora(eventoId: string, tipo: TipoAviso, prueba
   const r = await enviarAviso(e, tipo, await urlDelSitio(), prueba);
   revalidatePath('/admin/eventos', 'layout');
   if (r.error) return { ok: false, error: r.error };
-  if (prueba) return r.enviados ? { ok: true, aviso: `Prueba enviada a ${CORREO_ADMINISTRADORA}.` } : { ok: false, error: 'No se pudo enviar la prueba (revisa la cuota de Resend).' };
+  if (prueba) return r.enviados ? { ok: true, aviso: `Prueba enviada a ${CORREO_ADMINISTRADORA}. Revisa la bandeja de entrada (y spam).` } : { ok: false, error: `No se pudo enviar la prueba. ${r.detalle || ''}`.trim() };
   if (!r.enviados && !r.fallidos.length) return { ok: true, aviso: 'No hay nadie pendiente: todos ya lo recibieron.' };
-  const resto = r.pendientes ? ` Faltan ${r.pendientes}: ${tipo === 'nuevo_grupo' ? 'salen solos cada mañana' : 'vuelve a pulsar el botón mañana'} (límite diario de Resend).` : ' Ya lo recibieron todos.';
+  const resto = r.pendientes ? ` Faltan ${r.pendientes}: vuelve a pulsar el botón para enviarles.` : ' Ya lo recibieron todos.';
   return r.fallidos.length
-    ? { ok: false, error: `Se enviaron ${r.enviados}. No salieron ${r.fallidos.length} (puede ser el límite diario de Resend); quedan pendientes y puedes reintentar.${resto}` }
+    ? { ok: false, error: `Se enviaron ${r.enviados}. No salieron ${r.fallidos.length}${r.detalle ? ` (${r.detalle})` : ''}; quedan pendientes y puedes reintentar.${resto}` }
     : { ok: true, aviso: `Enviado a ${r.enviados} ${r.enviados === 1 ? 'persona' : 'personas'}.${resto}` };
 }
 
 /** Fin de la etapa de prioridad: el grupo aparece en Eventos para todos y empieza el aviso general. */
 export async function abrirATodos(eventoId: string, soloNovedades: boolean): Promise<Simple> {
+  return protegida(() => abrirATodosSin(eventoId, soloNovedades));
+}
+async function abrirATodosSin(eventoId: string, soloNovedades: boolean): Promise<Simple> {
   const servidor = await servidorAdmin();
   if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
   const { data: e, error } = await servidor.from('eventos_privados').update({
@@ -270,5 +289,5 @@ export async function abrirATodos(eventoId: string, soloNovedades: boolean): Pro
   revalidatePath('/eventos', 'layout');
   const r = await enviarAviso(e, 'nuevo_grupo', await urlDelSitio());
   revalidatePath('/admin/eventos', 'layout');
-  return { ok: true, aviso: `Listo: el grupo ya está abierto para todos y aparece en Eventos. Aviso enviado a ${r.enviados} ${r.enviados === 1 ? 'persona' : 'personas'}.${r.pendientes ? ` Faltan ${r.pendientes}: salen solos cada mañana (límite diario de Resend).` : ''}` };
+  return { ok: true, aviso: `Listo: el grupo ya está abierto para todos y aparece en Eventos. Aviso enviado a ${r.enviados} ${r.enviados === 1 ? 'persona' : 'personas'}.${r.pendientes ? ` Faltan ${r.pendientes}: pulsa «Enviar ya a los pendientes».` : ''}` };
 }

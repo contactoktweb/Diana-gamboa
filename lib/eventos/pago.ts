@@ -38,23 +38,27 @@ export async function procesarSesionPagada(sessionId: string) {
  */
 export async function avisarInscripcion(inscripcionId: string, enviar: { admin?: boolean; alumno?: boolean; porVerificar?: boolean }) {
   const admin = supabaseAdmin();
-  if (!admin) return;
+  if (!admin) return null;
   const { data: i } = await admin.from('inscripciones').select('nombre, correo, monto_centavos, evento_id, telefono, correo_pago').eq('id', inscripcionId).maybeSingle();
-  if (!i) return;
+  if (!i) return null;
   const { data: e } = await admin.from('eventos_privados').select('*').eq('id', i.evento_id).maybeSingle<Evento>();
-  if (!e) return;
+  if (!e) return null;
   const { count } = await admin.from('inscripciones').select('id', { count: 'exact', head: true }).eq('evento_id', e.id).in('estado', ['pagada', 'verificacion']);
   const sitio = await urlDelSitio();
   const envios: Promise<unknown>[] = [];
+  let alumno: Promise<unknown> | null = null;
   if (enviar.admin) envios.push(enviarCorreo({
     para: CORREO_ADMINISTRADORA,
     ...correoNuevoCupo({ sitio, evento: e.titulo, nombre: i.nombre, correo: i.correo, monto: precioTexto(i.monto_centavos ?? e.precio_centavos), ocupados: count ?? 0, cupos: e.cupos, enlace: `${sitio}/admin/eventos/${e.id}`, porVerificar: enviar.porVerificar, telefono: i.telefono, correoPago: i.correo_pago }),
   }));
-  if (enviar.alumno) envios.push(enviarCorreo({
+  if (enviar.alumno) envios.push(alumno = enviarCorreo({
     para: i.correo,
     ...correoGraciasEvento({ sitio, nombre: primerNombre(i.nombre || ''), evento: e.titulo, fecha: fechaEvento(e), ...horarioCorreo(e), enlace: `${sitio}/portal/eventos/${e.slug}` }),
   }));
-  for (const r of await Promise.allSettled(envios)) if (r.status === 'rejected') console.error('Correo de evento no enviado:', r.reason);
+  const resultados = await Promise.allSettled(envios);
+  for (const r of resultados) if (r.status === 'rejected') console.error('Correo de evento no enviado:', r.reason);
+  // ¿Le llegó el correo a la persona? (para mostrarlo en la administración)
+  return alumno ? resultados[envios.indexOf(alumno)]?.status === 'fulfilled' : null;
 }
 
 /**

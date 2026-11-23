@@ -1,29 +1,19 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
-import { CheckCircle2, ExternalLink, Save, Sparkles, Trash2, Video } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle2, ExternalLink, Loader2, Save, Sparkles, Trash2, Video } from 'lucide-react';
 import { crearSalaZoom, guardarSalaZoom, quitarSalaZoom } from '@/app/admin/eventos/acciones';
+import { useAccion } from './useAccion';
 
 /** Sala de clase de Zoom del evento: crearla, guardarla y entrar como anfitriona. */
 export default function SalaZoomAdmin({ eventoId, slug, sala, sdkActivo, apiActiva }: {
   eventoId: string; slug: string; sala: { reunion: string; clave: string } | null; sdkActivo: boolean; apiActiva: boolean;
 }) {
-  const router = useRouter();
   const [reunion, setReunion] = useState(sala?.reunion ?? '');
   const [clave, setClave] = useState(sala?.clave ?? '');
   const [duracion, setDuracion] = useState('120');
-  const [mensaje, setMensaje] = useState<{ ok: boolean; texto: string } | null>(null);
-  const [pendiente, iniciar] = useTransition();
-
-  function ejecutar(accion: () => Promise<{ ok: true; aviso?: string } | { ok: false; error: string }>) {
-    setMensaje(null);
-    iniciar(async () => {
-      const r = await accion();
-      setMensaje(r.ok ? { ok: true, texto: r.aviso ?? 'Listo.' } : { ok: false, texto: r.error });
-      if (r.ok) router.refresh();
-    });
-  }
+  const { ejecutar: correr, enCurso, aviso, ocupado: pendiente } = useAccion();
+  const ejecutar = (accion: () => Promise<{ ok: true; aviso?: string } | { ok: false; error: string }>) => correr('sala', accion);
   const formato = (n: string) => n.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1 $2 $3');
 
   return <section className="admin-panel sala-admin">
@@ -62,6 +52,7 @@ export default function SalaZoomAdmin({ eventoId, slug, sala, sdkActivo, apiActi
       <button type="button" className="btn btn-outline btn-sm es-peligro" disabled={pendiente} onClick={() => { if (confirm('¿Quitar la sala? Los inscritos dejarán de ver el botón «Entrar a la clase».')) ejecutar(() => quitarSalaZoom(eventoId)); }}><Trash2 size={16} aria-hidden="true" /> Quitar sala</button>
     </div>}
     {sala && !apiActiva && <small className="editor-ayuda">Para iniciar la clase como anfitriona desde la web falta la app Server-to-Server de Zoom. Sin ella, inicia la reunión en la aplicación de Zoom (con tu cuenta Pro): los alumnos igual entran desde la web.</small>}
-    {mensaje && <p className={mensaje.ok ? 'auth-ok' : 'auth-error'} role={mensaje.ok ? 'status' : 'alert'}>{mensaje.texto}</p>}
+    {enCurso('sala') && <p className="admin-tenue"><Loader2 size={14} className="girando" aria-hidden="true" /> Guardando…</p>}
+    {aviso('sala')}
   </section>;
 }
