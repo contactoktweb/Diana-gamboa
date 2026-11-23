@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: 'Eventos y talleres en vivo | Diana G
 export const dynamic = 'force-dynamic';
 
 export default async function EventosPublicosPage() {
-  const eventos = await eventosPublicos();
+  const eventos = (await eventosPublicos()).filter(e => e.en_lista !== false);
   const cupos = await Promise.all(eventos.map(hayCupoPublico));
   return <>
     <a className="skip-link" href="#contenido">Saltar al contenido</a>
@@ -26,8 +26,9 @@ export default async function EventosPublicosPage() {
         {eventos.length === 0
           ? <p className="admin-vacio">Por ahora no hay eventos publicados. Crea tu cuenta gratuita y te avisaremos del próximo.</p>
           : <ul className="eventos-lista">{eventos.map((e, i) => <li key={e.id} className="evento-tarjeta">
-            <p className="eyebrow"><CalendarDays size={16} aria-hidden="true" /> {fechaEvento(e)}</p>
+            {e.etiqueta && <p className="eyebrow evento-etiqueta">{e.etiqueta}</p>}
             <h2>{e.titulo}</h2>
+            <p className="evento-fecha"><CalendarDays size={16} aria-hidden="true" /> {fechaEvento(e)}</p>
             {e.subtitulo && <p className="evento-sub">{e.subtitulo}</p>}
             {e.resumen && <p>{e.resumen}</p>}
             <div className="evento-tarjeta-pie">

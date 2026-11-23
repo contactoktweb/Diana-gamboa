@@ -1093,3 +1093,7 @@ button{font:inherit;cursor:pointer}
 }
 .evento-nota-texto{display:block}
 .evento-nota-texto a{color:var(--green-700);font-weight:600}
+.evento-etiqueta{color:var(--gold-text)!important;font-weight:700;letter-spacing:.16em;margin-bottom:4px!important}
+.evento-fecha{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--green-700)!important;margin:4px 0 10px!important}
+.evento-detalles{margin:14px 0 0;font-weight:600;color:var(--green-700)}
+.lanzamiento-paso{font-size:1.02rem;margin:16px 0 4px;color:var(--green-900)}

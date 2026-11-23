@@ -45,6 +45,11 @@ export default async function EventoPublicoPage({ params }: Props) {
       <p className="evento-estado es-ok"><CheckCircle2 size={20} aria-hidden="true" /> Ya tienes tu cupo en este evento.</p>
       <Link href={portal} className="btn btn-green btn-lg"><Video size={20} aria-hidden="true" /> Ir al evento en mi portal</Link>
     </div>;
+    if (e.solo_lista_espera && e.lista_de) return <div className="evento-inscripcion">
+      <p className="evento-estado es-disponible"><CheckCircle2 size={20} aria-hidden="true" /> Primero, la lista de espera</p>
+      <Link href={sesion ? portal : `/ingresar?next=${encodeURIComponent(portal)}`} className={`btn btn-green ${principal ? 'btn-lg' : ''}`}>Reserva tu cupo <ArrowRight aria-hidden="true" /></Link>
+      <p className="evento-nota evento-nota-texto">Por ahora este grupo está abierto solo para quienes quedaron en la lista de espera del grupo anterior. Entra con el mismo correo con el que te anotaste.</p>
+    </div>;
     if (!e.inscripcion_abierta) return <p className="evento-estado es-cerrado"><Lock size={20} aria-hidden="true" /> Las inscripciones están cerradas.</p>;
     if (!hayCupo) return <div className="evento-inscripcion">
       <p className="evento-estado es-agotado"><X size={20} aria-hidden="true" /> Cupos agotados</p>
@@ -52,7 +57,7 @@ export default async function EventoPublicoPage({ params }: Props) {
     </div>;
     return <div className="evento-inscripcion">
       <p className="evento-estado es-disponible"><CheckCircle2 size={20} aria-hidden="true" /> Cupos disponibles</p>
-      <Link href={sesion ? portal : `/registro?next=${encodeURIComponent(portal)}`} className={`btn btn-green ${principal ? 'btn-lg' : ''}`}>Reserva tu lugar <ArrowRight aria-hidden="true" /></Link>
+      <Link href={sesion ? portal : `/registro?next=${encodeURIComponent(portal)}`} className={`btn btn-green ${principal ? 'btn-lg' : ''}`}>Reserva tu cupo <ArrowRight aria-hidden="true" /></Link>
       {!sesion && <p className="evento-nota evento-nota-texto">Primero creas tu cuenta gratuita (o <Link href={`/ingresar?next=${encodeURIComponent(portal)}`}>inicias sesión</Link>) y luego pagas de forma segura con Stripe.</p>}
     </div>;
   };
@@ -64,7 +69,7 @@ export default async function EventoPublicoPage({ params }: Props) {
       <section className="lesson-head evento-head">
         <div className="wrap">
           <div className="lesson-title"><div>
-            {e.detalles && <p className="eyebrow">{e.detalles}</p>}
+            {(e.etiqueta || e.detalles) && <p className="eyebrow">{e.etiqueta || e.detalles}</p>}
             <h1>{e.titulo}</h1>
           </div></div>
           {e.subtitulo && <p className="lead-sm">{e.subtitulo}</p>}
@@ -73,6 +78,7 @@ export default async function EventoPublicoPage({ params }: Props) {
             {e.horario && <li><Clock3 size={18} aria-hidden="true" /> {e.horario}</li>}
             {e.hora_inicio && <HoraLocal iso={e.hora_inicio} />}
           </ul>
+          {e.etiqueta && e.detalles && <p className="evento-detalles">{e.detalles}</p>}
           {llamado()}
         </div>
       </section>
@@ -80,7 +86,7 @@ export default async function EventoPublicoPage({ params }: Props) {
       <div className="wrap lesson-body evento-cuerpo">
         <article className="evento-texto"><TextoEvento texto={e.contenido} /></article>
         {!pagado && <section className="evento-reserva" aria-labelledby="reserva-titulo">
-          <h2 id="reserva-titulo">Reserva tu lugar</h2>
+          <h2 id="reserva-titulo">Reserva tu cupo</h2>
           {e.detalles && <p>{e.detalles}</p>}
           <p className="evento-nota">La clase es en vivo y se abre dentro de la web: no necesitas instalar nada.</p>
           {llamado(false)}

@@ -7,6 +7,18 @@ export interface Evento {
   horario: string; precio_centavos: number; cupos: number; inscripcion_abierta: boolean; visible: boolean;
   /** Recordatorios automáticos por correo (la víspera y cada día de clase). */
   recordatorios: boolean;
+  /** Enlace de pago de Stripe (solo mientras no estén las claves de Stripe). */
+  enlace_pago: string;
+  /** Texto sobre el título, por ejemplo «NUEVO GRUPO · DICIEMBRE». */
+  etiqueta: string;
+  /** Aparece en la lista de Eventos (si no, solo se llega con el enlace directo). */
+  en_lista: boolean;
+  /** Etapa de prioridad: solo compra la lista de espera del evento «lista_de». */
+  solo_lista_espera: boolean;
+  lista_de: string | null;
+  /** Cuándo se abrió a todos y se empezó a enviar el aviso del nuevo grupo. */
+  aviso_publico_en: string | null;
+  aviso_solo_novedades: boolean;
   /** Último día (eventos de varios días) y hora de inicio exacta (ISO, se muestra en la hora local de cada alumno). */
   fecha_fin: string | null; hora_inicio: string | null;
 }

@@ -7,11 +7,14 @@ import CopiarTexto from '@/components/admin/CopiarTexto';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import FormEvento from '@/components/admin/FormEvento';
 import SalaZoomAdmin from '@/components/admin/SalaZoomAdmin';
+import LanzamientoAdmin from '@/components/admin/LanzamientoAdmin';
+import { estadoAviso, LIMITE_AVISOS } from '@/lib/eventos/avisos';
+import { urlDelSitio } from '@/lib/sitio';
 import RecordatoriosAdmin, { type FilaRecordatorio } from '@/components/admin/RecordatoriosAdmin';
 import { planRecordatorios } from '@/lib/eventos/recordatorios';
 import { zoomApiActiva, zoomSdkActivo } from '@/lib/zoom';
 import { supabaseServidor } from '@/lib/supabase/servidor';
-import { diaLargo, horaEnZona, precioTexto, type EstadoInscripcion, type Evento } from '@/lib/eventos/formato';
+import { diaLargo, fechaEvento, horaEnZona, precioTexto, type EstadoInscripcion, type Evento } from '@/lib/eventos/formato';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +22,7 @@ interface Fila { id: string; nombre: string; correo: string; estado: EstadoInscr
 
 const fecha = (d: string) => new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/New_York' }).format(new Date(d));
 const GRUPOS: { estado: EstadoInscripcion; titulo: string; nota: string }[] = [
-  { estado: 'verificacion', titulo: 'Compras por verificar', nota: 'Avisos de pago hechos con el antiguo enlace de Stripe. En Stripe › Payments busca el pago por su correo, confirma el valor y el estado «Succeeded» y apruébalo. El teléfono abre WhatsApp.' },
+  { estado: 'verificacion', titulo: 'Compras por verificar', nota: 'Pagaron con el enlace de Stripe y esperan tu revisión. En Stripe › Payments busca el pago por su correo (o por el «correo de Stripe» si es distinto), confirma el valor y el estado «Succeeded», revisa el comprobante si lo subieron y apruébalo: le llega su correo «Gracias por tu confianza». Su cupo queda apartado mientras tanto. El teléfono abre WhatsApp.' },
   { estado: 'pagada', titulo: 'Inscritos (pago aprobado)', nota: 'Tienen su cupo, ven el acceso del evento en su portal y reciben los recordatorios. El teléfono (si lo escribieron en Stripe) abre WhatsApp.' },
   { estado: 'preinscrita', titulo: 'Preinscritos', nota: 'Se preinscribieron sin pagar (Stripe aún no estaba conectado). Envíales el enlace del evento para que paguen; no tienen cupo apartado.' },
   { estado: 'espera', titulo: 'Lista de espera', nota: 'Quisieron entrar con los cupos agotados. Te sirve para decidir si abres otra fecha o amplías cupos.' },
@@ -43,11 +46,18 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
     const { data: firmados } = await servidor.storage.from('comprobantes').createSignedUrls(conComprobante.map(f => f.comprobante!), 3600);
     (firmados ?? []).forEach((x, k) => { if (x.signedUrl) comprobantes.set(conComprobante[k].id, x.signedUrl); });
   }
+  const { data: todos } = await supabase.from('eventos_privados').select('id, titulo, fecha_tipo, fecha, fecha_fin, fecha_periodo, fecha_mes, fecha_anio').neq('id', id).order('creado_en', { ascending: false });
+  const otros = (todos ?? []).map(o => ({ id: o.id as string, titulo: o.titulo as string, fecha: fechaEvento(o as Evento) }));
   const total = pagadas.reduce((s, f) => s + (f.monto_centavos ?? 0), 0);
 
   // Sala de Zoom y correos programados (tablas de supabase/sala-y-recordatorios.sql).
   const { data: sala } = servidor ? await servidor.from('eventos_zoom').select('reunion, clave').eq('evento_id', id).maybeSingle() : { data: null };
   const { data: enviados } = servidor ? await servidor.from('recordatorios_enviados').select('clave, enviados, fallidos, manual, creado_en').eq('evento_id', id) : { data: null };
+  // Lanzamiento por etapas (lista de espera con prioridad y aviso general).
+  const conLanzamiento = Boolean(e.lista_de || e.aviso_publico_en || e.en_lista === false);
+  const [espera, general] = conLanzamiento ? await Promise.all([estadoAviso(e, 'lista_espera'), estadoAviso(e, 'nuevo_grupo')]) : [null, null];
+  const listaNombre = e.lista_de ? otros.find(o => o.id === e.lista_de) : null;
+  const sitio = await urlDelSitio();
   const ahora = Date.now();
   const recordatorios: FilaRecordatorio[] = planRecordatorios(e).map(r => {
     const hecho = enviados?.find(x => x.clave === r.clave);
@@ -66,10 +76,13 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
     <section className="cifras" aria-label="Cifras del evento">
       <div className="cifra"><span>Cupos pagados</span><strong>{pagadas.length} de {e.cupos}</strong><small>{e.cupos - pagadas.length > 0 ? `${e.cupos - pagadas.length} disponibles` : 'Cupos agotados'}</small></div>
       <div className="cifra"><span>Ingresos</span><strong>{precioTexto(total)}</strong><small>Antes de la comisión de Stripe</small></div>
-            <div className="cifra"><span>Preinscritos</span><strong>{filas.filter(f => f.estado === 'preinscrita').length}</strong><small>Sin pagar</small></div>
+            {filas.some(f => f.estado === 'verificacion') && <div className="cifra"><span>Por verificar</span><strong>{filas.filter(f => f.estado === 'verificacion').length}</strong><small>Pagaron con el enlace</small></div>}
+      <div className="cifra"><span>Preinscritos</span><strong>{filas.filter(f => f.estado === 'preinscrita').length}</strong><small>Sin pagar</small></div>
       <div className="cifra"><span>Lista de espera</span><strong>{filas.filter(f => f.estado === 'espera').length}</strong><small>Con cupos agotados</small></div>
     </section>
 
+    {conLanzamiento && espera && general && <LanzamientoAdmin eventoId={e.id} enlace={`${sitio}/portal/eventos/${e.slug}`} prioridad={Boolean(e.solo_lista_espera && e.lista_de)}
+      listaNombre={listaNombre ? `${listaNombre.titulo} · ${listaNombre.fecha}` : ''} espera={espera} general={general} abierto={Boolean(e.aviso_publico_en)} limite={LIMITE_AVISOS} />}
     <SalaZoomAdmin eventoId={e.id} slug={e.slug} sala={sala as { reunion: string; clave: string } | null} sdkActivo={zoomSdkActivo} apiActiva={zoomApiActiva} />
     <RecordatoriosAdmin eventoId={e.id} filas={recordatorios} activos={e.recordatorios !== false} cron={Boolean(process.env.CRON_SECRET)} inscritos={new Set(pagadas.map(f => f.correo.toLowerCase())).size} />
 
@@ -107,6 +120,6 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
       <AprobarPagos eventoId={e.id} />
     </details>
 
-    <FormEvento inicial={{ ...e, precio: (e.precio_centavos / 100).toFixed(2), zona: 'America/New_York', hora_local: e.hora_inicio ? horaEnZona(e.hora_inicio, 'America/New_York') : '' }} />
+    <FormEvento otros={otros} inicial={{ ...e, precio: (e.precio_centavos / 100).toFixed(2), zona: 'America/New_York', hora_local: e.hora_inicio ? horaEnZona(e.hora_inicio, 'America/New_York') : '' }} />
   </>;
 }

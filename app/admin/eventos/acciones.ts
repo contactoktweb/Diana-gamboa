@@ -6,6 +6,7 @@ import { supabaseServidor } from '@/lib/supabase/servidor';
 import { aInstante, diasEvento, ZONAS, type Evento } from '@/lib/eventos/formato';
 import { crearReunionZoom, numeroReunion, zoomApiActiva } from '@/lib/zoom';
 import { enviarRecordatorio, planRecordatorios } from '@/lib/eventos/recordatorios';
+import { enviarAviso, type TipoAviso } from '@/lib/eventos/avisos';
 import { CORREO_ADMINISTRADORA } from '@/lib/administradora';
 import { avisarInscripcion, primerNombre } from '@/lib/eventos/pago';
 import { supabaseAdmin } from '@/lib/supabase/admin';
@@ -13,7 +14,7 @@ import { enviarCorreosLote } from '@/lib/correo/enviar';
 import { correoCupoAprobado } from '@/lib/correo/plantillas';
 import { urlDelSitio } from '@/lib/sitio';
 
-export type DatosEvento = Omit<Evento, 'id' | 'precio_centavos'> & { id?: string; precio: string; hora_local?: string; zona?: string };
+export type DatosEvento = Omit<Evento, 'id' | 'precio_centavos' | 'aviso_publico_en' | 'aviso_solo_novedades'> & { id?: string; precio: string; hora_local?: string; zona?: string };
 type Resultado = { ok: true; id: string } | { ok: false; error: string };
 
 async function clienteAdmin() {
@@ -34,6 +35,10 @@ export async function guardarEvento(d: DatosEvento): Promise<Resultado> {
   const precio = Math.round(Number(String(d.precio).replace(',', '.')) * 100);
   const cupos = Math.round(Number(d.cupos));
   if (!titulo) return { ok: false, error: 'Escribe el título del evento.' };
+  const enlacePago = recortar(d.enlace_pago, 300);
+  if (enlacePago && !/^https:\/\/\S+$/.test(enlacePago)) return { ok: false, error: 'El enlace de pago debe empezar por https://.' };
+  const listaDe = d.solo_lista_espera && d.lista_de && d.lista_de !== d.id ? d.lista_de : null;
+  if (d.solo_lista_espera && !listaDe) return { ok: false, error: 'Elige de qué evento es la lista de espera con prioridad.' };
   if (!/^[a-z0-9-]{2,60}$/.test(slug)) return { ok: false, error: 'La dirección solo puede tener letras minúsculas, números y guiones.' };
   if (!Number.isFinite(precio) || precio < 50) return { ok: false, error: 'Escribe un valor válido en dólares (mínimo 0.50).' };
   if (!Number.isInteger(cupos) || cupos < 1 || cupos > 10000) return { ok: false, error: 'Los cupos deben ser un número entre 1 y 10.000.' };
@@ -57,6 +62,8 @@ export async function guardarEvento(d: DatosEvento): Promise<Resultado> {
     fecha_mes: exacta ? null : Number(d.fecha_mes), fecha_anio: exacta ? null : Number(d.fecha_anio),
     horario: recortar(d.horario, 300), precio_centavos: precio, cupos,
     inscripcion_abierta: Boolean(d.inscripcion_abierta), visible: Boolean(d.visible), recordatorios: d.recordatorios !== false,
+    enlace_pago: enlacePago, etiqueta: recortar(d.etiqueta, 80), en_lista: d.en_lista !== false,
+    solo_lista_espera: Boolean(listaDe), lista_de: listaDe,
     actualizado_en: new Date().toISOString(),
   };
   const r = d.id
@@ -230,4 +237,38 @@ export async function enviarRecordatorioAhora(eventoId: string, clave: string, p
   return res.fallidos.length
     ? { ok: false, error: `Se enviaron ${res.enviados} de ${res.total}. No llegaron ${res.fallidos.length} (puede ser el límite diario de Resend): ${res.fallidos.slice(0, 20).join(', ')}${res.fallidos.length > 20 ? '…' : ''}` }
     : { ok: true, aviso: `Enviado a ${res.enviados} ${res.enviados === 1 ? 'persona' : 'personas'}.` };
+}
+
+/** Envía el correo de la lista de espera o el aviso del nuevo grupo (a quienes falten). */
+export async function enviarAvisoAhora(eventoId: string, tipo: TipoAviso, prueba: boolean): Promise<Simple> {
+  const servidor = await servidorAdmin();
+  if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
+  const { data: e } = await servidor.from('eventos_privados').select('*').eq('id', eventoId).maybeSingle<Evento>();
+  if (!e) return { ok: false, error: 'No se encontró el evento.' };
+  if (tipo === 'lista_espera' && !e.lista_de) return { ok: false, error: 'Activa primero la prioridad y elige de qué evento es la lista de espera.' };
+  const r = await enviarAviso(e, tipo, await urlDelSitio(), prueba);
+  revalidatePath('/admin/eventos', 'layout');
+  if (r.error) return { ok: false, error: r.error };
+  if (prueba) return r.enviados ? { ok: true, aviso: `Prueba enviada a ${CORREO_ADMINISTRADORA}.` } : { ok: false, error: 'No se pudo enviar la prueba (revisa la cuota de Resend).' };
+  if (!r.enviados && !r.fallidos.length) return { ok: true, aviso: 'No hay nadie pendiente: todos ya lo recibieron.' };
+  const resto = r.pendientes ? ` Faltan ${r.pendientes}: ${tipo === 'nuevo_grupo' ? 'salen solos cada mañana' : 'vuelve a pulsar el botón mañana'} (límite diario de Resend).` : ' Ya lo recibieron todos.';
+  return r.fallidos.length
+    ? { ok: false, error: `Se enviaron ${r.enviados}. No salieron ${r.fallidos.length} (puede ser el límite diario de Resend); quedan pendientes y puedes reintentar.${resto}` }
+    : { ok: true, aviso: `Enviado a ${r.enviados} ${r.enviados === 1 ? 'persona' : 'personas'}.${resto}` };
+}
+
+/** Fin de la etapa de prioridad: el grupo aparece en Eventos para todos y empieza el aviso general. */
+export async function abrirATodos(eventoId: string, soloNovedades: boolean): Promise<Simple> {
+  const servidor = await servidorAdmin();
+  if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
+  const { data: e, error } = await servidor.from('eventos_privados').update({
+    solo_lista_espera: false, en_lista: true, visible: true, inscripcion_abierta: true,
+    aviso_publico_en: new Date().toISOString(), aviso_solo_novedades: soloNovedades, actualizado_en: new Date().toISOString(),
+  }).eq('id', eventoId).select('*').maybeSingle<Evento>();
+  if (error || !e) return { ok: false, error: error?.message ?? 'No se encontró el evento.' };
+  revalidatePath('/portal/eventos', 'layout');
+  revalidatePath('/eventos', 'layout');
+  const r = await enviarAviso(e, 'nuevo_grupo', await urlDelSitio());
+  revalidatePath('/admin/eventos', 'layout');
+  return { ok: true, aviso: `Listo: el grupo ya está abierto para todos y aparece en Eventos. Aviso enviado a ${r.enviados} ${r.enviados === 1 ? 'persona' : 'personas'}.${r.pendientes ? ` Faltan ${r.pendientes}: salen solos cada mañana (límite diario de Resend).` : ''}` };
 }

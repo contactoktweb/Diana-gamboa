@@ -3,8 +3,8 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 import type { Evento } from './formato';
 
 /** Columnas que se pueden mostrar fuera del portal (sin el acceso de los inscritos). */
-const COLUMNAS = 'id, slug, titulo, subtitulo, detalles, resumen, contenido, aviso, fecha_tipo, fecha, fecha_fin, fecha_periodo, fecha_mes, fecha_anio, hora_inicio, horario, cupos, inscripcion_abierta, visible';
-export type EventoPublico = Omit<Evento, 'acceso' | 'precio_centavos' | 'recordatorios'>;
+const COLUMNAS = 'id, slug, titulo, subtitulo, detalles, resumen, contenido, aviso, fecha_tipo, fecha, fecha_fin, fecha_periodo, fecha_mes, fecha_anio, hora_inicio, horario, cupos, inscripcion_abierta, visible, etiqueta, en_lista, solo_lista_espera, lista_de';
+export type EventoPublico = Omit<Evento, 'acceso' | 'precio_centavos' | 'recordatorios' | 'enlace_pago' | 'aviso_publico_en' | 'aviso_solo_novedades'>;
 
 /** Eventos visibles para la página pública (cualquier visitante, sin sesión). */
 export async function eventosPublicos(slug?: string): Promise<EventoPublico[]> {

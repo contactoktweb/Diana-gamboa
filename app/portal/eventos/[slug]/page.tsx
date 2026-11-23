@@ -11,6 +11,7 @@ import { getSesion } from '@/lib/sesion';
 import { stripeActivo } from '@/lib/stripe';
 import { procesarSesionPagada, vincularPorCorreo } from '@/lib/eventos/pago';
 import { salaLista } from '@/lib/eventos/sala';
+import { MENSAJE_PRIORIDAD, sinPrioridad } from '@/lib/eventos/prioridad';
 import { fechaEvento, precioTexto, type Evento } from '@/lib/eventos/formato';
 
 export const dynamic = 'force-dynamic';
@@ -48,10 +49,12 @@ export default async function EventoPage({ params, searchParams }: Props) {
   }
   const { data: hayCupo } = await supabase.rpc('evento_hay_cupo', { p_evento: evento.id });
   const precio = precioTexto(evento.precio_centavos);
-  // Pago con Stripe dentro de la web (claves en Vercel). Sin claves, preinscripción.
-  const modo = stripeActivo ? 'stripe' : 'preinscripcion';
+  // Con claves de Stripe: pago automático. Sin claves pero con enlace de pago: pago por enlace y verificación.
+  const modo = stripeActivo ? 'stripe' : evento.enlace_pago ? 'enlace' : 'preinscripcion';
+  // Etapa de prioridad: solo compra la lista de espera del grupo anterior.
+  const bloqueo = sesion && estado === 'ninguno' && await sinPrioridad(evento, sesion.id, sesion.correo, sesion.perfil?.rol === 'admin') ? MENSAJE_PRIORIDAD : undefined;
   const inscripcion = (boton?: string) => <Inscripcion eventoId={evento.id} precio={precio} hayCupo={Boolean(hayCupo)} abierta={evento.inscripcion_abierta}
-    modo={modo} estado={estado} boton={boton} />;
+    modo={modo} enlacePago={evento.enlace_pago} correo={sesion?.correo} estado={estado} boton={boton} bloqueo={bloqueo} />;
   const conSala = estado === 'pagada' && await salaLista(evento.id);
 
   return <>
@@ -63,7 +66,7 @@ export default async function EventoPage({ params, searchParams }: Props) {
           <span aria-current="page">{evento.titulo}</span>
         </nav>
         <div className="lesson-title"><div>
-          {evento.detalles && <p className="eyebrow">{evento.detalles}</p>}
+          {(evento.etiqueta || evento.detalles) && <p className="eyebrow">{evento.etiqueta || evento.detalles}</p>}
           <h1>{evento.titulo}</h1>
         </div></div>
         {evento.subtitulo && <p className="lead-sm">{evento.subtitulo}</p>}
@@ -72,6 +75,7 @@ export default async function EventoPage({ params, searchParams }: Props) {
           {evento.horario && <li><Clock3 size={18} aria-hidden="true" /> {evento.horario}</li>}
           {evento.hora_inicio && <HoraLocal iso={evento.hora_inicio} />}
         </ul>
+        {evento.etiqueta && evento.detalles && <p className="evento-detalles">{evento.detalles}</p>}
         {q.pago === 'ok' && estado === 'pagada' && <p className="auth-ok evento-aviso" role="status"><CheckCircle2 size={18} aria-hidden="true" /> ¡Gracias por tu confianza! Tu pago fue aprobado y ya tienes tu cupo. Te enviamos la confirmación por correo.</p>}
         {q.pago === 'ok' && estado !== 'pagada' && <p className="auth-ok evento-aviso" role="status">Estamos confirmando tu pago con Stripe. Si en unos minutos no aparece tu cupo, recarga esta página. {errorPago}</p>}
         {q.pago === 'cancelado' && <p className="auth-error evento-aviso" role="alert">El pago no se completó y no se te cobró nada. Puedes intentarlo de nuevo.</p>}
@@ -92,7 +96,7 @@ export default async function EventoPage({ params, searchParams }: Props) {
       <article className="evento-texto"><TextoEvento texto={evento.contenido} /></article>
 
       {estado !== 'pagada' && <section className="evento-reserva" aria-labelledby="reserva-titulo">
-        <h2 id="reserva-titulo">Reserva tu lugar</h2>
+        <h2 id="reserva-titulo">Reserva tu cupo</h2>
         {evento.detalles && <p>{evento.detalles}</p>}
         <p className="evento-nota">Inscripciones abiertas hasta llenar los cupos.</p>
         {inscripcion()}

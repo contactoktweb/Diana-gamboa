@@ -42,8 +42,8 @@ grant all on public.recordatorios_enviados to service_role;
 -- Cada evento puede apagar sus recordatorios automáticos.
 alter table public.eventos_privados add column if not exists recordatorios boolean not null default true;
 
--- Los pagos ahora solo pasan por Stripe con las claves: se quita el enlace de pago provisional.
-update public.eventos_privados set enlace_pago = '' where enlace_pago <> '';
+-- El grupo de noviembre ya no usa su enlace de pago provisional (está agotado).
+update public.eventos_privados set enlace_pago = '' where slug = 'call-o-put' and enlace_pago <> '';
 
 -- Texto de acceso del primer taller: ahora la clase se abre dentro de la web (solo si aún tiene el texto original).
 update public.eventos_privados set acceso = replace(acceso,

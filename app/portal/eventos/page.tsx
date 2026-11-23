@@ -20,6 +20,13 @@ export default async function EventosPage() {
   if (supabase) {
     const { data } = await supabase.from('eventos_privados').select('*').eq('visible', true).order('creado_en', { ascending: false });
     eventos = (data as Evento[]) ?? [];
+    // Grupos fuera de la lista (etapa de prioridad): solo los ve su lista de espera o quien ya tiene cupo.
+    if (eventos.some(e => e.en_lista === false)) {
+      const { data: mias } = sesion ? await supabase.from('inscripciones').select('evento_id, estado').eq('usuario_id', sesion.id) : { data: [] };
+      const espera = new Set((mias ?? []).filter(m => m.estado === 'espera').map(m => m.evento_id as string));
+      const propias = new Set((mias ?? []).filter(m => m.estado === 'pagada' || m.estado === 'verificacion').map(m => m.evento_id as string));
+      eventos = eventos.filter(e => e.en_lista !== false || propias.has(e.id) || (e.lista_de && espera.has(e.lista_de)) || sesion?.perfil?.rol === 'admin');
+    }
     await Promise.all(eventos.map(async e => { const { data: hay } = await supabase.rpc('evento_hay_cupo', { p_evento: e.id }); cupo.set(e.id, Boolean(hay)); }));
     if (sesion && eventos.length) {
       const { data: mias } = await supabase.from('inscripciones').select('evento_id').eq('usuario_id', sesion.id).in('estado', ['pagada', 'verificacion']);
@@ -44,8 +51,9 @@ export default async function EventosPage() {
       {eventos.length === 0
         ? <p className="admin-vacio">Por ahora no hay eventos publicados. Te avisaremos cuando abramos el próximo.</p>
         : <ul className="eventos-lista">{eventos.map(e => <li key={e.id} className="evento-tarjeta">
-          <p className="eyebrow"><CalendarDays size={16} aria-hidden="true" /> {fechaEvento(e)}</p>
+          {e.etiqueta && <p className="eyebrow evento-etiqueta">{e.etiqueta}</p>}
           <h2>{e.titulo}</h2>
+          <p className="evento-fecha"><CalendarDays size={16} aria-hidden="true" /> {fechaEvento(e)}</p>
           {e.subtitulo && <p className="evento-sub">{e.subtitulo}</p>}
           {e.resumen && <p>{e.resumen}</p>}
           <div className="evento-tarjeta-pie">

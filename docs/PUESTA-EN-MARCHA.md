@@ -177,3 +177,16 @@ Recomendado: probar primero con las claves de prueba de Stripe (`sk_test_…`) y
 - En la administración del evento se ven los recordatorios, se pueden probar (te llegan a ti) y enviar a mano.
   La bienvenida («gracias por tu confianza») se envía a mano desde ahí.
 - Cuidado con el límite de Resend: el plan gratuito permite 100 correos al día.
+
+## Nuevo grupo con prioridad para la lista de espera
+
+1. Ejecuta [`supabase/grupo-diciembre.sql`](../supabase/grupo-diciembre.sql) (después de `sala-y-recordatorios.sql`). Crea el grupo
+   `call-o-put-diciembre` (19 y 20 de diciembre, US$99, 100 cupos), oculto de la lista de Eventos y con prioridad para la
+   lista de espera del grupo de noviembre.
+2. Prueba la reserva y el pago con tu cuenta de administradora (siempre puede comprar).
+3. En **Administración → Eventos → (grupo) → Lanzamiento del grupo**: «Probar» y luego **«Enviar a la lista de espera»**.
+4. Cuando Diana confirme el anuncio público: **«Abrir a todos y avisar»**. El grupo aparece en Eventos y se envía
+   «Nuevo grupo disponible» a los demás alumnos (no a la lista de espera ni a quienes ya tienen cupo). Si son muchos, la
+   tarea diaria sigue enviando a los que falten (variable opcional `LIMITE_AVISOS_DIA`, por defecto 90 por día).
+5. Mientras no estén las claves de Stripe, el pago usa el **enlace de pago** del evento con «Ya pagué» y verificación,
+   como en noviembre. Con las claves, el pago es automático y el enlace no se usa.

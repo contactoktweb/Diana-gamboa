@@ -10,7 +10,7 @@ const slugDe = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLower
 
 const AYUDA_FORMATO = 'Formato: «## » título de sección · «### » pregunta · «- » punto de lista (dos espacios antes del guion = subpunto) · «> » frase destacada · **negrita** · [texto](/direccion). Deja una línea en blanco entre párrafos.';
 
-export default function FormEvento({ inicial }: { inicial: DatosEvento }) {
+export default function FormEvento({ inicial, otros = [] }: { inicial: DatosEvento; otros?: { id: string; titulo: string; fecha: string }[] }) {
   const router = useRouter();
   const [d, setD] = useState<DatosEvento>(inicial);
   const [slugTocado, setSlugTocado] = useState(Boolean(inicial.id));
@@ -49,6 +49,7 @@ export default function FormEvento({ inicial }: { inicial: DatosEvento }) {
 
   return <form className="admin-panel form-evento" onSubmit={guardar}>
     <h2>Datos principales</h2>
+    {campo('etiqueta', 'Texto sobre el título (opcional)', { placeholder: 'Ej.: NUEVO GRUPO · DICIEMBRE', ayuda: 'Aparece arriba del título, en la tarjeta de Eventos y en la página del taller.' })}
     <label className="editor-campo"><span className="editor-etiqueta">Título</span>
       <input required value={d.titulo} onChange={e => cambiar({ titulo: e.target.value, ...(slugTocado ? {} : { slug: slugDe(e.target.value) }) })} /></label>
     <label className="editor-campo"><span className="editor-etiqueta">Dirección del evento</span>
@@ -93,9 +94,17 @@ export default function FormEvento({ inicial }: { inicial: DatosEvento }) {
       <label className="editor-campo"><span className="editor-etiqueta">Valor (USD)</span><input inputMode="decimal" value={d.precio} onChange={e => cambiar({ precio: e.target.value })} placeholder="98.99" /></label>
       <label className="editor-campo"><span className="editor-etiqueta">Cupos</span><input type="number" min={1} value={d.cupos} onChange={e => cambiar({ cupos: Number(e.target.value) })} /></label>
     </div>
-    <small className="editor-ayuda">El pago se hace con Stripe dentro de la web: al pagar, el alumno queda inscrito solo y recibe su correo de agradecimiento. El valor solo se muestra cuando el alumno pulsa «Reserva tu lugar». Los alumnos nunca ven cuántos cupos quedan: solo si hay o no.</small>
+    {campo('enlace_pago', 'Enlace de pago de Stripe (solo mientras no estén las claves)', { placeholder: 'https://buy.stripe.com/…', ayuda: 'Con las claves de Stripe en Vercel, el pago es automático y este enlace no se usa. Sin claves, el botón abre este enlace y el alumno avisa que pagó (con comprobante opcional); tú apruebas cada compra aquí. El valor del enlace en Stripe debe coincidir con el de arriba.' })}
+    <small className="editor-ayuda">Con las claves de Stripe, al pagar el alumno queda inscrito solo y recibe su correo de agradecimiento. El valor solo se muestra cuando el alumno pulsa «Reserva tu lugar». Los alumnos nunca ven cuántos cupos quedan: solo si hay o no.</small>
     <label className="check"><input type="checkbox" checked={d.inscripcion_abierta} onChange={e => cambiar({ inscripcion_abierta: e.target.checked })} /> <span>Inscripciones abiertas</span></label>
     <label className="check"><input type="checkbox" checked={d.visible} onChange={e => cambiar({ visible: e.target.checked })} /> <span>Visible en la web (página pública del evento y «Eventos» del portal)</span></label>
+    <label className="check"><input type="checkbox" checked={d.en_lista !== false} onChange={e => cambiar({ en_lista: e.target.checked })} /> <span>Mostrar en la lista de Eventos (si no, solo se entra con el enlace directo)</span></label>
+    <label className="check"><input type="checkbox" checked={Boolean(d.solo_lista_espera)} onChange={e => cambiar({ solo_lista_espera: e.target.checked, lista_de: e.target.checked ? d.lista_de ?? otros[0]?.id ?? null : d.lista_de })} /> <span>Prioridad: por ahora solo puede comprar la lista de espera de otro evento</span></label>
+    {d.solo_lista_espera && <label className="editor-campo"><span className="editor-etiqueta">Lista de espera con prioridad</span>
+      <select value={d.lista_de ?? ''} onChange={e => cambiar({ lista_de: e.target.value || null })}>
+        <option value="">Elige…</option>{otros.map(o => <option key={o.id} value={o.id}>{o.titulo} · {o.fecha}</option>)}
+      </select>
+      <small className="editor-ayuda">Para abrirlo a todos usa «Abrir a todos y avisar» en el panel de lanzamiento: quita la prioridad, lo muestra en Eventos y envía el aviso.</small></label>}
     <label className="check"><input type="checkbox" checked={d.recordatorios !== false} onChange={e => cambiar({ recordatorios: e.target.checked })} /> <span>Enviar recordatorios automáticos a los inscritos (un día antes y el día de cada clase)</span></label>
 
     <h2>Página del evento</h2>

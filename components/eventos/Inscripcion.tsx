@@ -2,23 +2,44 @@
 
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
-import { ArrowRight, CheckCircle2, Clock3, Lock, X } from 'lucide-react';
-import { iniciarInscripcion, unirseListaEspera } from '@/app/portal/eventos/acciones';
+import { ArrowRight, CheckCircle2, Clock3, ExternalLink, Lock, Upload, X } from 'lucide-react';
+import { avisarPagoRealizado, iniciarInscripcion, unirseListaEspera } from '@/app/portal/eventos/acciones';
 
 export type EstadoUsuario = 'ninguno' | 'pagada' | 'verificacion' | 'preinscrita' | 'espera';
-type Modo = 'stripe' | 'preinscripcion';
+type Modo = 'stripe' | 'enlace' | 'preinscripcion';
+
+/** Reduce las fotos grandes del celular antes de enviarlas (máximo 2000 px, JPEG). */
+async function prepararComprobante(archivo: File): Promise<File> {
+  if (!archivo.type.startsWith('image/') || archivo.size < 1.5 * 1024 * 1024) return archivo;
+  try {
+    const img = await createImageBitmap(archivo);
+    const escala = Math.min(1, 2000 / Math.max(img.width, img.height));
+    const lienzo = document.createElement('canvas');
+    lienzo.width = Math.round(img.width * escala); lienzo.height = Math.round(img.height * escala);
+    lienzo.getContext('2d')!.drawImage(img, 0, 0, lienzo.width, lienzo.height);
+    const blob = await new Promise<Blob | null>(r => lienzo.toBlob(r, 'image/jpeg', 0.85));
+    return blob ? new File([blob], 'comprobante.jpg', { type: 'image/jpeg' }) : archivo;
+  } catch { return archivo; }
+}
 
 /**
  * Inscripción a un evento. El valor solo aparece al pulsar «Reserva tu lugar».
  * Nunca se muestra cuántos cupos quedan: solo si hay o no.
- * Pago con Stripe dentro de la web (con las claves). Sin claves, preinscripción.
+ * Modos de pago: Stripe automático (con las claves), enlace de pago de Stripe con verificación (mientras no estén las claves) o preinscripción.
  */
-export default function Inscripcion({ eventoId, precio, hayCupo, abierta, modo, estado, boton = 'Reserva tu lugar' }: {
-  eventoId: string; precio: string; hayCupo: boolean; abierta: boolean; modo: Modo;
+export default function Inscripcion({ eventoId, precio, hayCupo, abierta, modo, enlacePago, correo, estado, boton = 'Reserva tu cupo', bloqueo }: {
+  eventoId: string; precio: string; hayCupo: boolean; abierta: boolean; modo: Modo; enlacePago?: string; correo?: string;
   estado: EstadoUsuario; boton?: string;
+  /** Grupo con prioridad para la lista de espera: mensaje para quien aún no puede comprar. */
+  bloqueo?: string;
 }) {
   const [abiertoPanel, setAbiertoPanel] = useState(false);
   const [acepta, setAcepta] = useState(false);
+  const [archivo, setArchivo] = useState<File | null>(null);
+  const [abrioPago, setAbrioPago] = useState(false);
+  const [telefono, setTelefono] = useState('');
+  const [otroCorreo, setOtroCorreo] = useState(false);
+  const [correoPago, setCorreoPago] = useState('');
   const [listo, setListo] = useState<EstadoUsuario | null>(null);
   const [mensaje, setMensaje] = useState<{ ok: boolean; texto: string } | null>(null);
   const [pendiente, iniciar] = useTransition();
@@ -27,9 +48,13 @@ export default function Inscripcion({ eventoId, precio, hayCupo, abierta, modo, 
   if (actual === 'pagada') return <p className="evento-estado es-ok"><CheckCircle2 size={20} aria-hidden="true" /> Ya tienes tu cupo en este evento.</p>;
   if (actual === 'verificacion') return <div className="evento-inscripcion">
     <p className="evento-estado es-verificacion"><Clock3 size={20} aria-hidden="true" /> Pago en verificación</p>
-    <p className="evento-nota">Tu cupo queda apartado. Te escribiremos al correo en cuanto confirmemos la compra.</p>
+    <p className="evento-nota">Recibimos tu aviso de pago y tu cupo queda apartado. Te escribiremos al correo en cuanto confirmemos la compra.</p>
   </div>;
   if (!abierta) return <p className="evento-estado es-cerrado"><Lock size={20} aria-hidden="true" /> Las inscripciones están cerradas.</p>;
+  if (bloqueo) return <div className="evento-inscripcion">
+    <p className="evento-estado es-cerrado"><Lock size={20} aria-hidden="true" /> Muy pronto para todos</p>
+    <p className="evento-nota">{bloqueo}</p>
+  </div>;
 
   function ejecutar(accion: () => ReturnType<typeof iniciarInscripcion>, siOk?: EstadoUsuario) {
     setMensaje(null);
@@ -41,6 +66,21 @@ export default function Inscripcion({ eventoId, precio, hayCupo, abierta, modo, 
     });
   }
 
+  async function avisarPago() {
+    if (!/^\+?[\d\s().-]{7,20}$/.test(telefono.trim())) { setMensaje({ ok: false, texto: 'Escribe tu teléfono o WhatsApp con el indicativo del país (por ejemplo, +1 305 555 0123).' }); return; }
+    if (otroCorreo && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correoPago.trim())) { setMensaje({ ok: false, texto: 'Escribe el correo que usaste en la página de pago de Stripe.' }); return; }
+    const datos = new FormData();
+    datos.set('evento', eventoId);
+    datos.set('telefono', telefono.trim());
+    if (otroCorreo) datos.set('correo_pago', correoPago.trim());
+    if (archivo) {
+      const listoArchivo = await prepararComprobante(archivo);
+      if (listoArchivo.size > 4 * 1024 * 1024) { setMensaje({ ok: false, texto: 'El comprobante pesa más de 4 MB. Sube una captura de pantalla o continúa sin él.' }); return; }
+      datos.set('comprobante', listoArchivo);
+    }
+    ejecutar(() => avisarPagoRealizado(datos), 'verificacion');
+  }
+
   if (!hayCupo || actual === 'espera') return <div className="evento-inscripcion">
     <p className="evento-estado es-agotado"><X size={20} aria-hidden="true" /> Cupos agotados</p>
     {actual === 'espera'
@@ -50,6 +90,7 @@ export default function Inscripcion({ eventoId, precio, hayCupo, abierta, modo, 
   </div>;
 
   const politica = <label className="check"><input type="checkbox" checked={acepta} onChange={e => setAcepta(e.target.checked)} /> <span>Acepto la <Link href="/reembolsos" target="_blank">política de reembolsos</Link> y entiendo que es un evento educativo, no asesoría financiera.</span></label>;
+  const enlace = enlacePago && `${enlacePago}${enlacePago.includes('?') ? '&' : '?'}${correo ? `prefilled_email=${encodeURIComponent(correo)}` : ''}`;
 
   return <div className="evento-inscripcion">
     <p className="evento-estado es-disponible"><CheckCircle2 size={20} aria-hidden="true" /> Cupos disponibles</p>
@@ -68,6 +109,47 @@ export default function Inscripcion({ eventoId, precio, hayCupo, abierta, modo, 
               <button type="button" className="btn btn-green btn-lg" disabled={!acepta || pendiente} onClick={() => ejecutar(() => iniciarInscripcion(eventoId))}>{pendiente ? 'Un momento…' : `Pagar ${precio}`} <ArrowRight aria-hidden="true" /></button>
               <button type="button" className="btn btn-outline btn-sm" onClick={() => setAbiertoPanel(false)} disabled={pendiente}>Cancelar</button>
             </div>
+          </>}
+
+          {modo === 'enlace' && enlace && <>
+            {politica}
+            <ol className="evento-pasos">
+              <li>
+                <span className="evento-paso-num" aria-hidden="true">1</span>
+                <h3>Paga con Stripe</h3>
+                <p>Se abre una página segura de pago en otra pestaña: tarjeta, Apple Pay o Google Pay.</p>
+                <ul className="evento-consejos">
+                  <li>Stripe te envía el recibo a tu correo.</li>
+                  <li>Si pagas con otro correo, indícalo en el paso 2.</li>
+                  <li>Al terminar, vuelve a esta pestaña y completa el paso 2.</li>
+                </ul>
+                <a className={`btn btn-green ${acepta ? '' : 'is-disabled'}`} href={acepta ? enlace : undefined} aria-disabled={!acepta} target="_blank" rel="noopener noreferrer"
+                  onClick={e => { if (!acepta) { e.preventDefault(); setMensaje({ ok: false, texto: 'Primero acepta la política de reembolsos.' }); } else { setAbrioPago(true); setMensaje(null); } }}>
+                  Pagar {precio} con Stripe <ExternalLink size={18} aria-hidden="true" />
+                </a>
+                {!acepta && <small>Acepta la política de reembolsos para continuar.</small>}
+              </li>
+              <li>
+                <span className="evento-paso-num" aria-hidden="true">2</span>
+                <h3>Avísanos que ya pagaste</h3>
+                <p>Tu cupo queda apartado mientras verificamos la compra.</p>
+                <label className="editor-campo evento-campo"><span className="editor-etiqueta">Teléfono o WhatsApp</span>
+                  <input type="tel" inputMode="tel" autoComplete="tel" placeholder="+1 305 555 0123" value={telefono} onChange={e => setTelefono(e.target.value)} /></label>
+                <label className="check evento-check"><input type="checkbox" checked={otroCorreo} onChange={e => setOtroCorreo(e.target.checked)} /> <span>En Stripe pagué con otro correo{correo ? <> (no con {correo})</> : ''}</span></label>
+                {otroCorreo && <label className="editor-campo evento-campo"><span className="editor-etiqueta">Correo que usaste en Stripe</span>
+                  <input type="email" inputMode="email" autoComplete="email" placeholder="correo@ejemplo.com" value={correoPago} onChange={e => setCorreoPago(e.target.value)} /></label>}
+                <label className="evento-archivo">
+                  <Upload size={18} aria-hidden="true" />
+                  <span>{archivo ? archivo.name : 'Subir comprobante (opcional)'}</span>
+                  <input type="file" accept="image/*,application/pdf" onChange={e => setArchivo(e.target.files?.[0] ?? null)} />
+                </label>
+                <button type="button" className="btn btn-gold" disabled={!acepta || pendiente} onClick={avisarPago}>
+                  {pendiente ? 'Enviando…' : 'Ya pagué, confirmar mi cupo'} <CheckCircle2 size={18} aria-hidden="true" />
+                </button>
+                {!abrioPago && <small>Usa este botón solo después de completar el pago.</small>}
+              </li>
+            </ol>
+            <button type="button" className="btn btn-outline btn-sm evento-cancelar" onClick={() => setAbiertoPanel(false)} disabled={pendiente}>Cancelar</button>
           </>}
 
           {modo === 'preinscripcion' && <>

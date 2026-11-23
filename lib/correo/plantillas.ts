@@ -249,3 +249,36 @@ export function correoCupoAprobado({ sitio, nombre, evento }: { sitio: string; n
     texto: textoPlano(titulo, parrafos, []),
   };
 }
+
+/** Para la lista de espera del grupo anterior: se abrió un nuevo grupo y tienen la primera oportunidad (texto de Diana). */
+export function correoListaEspera({ sitio, nombre, evento, fechas, enlace }: { sitio: string; nombre: string; evento: string; fechas: string; enlace: string }) {
+  const titulo = `Hola${nombre ? `, ${nombre}` : ''}`;
+  const parrafos = [
+    `Si quedaste en la lista de espera de <strong>${esc(evento)}</strong>, te escribo primero a ti. Abrí un nuevo grupo para que puedas tomar el taller completo conmigo el <strong>${esc(fechas)}</strong>.`,
+    'Vamos a trabajar con casos prácticos para que puedas comparar contratos de opciones y explicar por qué escogerías uno según tu lectura de la gráfica. Tu inscripción incluye las dos clases en vivo y sus grabaciones.',
+  ];
+  return {
+    asunto: `Abrí un nuevo grupo de ${evento}`,
+    html: marco({ sitio, previa: `Te escribo primero a ti: nuevo grupo el ${fechas}.`, etiqueta: 'Nuevo grupo · Lista de espera', titulo, parrafos,
+      boton: { texto: 'Reserva tu cupo aquí', enlace },
+      nota: 'Nos vemos en clase,<br><strong style="color:#0F4131">Diana Gamboa</strong><br><br>Recibes este correo porque te anotaste en la lista de espera del taller. Si el botón te pide iniciar sesión, usa el mismo correo de tu cuenta.' }),
+    texto: textoPlano(titulo, parrafos, [`Reserva tu cupo aquí: ${enlace}`, '', 'Nos vemos en clase,', 'Diana Gamboa']),
+  };
+}
+
+/** Aviso general cuando el nuevo grupo se abre a todos: «por si no alcanzaste el anterior». */
+export function correoNuevoGrupo({ sitio, nombre, evento, fechas, hora, enlace }: { sitio: string; nombre: string; evento: string; fechas: string; hora: string; enlace: string }) {
+  const titulo = `Nuevo grupo disponible${nombre ? `, ${nombre}` : ''}`;
+  const parrafos = [
+    `Si no alcanzaste el grupo anterior de <strong>${esc(evento)}</strong>, abrí un nuevo grupo para que puedas tomar el taller completo conmigo.`,
+    `<strong>Fechas:</strong> ${esc(fechas)}${hora ? `<br><strong>Hora:</strong> ${esc(hora)}` : ''}`,
+    'Vamos a trabajar con casos prácticos para que puedas comparar contratos de opciones y explicar por qué escogerías uno según tu lectura de la gráfica. Tu inscripción incluye las dos clases en vivo y sus grabaciones. Los cupos son limitados.',
+  ];
+  return {
+    asunto: `Nuevo grupo de ${evento}: ${fechas.charAt(0).toLowerCase()}${fechas.slice(1).replace(/ de \d{4}$/, '')}`,
+    html: marco({ sitio, previa: `Nuevo grupo: ${fechas}. Cupos limitados.`, etiqueta: 'Nuevo grupo', titulo, parrafos,
+      boton: { texto: 'Reserva tu cupo', enlace },
+      nota: 'Nos vemos en clase,<br><strong style="color:#0F4131">Diana Gamboa</strong><br><br>Recibes este correo porque tienes una cuenta en la Academia Diana Gamboa. Este taller es educativo y no es asesoría financiera.' }),
+    texto: textoPlano(titulo, parrafos, [`Reserva tu cupo: ${enlace}`, '', 'Nos vemos en clase,', 'Diana Gamboa']),
+  };
+}
