@@ -76,7 +76,7 @@ button{font:inherit;cursor:pointer}
 .header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:76px}
 .header-nav{display:none}
 .menu-toggle{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:8px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--white);color:var(--green-900);font-weight:600}
-.mobile-nav{border-top:1px solid var(--line);padding:8px 16px 20px;background:var(--paper)}
+.mobile-nav{position:absolute;left:0;right:0;top:100%;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 20px 20px;background:var(--paper);box-shadow:0 18px 30px rgba(15,65,49,.12);max-height:calc(100dvh - 76px);overflow-y:auto}
 .mobile-nav[hidden]{display:none}
 .mobile-nav a:not(.btn){display:block;padding:16px 4px;font-size:1.15rem;font-weight:600;text-decoration:none;border-bottom:1px solid var(--line);color:var(--green-900)}
 .mobile-nav .btn{margin-top:16px}
