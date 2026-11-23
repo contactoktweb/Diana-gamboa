@@ -31,6 +31,7 @@ export default function SiteHeaderMenu({ boton }: { boton: string }) {
     <nav className="header-nav" aria-label="Navegación principal">
       <Link href="/">Inicio</Link>
       <Link href="/sobre-diana">Sobre Diana</Link>
+      <Link href="/eventos">Eventos</Link>
       {acceso}
       {!sesion && <Link href="/registro" className="btn btn-gold btn-sm">{boton} <ArrowRight aria-hidden="true" /></Link>}
     </nav>
@@ -40,6 +41,7 @@ export default function SiteHeaderMenu({ boton }: { boton: string }) {
     <nav id="menu-movil" className={`mobile-nav ${open ? 'is-open' : ''}`} aria-label="Menú" hidden={!open}>
       <Link href="/" onClick={close}>Inicio</Link>
       <Link href="/sobre-diana" onClick={close}>Sobre Diana</Link>
+      <Link href="/eventos" onClick={close}>Eventos</Link>
       {acceso}
       {!sesion && <Link href="/registro" className="btn btn-gold btn-block" onClick={close}>{boton} <ArrowRight aria-hidden="true" /></Link>}
     </nav>

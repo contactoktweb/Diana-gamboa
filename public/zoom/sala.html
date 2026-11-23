@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Sala de clase · Diana Gamboa</title>
+<style>
+  html,body{margin:0;height:100%;background:#0E1F19;font-family:'Century Gothic','Avenir Next','Trebuchet MS',Arial,sans-serif;color:#fff}
+  #estado{position:fixed;inset:0;display:grid;place-items:center;padding:24px;text-align:center;z-index:100000;background:#0E1F19}
+  #estado .caja{max-width:440px;display:grid;gap:14px;justify-items:center}
+  #estado h1{margin:0;font-size:1.35rem;color:#fff}
+  #estado p{margin:0;color:#C9D6D0;line-height:1.6}
+  #estado .marca{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#CBA52F}
+  #estado a,#estado button{display:inline-block;margin:4px;padding:12px 24px;border-radius:999px;border:1px solid #CBA52F;background:#0F4131;color:#fff;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
+  #estado a.secundario{background:transparent}
+  .giro{width:38px;height:38px;border-radius:50%;border:3px solid rgba(203,165,47,.25);border-top-color:#CBA52F;animation:g 1s linear infinite}
+  @keyframes g{to{transform:rotate(360deg)}}
+  #aviso{position:fixed;left:12px;right:12px;bottom:12px;z-index:100001;display:none;padding:10px 14px;border-radius:12px;background:#FBF5E3;color:#5B4A12;font-size:13px;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="estado"><div class="caja">
+  <div class="marca">Sala de clase</div>
+  <div class="giro" aria-hidden="true"></div>
+  <h1 id="titulo">Entrando a la clase…</h1>
+  <p id="texto">Preparando la sala. Cuando tu navegador lo pida, permite el uso del micrófono y la cámara.</p>
+  <div id="botones"></div>
+</div></div>
+<div id="aviso" role="status"></div>
+
+<script src="https://source.zoom.us/6.10.0/lib/vendor/react.min.js"></script>
+<script src="https://source.zoom.us/6.10.0/lib/vendor/react-dom.min.js"></script>
+<script src="https://source.zoom.us/6.10.0/lib/vendor/redux.min.js"></script>
+<script src="https://source.zoom.us/6.10.0/lib/vendor/redux-thunk.min.js"></script>
+<script src="https://source.zoom.us/6.10.0/lib/vendor/lodash.min.js"></script>
+<script src="https://source.zoom.us/zoom-meeting-6.10.0.min.js"></script>
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var evento = params.get('evento') || '';
+  var portal = '/portal/eventos/' + encodeURIComponent(evento);
+  var estado = document.getElementById('estado');
+
+  function mostrar(titulo, texto, botones) {
+    estado.style.display = 'grid';
+    var giro = estado.querySelector('.giro'); if (giro) giro.remove();
+    document.getElementById('titulo').textContent = titulo;
+    document.getElementById('texto').textContent = texto;
+    var b = document.getElementById('botones'); b.innerHTML = '';
+    (botones || []).forEach(function (x) {
+      var el = document.createElement(x.accion ? 'button' : 'a');
+      el.textContent = x.texto;
+      if (x.accion) { el.type = 'button'; el.onclick = x.accion; }
+      else { el.href = x.enlace; el.target = '_top'; if (x.secundario) el.className = 'secundario'; }
+      b.appendChild(el);
+    });
+  }
+  var volverPortal = { texto: 'Volver al evento', enlace: portal, secundario: true };
+  var reintentar = { texto: 'Volver a entrar', accion: function () { location.href = location.pathname + '?evento=' + encodeURIComponent(evento); } };
+
+  if (params.get('salio')) { mostrar('Saliste de la clase', 'Puedes volver a entrar cuando quieras mientras la clase siga en curso.', [reintentar, volverPortal]); return; }
+  if (!window.ZoomMtg) { mostrar('No se pudo cargar la sala', 'Revisa tu conexión a internet o desactiva el bloqueador de anuncios para esta página e inténtalo de nuevo.', [reintentar, volverPortal]); return; }
+
+  var Z = window.ZoomMtg;
+  Z.preLoadWasm();
+  Z.prepareWebSDK();
+
+  function errorZoom(e) {
+    var codigo = e && (e.errorCode || e.error_code || e.code);
+    var texto = (e && (e.reason || e.errorMessage || e.message)) || '';
+    var mensajes = {
+      3008: 'La clase aún no ha comenzado. Espera a que Diana la inicie y vuelve a entrar.',
+      3707: 'No encontramos la reunión de esta clase. Escríbenos a hola@dianagamboa.com para ayudarte.',
+      1: 'La clase aún no ha comenzado o la sala está cerrada. Vuelve a entrar en unos minutos.',
+      3000: 'Tu navegador no pudo entrar a la sala. Prueba con Google Chrome o Microsoft Edge actualizados.',
+      3712: 'La firma de acceso venció. Vuelve a entrar.',
+      200: 'La sala no está disponible en este momento. Vuelve a intentarlo en unos minutos.'
+    };
+    console.error('Zoom', e);
+    mostrar('No pudimos entrarte a la clase', mensajes[codigo] || ('Vuelve a intentarlo en unos minutos.' + (texto ? ' (' + texto + ')' : '')), [reintentar, volverPortal]);
+  }
+
+  fetch('/api/zoom/unirse?evento=' + encodeURIComponent(evento), { credentials: 'same-origin', cache: 'no-store' })
+    .then(function (r) { return r.json().then(function (d) { return { r: r, d: d }; }); })
+    .then(function (x) {
+      var d = x.d;
+      if (!x.r.ok) {
+        var botones = x.r.status === 401 ? [{ texto: 'Iniciar sesión', enlace: '/ingresar?next=' + encodeURIComponent(portal + '/sala') }] : [volverPortal];
+        mostrar('No puedes entrar todavía', d.error || 'Vuelve a intentarlo.', botones);
+        return;
+      }
+      if (d.aviso) { var av = document.getElementById('aviso'); av.textContent = d.aviso; av.style.display = 'block'; setTimeout(function () { av.style.display = 'none'; }, 15000); }
+      var salir = location.origin + location.pathname + '?evento=' + encodeURIComponent(evento) + '&salio=1';
+      var raiz = document.getElementById('zmmtg-root');
+      if (raiz) raiz.style.display = 'block';
+      Z.i18n.load('es-ES').then(function () { Z.i18n.reload('es-ES'); }).catch(function () {}).finally(function () {
+        Z.init({
+          leaveUrl: salir,
+          patchJsMedia: true,
+          leaveOnPageUnload: true,
+          disableInvite: true,
+          disableRecord: !d.anfitriona,
+          meetingInfo: d.anfitriona ? ['topic', 'host', 'mn', 'pwd', 'participant'] : ['topic', 'host', 'participant'],
+          defaultView: 'speaker',
+          success: function () {
+            // Desde aquí Zoom muestra su propia pantalla (vista previa de audio y video).
+            estado.style.display = 'none';
+            Z.join({
+              signature: d.signature,
+              meetingNumber: d.meetingNumber,
+              passWord: d.passWord,
+              userName: d.userName,
+              userEmail: d.userEmail,
+              zak: d.zak || undefined,
+              success: function () { estado.style.display = 'none'; },
+              error: errorZoom
+            });
+          },
+          error: errorZoom
+        });
+      });
+    })
+    .catch(function () { mostrar('No se pudo conectar', 'Revisa tu conexión a internet e inténtalo de nuevo.', [reintentar, volverPortal]); });
+})();
+</script>
+</body>
+</html>

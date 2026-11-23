@@ -5,7 +5,7 @@ import { enviarCorreo } from '@/lib/correo/enviar';
 import { correoGraciasEvento, correoNuevoCupo } from '@/lib/correo/plantillas';
 import { CORREO_ADMINISTRADORA } from '@/lib/administradora';
 import { urlDelSitio } from '@/lib/sitio';
-import { fechaEvento, precioTexto, type Evento } from './formato';
+import { fechaEvento, horarioCorreo, precioTexto, type Evento } from './formato';
 
 /**
  * Revisa una sesión de pago de Stripe y, si está pagada, inscribe a la persona.
@@ -23,6 +23,9 @@ export async function procesarSesionPagada(sessionId: string) {
   const pago = typeof sesion.payment_intent === 'string' ? sesion.payment_intent : sesion.payment_intent?.id ?? null;
   const { data: nueva, error } = await admin.rpc('confirmar_pago', { p_inscripcion: inscripcion, p_session: sesion.id, p_pago: pago, p_monto: sesion.amount_total });
   if (error) throw new Error('No se pudo registrar el pago: ' + error.message);
+  // Teléfono que la persona escribió en Stripe (la administración lo ve con enlace a WhatsApp).
+  const telefono = sesion.customer_details?.phone;
+  if (nueva && telefono) await admin.from('inscripciones').update({ telefono }).eq('id', inscripcion).is('telefono', null);
   if (nueva) await avisarInscripcion(inscripcion, { admin: true, alumno: true });
   return { pagada: true };
 }
@@ -30,7 +33,7 @@ export async function procesarSesionPagada(sessionId: string) {
 /**
  * Correos de una inscripción:
  * - admin: aviso de nuevo cupo (o «por verificar» si la compra espera revisión).
- * - alumno: agradecimiento por su participación (cuando el pago está aprobado).
+ * - alumno: «gracias por tu confianza» (cuando el pago está aprobado).
  * Un correo que falle (por ejemplo, por la cuota diaria) no deshace la inscripción.
  */
 export async function avisarInscripcion(inscripcionId: string, enviar: { admin?: boolean; alumno?: boolean; porVerificar?: boolean }) {
@@ -49,7 +52,7 @@ export async function avisarInscripcion(inscripcionId: string, enviar: { admin?:
   }));
   if (enviar.alumno) envios.push(enviarCorreo({
     para: i.correo,
-    ...correoGraciasEvento({ sitio, nombre: (i.nombre || '').split(' ')[0], evento: e.titulo, fecha: fechaEvento(e), horario: e.horario, enlace: `${sitio}/portal/eventos/${e.slug}` }),
+    ...correoGraciasEvento({ sitio, nombre: primerNombre(i.nombre || ''), evento: e.titulo, fecha: fechaEvento(e), ...horarioCorreo(e), enlace: `${sitio}/portal/eventos/${e.slug}` }),
   }));
   for (const r of await Promise.allSettled(envios)) if (r.status === 'rejected') console.error('Correo de evento no enviado:', r.reason);
 }
@@ -69,4 +72,10 @@ export async function vincularPorCorreo(usuarioId: string, correo: string) {
       .eq('evento_id', fila.evento_id).eq('usuario_id', usuarioId).in('estado', ['pendiente', 'preinscrita', 'espera']);
     await admin.from('inscripciones').update({ usuario_id: usuarioId, actualizado_en: new Date().toISOString() }).eq('id', fila.id);
   }
+}
+
+/** «MARIA DEL ROSARIO NIEVES» → «Maria»; «(sin nombre)» → «». */
+export function primerNombre(nombre: string) {
+  const p = nombre.replace(/\(.*?\)/g, '').trim().split(/\s+/)[0] ?? '';
+  return p ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : '';
 }

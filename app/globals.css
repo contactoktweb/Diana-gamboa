@@ -1069,3 +1069,27 @@ button{font:inherit;cursor:pointer}
 .resultado-aprobado,.resultado-aprobado_verificacion{color:var(--green-700);font-weight:600}
 .resultado-error,.resultado-no_valido{color:var(--alert);font-weight:600}
 .resultado-ya_aprobado,.resultado-repetido{color:var(--muted)}
+
+/* ── Sala de clase (Zoom dentro de la web) ─────────────────────────── */
+.sala{background:var(--green-900);padding:14px 0 24px;min-height:calc(100vh - 80px)}
+.sala-cabecera{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin-bottom:12px}
+.sala-cabecera .back-link{color:#DCE7E2}
+.sala-cabecera h1{display:flex;align-items:center;gap:8px;margin:0;font-size:1.15rem;color:var(--white)}
+.sala-cabecera p{margin:0;color:#C9D6D0;font-size:.9rem;flex-basis:100%}
+.sala-zoom{position:relative;width:min(1400px,100% - 24px);margin:0 auto}
+.sala-zoom iframe{display:block;width:100%;height:calc(100vh - 190px);min-height:520px;border:1px solid rgba(203,165,47,.5);border-radius:16px;background:#0E1F19}
+.sala-completa{margin-top:10px;background:transparent;color:var(--white);border-color:rgba(255,255,255,.4)}
+.sala-aviso{margin-top:18px}
+.evento-sala{display:grid;gap:12px;justify-items:start;padding:16px 18px;margin:4px 0 14px;background:var(--green-50);border-radius:16px}
+.evento-sala p{margin:0}
+.sala-admin h2,.admin-panel h2 svg{vertical-align:-3px}
+.sala-admin h2{display:flex;align-items:center;gap:8px}
+.sala-manual{margin:12px 0;border:1px dashed var(--line);border-radius:14px;padding:12px 16px}
+.sala-manual summary,.aprobar-manual summary{cursor:pointer;font-weight:700;color:var(--green-900)}
+.aprobar-manual[open] summary{margin-bottom:10px}
+@media (max-width:760px){
+  .sala-zoom{width:100%}
+  .sala-zoom iframe{height:calc(100vh - 170px);min-height:460px;border-radius:0;border-left:0;border-right:0}
+}
+.evento-nota-texto{display:block}
+.evento-nota-texto a{color:var(--green-700);font-weight:600}

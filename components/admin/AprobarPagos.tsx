@@ -25,7 +25,7 @@ export default function AprobarPagos({ eventoId }: { eventoId: string }) {
   const lineas = texto.split(/\r?\n/).filter(l => l.trim()).length;
 
   function aprobar() {
-    if (!confirm(`¿Aprobar ${lineas} ${lineas === 1 ? 'pago' : 'pagos'}${enviar ? ' y enviar el correo de «pago comprobado»' : ''}? Solo pega pagos que aparecen como «Efectuado» en Stripe.`)) return;
+    if (!confirm(`¿Aprobar ${lineas} ${lineas === 1 ? 'pago' : 'pagos'}${enviar ? ' y enviar el correo de «pago comprobado»' : ''}? Solo pega pagos que ya comprobaste en Stripe.`)) return;
     setError(''); setRes(null);
     iniciar(async () => {
       const r = await aprobarPagosStripe(eventoId, texto, enviar);
@@ -36,9 +36,8 @@ export default function AprobarPagos({ eventoId }: { eventoId: string }) {
   }
 
   const aprobados = res?.filas.filter(f => f.resultado === 'aprobado' || f.resultado === 'aprobado_verificacion').length ?? 0;
-  return <section className="admin-panel aprobar-pagos">
-    <h2>Aprobar pagos de Stripe</h2>
-    <p className="admin-nota">Para quienes pagaron directamente con el enlace de Stripe. Pega una persona por línea, con su nombre y el correo con el que pagó (por ejemplo <code>María López, maria@gmail.com</code>), o solo el correo. Cada persona queda con su cupo pagado y, cuando entre a la web con ese correo, verá el evento como inscrita.</p>
+  return <section className="aprobar-pagos">
+    <p className="admin-nota">Pega una persona por línea, con su nombre y el correo con el que pagó (por ejemplo <code>María López, maria@gmail.com</code>), o solo el correo. Cada persona queda con su cupo pagado y, cuando entre a la web con ese correo, verá el evento como inscrita.</p>
     <textarea rows={8} value={texto} onChange={e => setTexto(e.target.value)} placeholder={'María López, maria@gmail.com\nJuan Pérez, juan@yahoo.com'} aria-label="Lista de pagos" />
     <label className="check"><input type="checkbox" checked={enviar} onChange={e => setEnviar(e.target.checked)} /> <span>Enviar a cada persona el correo «Pago comprobado: estás dentro»</span></label>
     <div className="admin-botones">

@@ -3,8 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { getSesion } from '@/lib/sesion';
 import { supabaseServidor } from '@/lib/supabase/servidor';
-import { aInstante, ZONAS, type Evento } from '@/lib/eventos/formato';
-import { avisarInscripcion } from '@/lib/eventos/pago';
+import { aInstante, diasEvento, ZONAS, type Evento } from '@/lib/eventos/formato';
+import { crearReunionZoom, numeroReunion, zoomApiActiva } from '@/lib/zoom';
+import { enviarRecordatorio, planRecordatorios } from '@/lib/eventos/recordatorios';
+import { CORREO_ADMINISTRADORA } from '@/lib/administradora';
+import { avisarInscripcion, primerNombre } from '@/lib/eventos/pago';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { enviarCorreosLote } from '@/lib/correo/enviar';
 import { correoCupoAprobado } from '@/lib/correo/plantillas';
@@ -31,8 +34,6 @@ export async function guardarEvento(d: DatosEvento): Promise<Resultado> {
   const precio = Math.round(Number(String(d.precio).replace(',', '.')) * 100);
   const cupos = Math.round(Number(d.cupos));
   if (!titulo) return { ok: false, error: 'Escribe el título del evento.' };
-  const enlacePago = recortar(d.enlace_pago, 300);
-  if (enlacePago && !/^https:\/\/\S+$/.test(enlacePago)) return { ok: false, error: 'El enlace de pago debe empezar por https://.' };
   if (!/^[a-z0-9-]{2,60}$/.test(slug)) return { ok: false, error: 'La dirección solo puede tener letras minúsculas, números y guiones.' };
   if (!Number.isFinite(precio) || precio < 50) return { ok: false, error: 'Escribe un valor válido en dólares (mínimo 0.50).' };
   if (!Number.isInteger(cupos) || cupos < 1 || cupos > 10000) return { ok: false, error: 'Los cupos deben ser un número entre 1 y 10.000.' };
@@ -55,7 +56,7 @@ export async function guardarEvento(d: DatosEvento): Promise<Resultado> {
     fecha_periodo: exacta ? null : d.fecha_periodo || null,
     fecha_mes: exacta ? null : Number(d.fecha_mes), fecha_anio: exacta ? null : Number(d.fecha_anio),
     horario: recortar(d.horario, 300), precio_centavos: precio, cupos,
-    inscripcion_abierta: Boolean(d.inscripcion_abierta), visible: Boolean(d.visible), enlace_pago: enlacePago,
+    inscripcion_abierta: Boolean(d.inscripcion_abierta), visible: Boolean(d.visible), recordatorios: d.recordatorios !== false,
     actualizado_en: new Date().toISOString(),
   };
   const r = d.id
@@ -164,8 +165,69 @@ export async function aprobarPagosStripe(eventoId: string, texto: string, enviar
   return { ok: true, filas, enviados, fallidos };
 }
 
-/** «MARIA DEL ROSARIO NIEVES» → «Maria»; «(sin nombre)» → «». */
-function primerNombre(nombre: string) {
-  const p = nombre.replace(/\(.*?\)/g, '').trim().split(/\s+/)[0] ?? '';
-  return p ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : '';
+type Simple = { ok: true; aviso?: string } | { ok: false; error: string };
+
+async function servidorAdmin() {
+  return (await clienteAdmin()) && supabaseAdmin();
+}
+
+/** Guarda la reunión de Zoom del evento (número o enlace de invitación + código). */
+export async function guardarSalaZoom(eventoId: string, reunionTexto: string, clave: string): Promise<Simple> {
+  const servidor = await servidorAdmin();
+  if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
+  const reunion = numeroReunion(reunionTexto);
+  if (!reunion) return { ok: false, error: 'Escribe el ID de la reunión de Zoom (9 a 12 números) o pega el enlace de invitación.' };
+  const codigo = recortar(clave, 40);
+  const { error } = await servidor.from('eventos_zoom').upsert({ evento_id: eventoId, reunion, clave: codigo, actualizado_en: new Date().toISOString() });
+  if (error) return { ok: false, error: /eventos_zoom/.test(error.message) ? 'Falta ejecutar supabase/sala-y-recordatorios.sql en Supabase.' : error.message };
+  revalidatePath('/admin/eventos', 'layout');
+  revalidatePath('/portal/eventos', 'layout');
+  return { ok: true, aviso: 'Sala guardada. Los inscritos ya ven el botón «Entrar a la clase».' };
+}
+
+/** Crea la reunión en la cuenta de Zoom Pro de Diana (app Server-to-Server) y la guarda. */
+export async function crearSalaZoom(eventoId: string, duracionMin: number): Promise<Simple> {
+  const servidor = await servidorAdmin();
+  if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
+  if (!zoomApiActiva) return { ok: false, error: 'Falta la app Server-to-Server de Zoom en Vercel. Mientras tanto, crea la reunión en zoom.us y pega aquí su ID y código.' };
+  const { data: e } = await servidor.from('eventos_privados').select('*').eq('id', eventoId).maybeSingle<Evento>();
+  if (!e) return { ok: false, error: 'No se encontró el evento.' };
+  if (!e.hora_inicio || !e.fecha) return { ok: false, error: 'Primero guarda la fecha exacta y la hora de inicio del evento.' };
+  const minutos = Math.min(Math.max(Math.round(duracionMin) || 120, 30), 600);
+  try {
+    const { reunion, clave } = await crearReunionZoom({ titulo: e.titulo, inicio: e.hora_inicio, dias: diasEvento(e).length, duracionMin: minutos });
+    const { error } = await servidor.from('eventos_zoom').upsert({ evento_id: eventoId, reunion, clave, actualizado_en: new Date().toISOString() });
+    if (error) return { ok: false, error: error.message };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+  revalidatePath('/admin/eventos', 'layout');
+  revalidatePath('/portal/eventos', 'layout');
+  return { ok: true, aviso: 'Reunión creada en tu cuenta de Zoom (con sala de espera y grabación en la nube) y guardada.' };
+}
+
+export async function quitarSalaZoom(eventoId: string): Promise<Simple> {
+  const servidor = await servidorAdmin();
+  if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
+  await servidor.from('eventos_zoom').delete().eq('evento_id', eventoId);
+  revalidatePath('/admin/eventos', 'layout');
+  revalidatePath('/portal/eventos', 'layout');
+  return { ok: true };
+}
+
+/** Envía ahora un correo programado (bienvenida o recordatorio). Con «prueba», solo a la administradora. */
+export async function enviarRecordatorioAhora(eventoId: string, clave: string, prueba: boolean): Promise<Simple> {
+  const servidor = await servidorAdmin();
+  if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
+  const { data: e } = await servidor.from('eventos_privados').select('*').eq('id', eventoId).maybeSingle<Evento>();
+  if (!e) return { ok: false, error: 'No se encontró el evento.' };
+  const r = planRecordatorios(e).find(x => x.clave === clave);
+  if (!r) return { ok: false, error: 'Ese recordatorio ya no existe (¿cambiaste la fecha?).' };
+  const res = await enviarRecordatorio(e, r, await urlDelSitio(), { prueba, manual: true });
+  if (res.error) return { ok: false, error: res.error };
+  revalidatePath('/admin/eventos', 'layout');
+  if (prueba) return res.enviados ? { ok: true, aviso: `Prueba enviada a ${CORREO_ADMINISTRADORA}.` } : { ok: false, error: 'No se pudo enviar la prueba (revisa la cuota de Resend).' };
+  return res.fallidos.length
+    ? { ok: false, error: `Se enviaron ${res.enviados} de ${res.total}. No llegaron ${res.fallidos.length} (puede ser el límite diario de Resend): ${res.fallidos.slice(0, 20).join(', ')}${res.fallidos.length > 20 ? '…' : ''}` }
+    : { ok: true, aviso: `Enviado a ${res.enviados} ${res.enviados === 1 ? 'persona' : 'personas'}.` };
 }

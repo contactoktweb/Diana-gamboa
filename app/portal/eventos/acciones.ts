@@ -6,7 +6,6 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe';
 import { urlDelSitio } from '@/lib/sitio';
 import { fechaEvento, type Evento } from '@/lib/eventos/formato';
-import { avisarInscripcion } from '@/lib/eventos/pago';
 
 type Resultado =
   | { ok: true; url: string }
@@ -28,7 +27,7 @@ async function datos(eventoId: string) {
 
 /**
  * «Reserva tu lugar». Con Stripe activo, aparta el cupo y devuelve la página de pago.
- * Sin Stripe, guarda una preinscripción para enviar después el enlace de pago.
+ * Sin Stripe, guarda una preinscripción para avisar cuando se habilite el pago.
  */
 export async function iniciarInscripcion(eventoId: string): Promise<Resultado> {
   const d = await datos(eventoId);
@@ -45,7 +44,7 @@ export async function iniciarInscripcion(eventoId: string): Promise<Resultado> {
       if (error) return { ok: false, error: 'No se pudo guardar tu preinscripción. Inténtalo de nuevo.' };
     }
     revalidatePath(`/portal/eventos/${evento.slug}`);
-    return { ok: true, aviso: 'Listo, quedaste preinscrito. Te enviaremos a tu correo el enlace de pago en cuanto se habilite.' };
+    return { ok: true, aviso: 'Listo, quedaste preinscrito. Te avisaremos por correo en cuanto se habilite el pago.' };
   }
 
   const { data, error } = await admin.rpc('reservar_cupo', { p_evento: evento.id, p_usuario: sesion.id, p_nombre: nombre, p_correo: sesion.correo, p_minutos: MINUTOS_PAGO + 5 });
@@ -62,6 +61,8 @@ export async function iniciarInscripcion(eventoId: string): Promise<Resultado> {
       mode: 'payment',
       locale: 'es',
       customer_email: sesion.correo,
+      // El teléfono queda en la inscripción (la administración lo ve con enlace a WhatsApp).
+      phone_number_collection: { enabled: true },
       client_reference_id: r.inscripcion,
       line_items: [{
         quantity: 1,
@@ -81,45 +82,6 @@ export async function iniciarInscripcion(eventoId: string): Promise<Resultado> {
     console.error('Stripe no creó la página de pago', e);
     return { ok: false, error: 'No se pudo abrir la página de pago. Inténtalo de nuevo en unos minutos.' };
   }
-}
-
-const TIPOS_COMPROBANTE: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/heic': 'heic', 'application/pdf': 'pdf' };
-
-/**
- * Pago por enlace de Stripe (provisional): la persona avisa que ya pagó y puede subir su comprobante.
- * La compra queda «en verificación» (aparta el cupo) hasta que la administración la aprueba.
- */
-export async function avisarPagoRealizado(datosFormulario: FormData): Promise<Resultado> {
-  const d = await datos(String(datosFormulario.get('evento') ?? ''));
-  if (!d) return { ok: false, error: 'Inicia sesión de nuevo.' };
-  const { sesion, admin, evento, nombre } = d;
-  if (!evento.enlace_pago) return { ok: false, error: 'Este evento no tiene enlace de pago.' };
-  const telefono = String(datosFormulario.get('telefono') ?? '').trim().slice(0, 30);
-  const correoPago = String(datosFormulario.get('correo_pago') ?? '').trim().toLowerCase().slice(0, 200);
-  if (!/^\+?[\d\s().-]{7,20}$/.test(telefono)) return { ok: false, error: 'Escribe un teléfono o WhatsApp válido.' };
-  if (correoPago && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correoPago)) return { ok: false, error: 'Revisa el correo que usaste en Stripe.' };
-
-  let ruta = '';
-  const archivo = datosFormulario.get('comprobante');
-  if (archivo instanceof File && archivo.size > 0) {
-    const ext = TIPOS_COMPROBANTE[archivo.type];
-    if (!ext) return { ok: false, error: 'El comprobante debe ser una imagen (JPG, PNG) o un PDF.' };
-    if (archivo.size > 10 * 1024 * 1024) return { ok: false, error: 'El comprobante pesa más de 10 MB.' };
-    ruta = `${evento.id}/${sesion.id}-${Date.now()}.${ext}`;
-    const { error } = await admin.storage.from('comprobantes').upload(ruta, archivo, { contentType: archivo.type });
-    if (error) return { ok: false, error: 'No se pudo subir el comprobante. Inténtalo de nuevo o continúa sin él.' };
-  }
-
-  const { data, error } = await admin.rpc('registrar_verificacion', { p_evento: evento.id, p_usuario: sesion.id, p_nombre: nombre, p_correo: sesion.correo, p_comprobante: ruta, p_telefono: telefono, p_correo_pago: correoPago && correoPago !== sesion.correo.toLowerCase() ? correoPago : null });
-  const r = (data as { resultado: string; inscripcion: string | null }[] | null)?.[0];
-  if (error || !r) return { ok: false, error: 'No se pudo registrar tu pago. Inténtalo de nuevo.' };
-  if (r.resultado === 'ya_inscrito') return { ok: false, error: 'Ya tienes tu cupo o tu pago ya está en verificación.' };
-  if (r.resultado === 'agotado') return { ok: false, agotado: true, error: 'Los cupos se agotaron. Si ya pagaste, escríbenos a hola@dianagamboa.com y te devolvemos el dinero completo.' };
-  if (r.resultado !== 'ok' || !r.inscripcion) return { ok: false, error: 'Las inscripciones de este evento están cerradas.' };
-
-  await avisarInscripcion(r.inscripcion, { admin: true, porVerificar: true });
-  revalidatePath(`/portal/eventos/${evento.slug}`);
-  return { ok: true, aviso: 'Recibimos tu aviso de pago. Tu cupo queda apartado mientras verificamos la compra; te escribiremos al confirmarla.' };
 }
 
 /** Con los cupos agotados: guarda a la persona en la lista de espera. */

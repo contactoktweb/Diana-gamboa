@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     return [
       { source: '/playlists', destination: '/portal', permanent: false },
       // Enlace corto del taller para el live y para Instagram.
-      { source: '/taller', destination: '/portal/eventos/call-o-put', permanent: false },
+      { source: '/taller', destination: '/eventos/call-o-put', permanent: false },
     ];
   },
 };

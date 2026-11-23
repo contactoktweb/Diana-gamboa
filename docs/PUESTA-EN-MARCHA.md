@@ -137,8 +137,8 @@ Alternativa sin Resend: Diana se registra en `/registro` y se ejecuta en el SQL 
 
 ## Eventos privados y pagos con Stripe
 
-1. **Base de datos:** ejecuta [`supabase/eventos.sql`](../supabase/eventos.sql) en el SQL Editor de Supabase (crea los eventos,
-   las inscripciones y el taller «Antes de Comprar Ese Call o Ese Put»). Se puede ejecutar varias veces.
+1. **Base de datos:** ejecuta en el SQL Editor de Supabase, en este orden, [`supabase/eventos.sql`](../supabase/eventos.sql)
+   y [`supabase/sala-y-recordatorios.sql`](../supabase/sala-y-recordatorios.sql). Se pueden ejecutar varias veces.
 2. **Clave de Stripe:** Stripe → Developers → API keys → *Secret key*. Súbela a Vercel como `STRIPE_SECRET_KEY`.
 3. **Avisos de pago (webhook):** Stripe → Developers → Webhooks → *Add destination*:
    - Dirección: `https://www.dianagamboa.com/api/stripe/webhook`
@@ -146,5 +146,34 @@ Alternativa sin Resend: Diana se registra en `/registro` y se ejecuta en el SQL 
    - Copia el *Signing secret* (`whsec_…`) y súbelo a Vercel como `STRIPE_WEBHOOK_SECRET`.
 4. Vuelve a desplegar en Vercel.
 
-Sin Stripe configurado, los alumnos pueden preinscribirse y la administración ve sus datos en **Eventos**.
+El pago se hace solo con las claves (ya no hay enlace de pago): el alumno pulsa «Reserva tu lugar», paga en Stripe
+y vuelve inscrito. Recibe el correo «Gracias por tu confianza» y Diana el aviso «Nuevo cupo comprado».
+Sin claves de Stripe, los alumnos solo pueden preinscribirse.
 Recomendado: probar primero con las claves de prueba de Stripe (`sk_test_…`) y la tarjeta `4242 4242 4242 4242`.
+
+**Página pública:** cada evento visible tiene una página para compartir sin cuenta: `/eventos/<dirección>`
+(por ejemplo `/eventos/call-o-put`; el atajo `/taller` lleva ahí). La compra y el acceso siguen dentro del portal.
+
+## Sala de clase con Zoom (dentro de la web)
+
+1. **Zoom Pro** en la cuenta de Diana.
+2. **App del Meeting SDK:** [marketplace.zoom.us](https://marketplace.zoom.us) → *Develop* → *Build App* → **General App**.
+   En *Features → Embed* activa **Meeting SDK**. En *App Credentials* copia el *Client ID* y el *Client Secret*
+   y súbelos a Vercel como `ZOOM_SDK_CLIENT_ID` y `ZOOM_SDK_CLIENT_SECRET`. Con esto los alumnos entran a la clase
+   desde su portal sin salir de la web.
+3. **Opcional, para que Diana inicie la clase desde la web y cree la reunión con un botón:** otra app **Server-to-Server OAuth**
+   con los permisos `user:read:zak:admin` y `meeting:write:meeting:admin`. Sube a Vercel `ZOOM_ACCOUNT_ID`,
+   `ZOOM_CLIENT_ID` y `ZOOM_CLIENT_SECRET` y actívala (*Activate your app*). Sin ella, Diana inicia la reunión en la
+   aplicación de Zoom y los alumnos igual entran desde la web.
+4. Vuelve a desplegar. En **Administración → Eventos → (evento) → Sala de clase**, crea la reunión o pega su ID y código.
+   La reunión debe tener la **sala de espera** activada.
+
+## Recordatorios automáticos
+
+- Vercel ejecuta cada día a las 8:00 a. m. de Nueva York (13:00 UTC) la tarea de [`vercel.json`](../vercel.json).
+- Sube a Vercel la variable `CRON_SECRET` (una clave larga inventada, por ejemplo de 32 letras y números). Sin ella la tarea no hace nada.
+- Se envían a los inscritos con pago aprobado: un día antes del primer día y la mañana de cada día de clase,
+  con la hora en cada país y el botón «Entrar a la clase». Cada uno sale una sola vez.
+- En la administración del evento se ven los recordatorios, se pueden probar (te llegan a ti) y enviar a mano.
+  La bienvenida («gracias por tu confianza») se envía a mano desde ahí.
+- Cuidado con el límite de Resend: el plan gratuito permite 100 correos al día.

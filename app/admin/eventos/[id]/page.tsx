@@ -6,8 +6,12 @@ import AprobarPagos from '@/components/admin/AprobarPagos';
 import CopiarTexto from '@/components/admin/CopiarTexto';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import FormEvento from '@/components/admin/FormEvento';
+import SalaZoomAdmin from '@/components/admin/SalaZoomAdmin';
+import RecordatoriosAdmin, { type FilaRecordatorio } from '@/components/admin/RecordatoriosAdmin';
+import { planRecordatorios } from '@/lib/eventos/recordatorios';
+import { zoomApiActiva, zoomSdkActivo } from '@/lib/zoom';
 import { supabaseServidor } from '@/lib/supabase/servidor';
-import { horaEnZona, precioTexto, type EstadoInscripcion, type Evento } from '@/lib/eventos/formato';
+import { diaLargo, horaEnZona, precioTexto, type EstadoInscripcion, type Evento } from '@/lib/eventos/formato';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,8 +19,8 @@ interface Fila { id: string; nombre: string; correo: string; estado: EstadoInscr
 
 const fecha = (d: string) => new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/New_York' }).format(new Date(d));
 const GRUPOS: { estado: EstadoInscripcion; titulo: string; nota: string }[] = [
-  { estado: 'verificacion', titulo: 'Compras por verificar', nota: 'Pagaron con el enlace de Stripe y esperan tu revisión. En Stripe › Payments busca el pago por su correo (o por el «correo de Stripe» si es distinto), confirma US$ y estado «Succeeded», revisa el comprobante si lo subieron y apruébalo. Su cupo queda apartado mientras tanto. El teléfono abre WhatsApp.' },
-  { estado: 'pagada', titulo: 'Inscritos (pago aprobado)', nota: 'Tienen su cupo y ven el acceso del evento en su portal.' },
+  { estado: 'verificacion', titulo: 'Compras por verificar', nota: 'Avisos de pago hechos con el antiguo enlace de Stripe. En Stripe › Payments busca el pago por su correo, confirma el valor y el estado «Succeeded» y apruébalo. El teléfono abre WhatsApp.' },
+  { estado: 'pagada', titulo: 'Inscritos (pago aprobado)', nota: 'Tienen su cupo, ven el acceso del evento en su portal y reciben los recordatorios. El teléfono (si lo escribieron en Stripe) abre WhatsApp.' },
   { estado: 'preinscrita', titulo: 'Preinscritos', nota: 'Se preinscribieron sin pagar (Stripe aún no estaba conectado). Envíales el enlace del evento para que paguen; no tienen cupo apartado.' },
   { estado: 'espera', titulo: 'Lista de espera', nota: 'Quisieron entrar con los cupos agotados. Te sirve para decidir si abres otra fecha o amplías cupos.' },
   { estado: 'reembolsada', titulo: 'Reembolsados', nota: 'Pagaron y se les devolvió el dinero desde Stripe. Ya no tienen acceso.' },
@@ -41,6 +45,20 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
   }
   const total = pagadas.reduce((s, f) => s + (f.monto_centavos ?? 0), 0);
 
+  // Sala de Zoom y correos programados (tablas de supabase/sala-y-recordatorios.sql).
+  const { data: sala } = servidor ? await servidor.from('eventos_zoom').select('reunion, clave').eq('evento_id', id).maybeSingle() : { data: null };
+  const { data: enviados } = servidor ? await servidor.from('recordatorios_enviados').select('clave, enviados, fallidos, manual, creado_en').eq('evento_id', id) : { data: null };
+  const ahora = Date.now();
+  const recordatorios: FilaRecordatorio[] = planRecordatorios(e).map(r => {
+    const hecho = enviados?.find(x => x.clave === r.clave);
+    return {
+      clave: r.clave, titulo: r.titulo, automatico: Boolean(r.envio),
+      cuando: r.envio ? `${diaLargo(r.envio)}, 8:00 a. m. (Nueva York)` : 'Manual',
+      vencido: Boolean(r.limite && ahora >= Date.parse(r.limite)),
+      enviado: hecho && (hecho.enviados || hecho.fallidos) ? { fecha: fecha(hecho.creado_en as string), enviados: hecho.enviados as number, fallidos: hecho.fallidos as number, manual: Boolean(hecho.manual) } : null,
+    };
+  });
+
   return <>
     <p><Link href="/admin/eventos" className="admin-volver"><ArrowLeft size={16} aria-hidden="true" /> Eventos</Link></p>
     <header className="admin-cabecera"><h1>{e.titulo}</h1><p>Enlace para compartir: <strong>/portal/eventos/{e.slug}</strong></p></header>
@@ -48,12 +66,12 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
     <section className="cifras" aria-label="Cifras del evento">
       <div className="cifra"><span>Cupos pagados</span><strong>{pagadas.length} de {e.cupos}</strong><small>{e.cupos - pagadas.length > 0 ? `${e.cupos - pagadas.length} disponibles` : 'Cupos agotados'}</small></div>
       <div className="cifra"><span>Ingresos</span><strong>{precioTexto(total)}</strong><small>Antes de la comisión de Stripe</small></div>
-      <div className="cifra"><span>Por verificar</span><strong>{filas.filter(f => f.estado === 'verificacion').length}</strong><small>Pagaron con el enlace</small></div>
-      <div className="cifra"><span>Preinscritos</span><strong>{filas.filter(f => f.estado === 'preinscrita').length}</strong><small>Sin pagar</small></div>
+            <div className="cifra"><span>Preinscritos</span><strong>{filas.filter(f => f.estado === 'preinscrita').length}</strong><small>Sin pagar</small></div>
       <div className="cifra"><span>Lista de espera</span><strong>{filas.filter(f => f.estado === 'espera').length}</strong><small>Con cupos agotados</small></div>
     </section>
 
-    <AprobarPagos eventoId={e.id} />
+    <SalaZoomAdmin eventoId={e.id} slug={e.slug} sala={sala as { reunion: string; clave: string } | null} sdkActivo={zoomSdkActivo} apiActiva={zoomApiActiva} />
+    <RecordatoriosAdmin eventoId={e.id} filas={recordatorios} activos={e.recordatorios !== false} cron={Boolean(process.env.CRON_SECRET)} inscritos={new Set(pagadas.map(f => f.correo.toLowerCase())).size} />
 
     {GRUPOS.map(g => {
       const lista = filas.filter(f => f.estado === g.estado);
@@ -82,6 +100,12 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
         </>}
       </section>;
     })}
+
+    <details className="admin-panel aprobar-manual">
+      <summary>Casos especiales: aprobar pagos a mano</summary>
+      <p className="admin-nota">Los pagos con Stripe se aprueban solos. Usa esto solo si alguien pagó por fuera de la web y necesitas darle su cupo.</p>
+      <AprobarPagos eventoId={e.id} />
+    </details>
 
     <FormEvento inicial={{ ...e, precio: (e.precio_centavos / 100).toFixed(2), zona: 'America/New_York', hora_local: e.hora_inicio ? horaEnZona(e.hora_inicio, 'America/New_York') : '' }} />
   </>;

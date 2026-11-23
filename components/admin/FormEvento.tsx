@@ -53,7 +53,7 @@ export default function FormEvento({ inicial }: { inicial: DatosEvento }) {
       <input required value={d.titulo} onChange={e => cambiar({ titulo: e.target.value, ...(slugTocado ? {} : { slug: slugDe(e.target.value) }) })} /></label>
     <label className="editor-campo"><span className="editor-etiqueta">Dirección del evento</span>
       <span className="form-evento-slug"><span>/portal/eventos/</span><input required value={d.slug} onChange={e => { setSlugTocado(true); cambiar({ slug: e.target.value.toLowerCase() }); }} /></span>
-      <small className="editor-ayuda">Solo letras minúsculas, números y guiones. No la cambies si ya compartiste el enlace.</small></label>
+      <small className="editor-ayuda">Solo letras minúsculas, números y guiones. La página pública (para compartir) es /eventos/{d.slug || '…'}. No la cambies si ya compartiste el enlace.</small></label>
     {campo('subtitulo', 'Subtítulo', { placeholder: 'Ej.: Taller práctico en vivo para…' })}
     {campo('detalles', 'Datos destacados', { placeholder: 'Ej.: Nivel intermedio · 2 clases en vivo · Solo 50 cupos', ayuda: 'Aparece sobre el título y en el bloque «Reserva tu lugar».' })}
     {campo('resumen', 'Resumen (tarjeta en la lista de eventos)', { filas: 2 })}
@@ -93,20 +93,21 @@ export default function FormEvento({ inicial }: { inicial: DatosEvento }) {
       <label className="editor-campo"><span className="editor-etiqueta">Valor (USD)</span><input inputMode="decimal" value={d.precio} onChange={e => cambiar({ precio: e.target.value })} placeholder="98.99" /></label>
       <label className="editor-campo"><span className="editor-etiqueta">Cupos</span><input type="number" min={1} value={d.cupos} onChange={e => cambiar({ cupos: Number(e.target.value) })} /></label>
     </div>
-    {campo('enlace_pago', 'Enlace de pago de Stripe (provisional)', { placeholder: 'https://buy.stripe.com/…', ayuda: 'Mientras no estén conectadas las claves de Stripe, el botón de pago abre este enlace y el alumno avisa que pagó (con comprobante opcional). Tú apruebas cada compra aquí. El valor del enlace en Stripe debe coincidir con el de arriba.' })}
-    <small className="editor-ayuda">El valor solo se muestra cuando el alumno pulsa «Reserva tu lugar». Los alumnos nunca ven cuántos cupos quedan: solo si hay o no.</small>
+    <small className="editor-ayuda">El pago se hace con Stripe dentro de la web: al pagar, el alumno queda inscrito solo y recibe su correo de agradecimiento. El valor solo se muestra cuando el alumno pulsa «Reserva tu lugar». Los alumnos nunca ven cuántos cupos quedan: solo si hay o no.</small>
     <label className="check"><input type="checkbox" checked={d.inscripcion_abierta} onChange={e => cambiar({ inscripcion_abierta: e.target.checked })} /> <span>Inscripciones abiertas</span></label>
-    <label className="check"><input type="checkbox" checked={d.visible} onChange={e => cambiar({ visible: e.target.checked })} /> <span>Visible para los alumnos en «Eventos»</span></label>
+    <label className="check"><input type="checkbox" checked={d.visible} onChange={e => cambiar({ visible: e.target.checked })} /> <span>Visible en la web (página pública del evento y «Eventos» del portal)</span></label>
+    <label className="check"><input type="checkbox" checked={d.recordatorios !== false} onChange={e => cambiar({ recordatorios: e.target.checked })} /> <span>Enviar recordatorios automáticos a los inscritos (un día antes y el día de cada clase)</span></label>
 
     <h2>Página del evento</h2>
     {campo('contenido', 'Texto de la página', { filas: 18, ayuda: AYUDA_FORMATO })}
-    {campo('acceso', 'Acceso para inscritos (solo lo ven quienes pagaron)', { filas: 5, ayuda: 'Enlace de las clases, grabaciones, hoja de chequeo… ' + AYUDA_FORMATO })}
+    {campo('acceso', 'Acceso para inscritos (solo lo ven quienes pagaron)', { filas: 5, ayuda: 'Grabaciones, hoja de chequeo, indicaciones… El botón «Entrar a la clase» aparece solo cuando configuras la sala de Zoom. ' + AYUDA_FORMATO })}
     {campo('aviso', 'Aviso de riesgo (siempre visible al final de la página)', { filas: 4 })}
 
     {mensaje && <p className={mensaje.ok ? 'auth-ok' : 'auth-error'} role={mensaje.ok ? 'status' : 'alert'}>{mensaje.texto}</p>}
     <div className="form-evento-botones">
       <button className="btn btn-green" disabled={pendiente}><Save size={18} aria-hidden="true" /> {pendiente ? 'Guardando…' : nuevo ? 'Crear evento' : 'Guardar cambios'}</button>
       {!nuevo && <a className="btn btn-outline btn-sm" href={`/portal/eventos/${inicial.slug}`} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden="true" /> Ver como alumno</a>}
+      {!nuevo && <a className="btn btn-outline btn-sm" href={`/eventos/${inicial.slug}`} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden="true" /> Ver página pública</a>}
       {!nuevo && <button type="button" className="btn btn-outline btn-sm es-peligro" onClick={eliminar} disabled={pendiente}><Trash2 size={16} aria-hidden="true" /> Eliminar</button>}
     </div>
   </form>;

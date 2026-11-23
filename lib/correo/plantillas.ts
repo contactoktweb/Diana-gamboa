@@ -130,14 +130,72 @@ export function correoNuevoCupo({ sitio, evento, nombre, correo, monto, ocupados
   };
 }
 
-/** Agradecimiento para la persona que pagó su cupo. */
-export function correoGraciasEvento({ sitio, nombre, evento, fecha, horario, enlace }: { sitio: string; nombre: string; evento: string; fecha: string; horario: string; enlace: string }) {
-  const titulo = `¡Gracias por tu participación${nombre ? `, ${nombre}` : ''}!`;
-  const parrafos = [`Tu pago fue aprobado y ya tienes tu cupo en <strong>${esc(evento)}</strong>.`, `<strong>Fecha:</strong> ${esc(fecha)}${horario ? `<br><strong>Horario:</strong> ${esc(horario)}` : ''}`, 'En tu portal encontrarás toda la información del evento. Antes de la primera clase publicaremos allí el enlace de acceso y te avisaremos por correo.'];
+export type FilaHora = { lugar: string; hora: string };
+
+/** Tabla «la hora en tu país». */
+function tablaHoras(filas: FilaHora[]) {
+  const fila = (f: FilaHora) => `<tr><td style="padding:6px 10px;border-bottom:1px solid #E3E8E5;color:#4A5952">${esc(f.lugar)}</td><td style="padding:6px 10px;border-bottom:1px solid #E3E8E5;color:#0F4131;font-weight:bold;text-align:right;white-space:nowrap">${esc(f.hora)}</td></tr>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;border:1px solid #E3E8E5;border-radius:12px;border-collapse:separate;font-size:14px;background:#FAFBFA">${filas.map(fila).join('')}</table>`;
+}
+const lista = (items: string[]) => `<ul style="margin:8px 0 0;padding-left:20px;color:#4A5952;font-size:16px;line-height:1.6">${items.map(i => `<li style="margin:0 0 6px;color:#4A5952;font-size:16px">${i}</li>`).join('')}</ul>`;
+const horasTexto = (filas: FilaHora[]) => 'Hora en tu país: ' + filas.map(f => `${f.lugar} ${f.hora}`).join(' · ');
+
+const COMO_ENTRAR = [
+  'El día de la clase entra a <strong>tu portal</strong> con el mismo correo con el que compraste tu cupo y pulsa <strong>«Entrar a la clase»</strong>.',
+  'La clase se abre <strong>dentro de la web</strong>: no necesitas instalar Zoom ni abrir enlaces externos.',
+  'Usa un computador con Google Chrome o Microsoft Edge y permite el micrófono y la cámara cuando el navegador lo pida.',
+];
+
+/** Agradecimiento para la persona que pagó su cupo («gracias por tu confianza»). */
+export function correoGraciasEvento({ sitio, nombre, evento, fecha, hora, horas, enlace }: {
+  sitio: string; nombre: string; evento: string; fecha: string; hora: string; horas?: FilaHora[]; enlace: string;
+}) {
+  const titulo = `¡Gracias por tu confianza${nombre ? `, ${nombre}` : ''}!`;
+  const parrafos = [
+    `Tu pago fue aprobado y ya tienes tu cupo en <strong>${esc(evento)}</strong>. Gracias por confiar en nosotros para seguir aprendiendo a leer el mercado.`,
+    `<strong>Fecha:</strong> ${esc(fecha)}${hora ? `<br><strong>Hora:</strong> ${esc(hora)}` : ''}`,
+    ...(horas?.length ? [`<strong>La hora en tu país</strong>${tablaHoras(horas)}`] : []),
+    `<strong>Cómo entrar a la clase</strong>${lista([...COMO_ENTRAR, 'Te enviaremos un recordatorio un día antes y otro el mismo día de la clase.'])}`,
+  ];
   return {
-    asunto: `Tu cupo está confirmado · ${evento}`,
-    html: marco({ sitio, previa: 'Tu pago fue aprobado. Ya tienes tu cupo.', etiqueta: 'Inscripción confirmada', titulo, parrafos, boton: { texto: 'Ver el evento en mi portal', enlace }, nota: `Si necesitas pedir un reembolso, revisa la política en ${sitio}/reembolsos.` }),
-    texto: textoPlano(titulo, parrafos, [`Ver el evento: ${enlace}`]),
+    asunto: `Gracias por tu confianza · Tu cupo en ${evento} está confirmado`,
+    html: marco({ sitio, previa: 'Tu pago fue aprobado. Ya tienes tu cupo.', etiqueta: 'Inscripción confirmada', titulo, parrafos, boton: { texto: 'Ver el evento en mi portal', enlace },
+      nota: `¿Tienes alguna duda? Responde a este correo o escríbenos a hola@dianagamboa.com. Si necesitas pedir un reembolso, revisa la política en ${sitio}/reembolsos.` }),
+    texto: textoPlano(titulo, parrafos.slice(0, 2), [horas?.length ? horasTexto(horas) : '', 'El día de la clase entra a tu portal y pulsa «Entrar a la clase». La clase se abre dentro de la web.', `Ver el evento: ${enlace}`]),
+  };
+}
+
+/**
+ * Recordatorio de la clase: la víspera («mañana») o el mismo día («hoy»).
+ * El botón lleva a la sala de clase dentro de la web.
+ */
+export function correoRecordatorio({ sitio, nombre, evento, tipo, dia, numeroDia, totalDias, hora, horas, enlaceSala }: {
+  sitio: string; nombre: string; evento: string; tipo: 'vispera' | 'hoy'; dia: string; numeroDia: number; totalDias: number;
+  hora: string; horas?: FilaHora[]; enlaceSala: string;
+}) {
+  const quien = nombre ? `, ${nombre}` : '';
+  const varios = totalDias > 1;
+  const titulo = tipo === 'vispera' ? `Mañana es la clase${quien}` : varios ? `Hoy es el día ${numeroDia} del taller${quien}` : `Hoy es la clase${quien}`;
+  const parrafos = [
+    tipo === 'vispera'
+      ? `Te esperamos mañana, <strong>${esc(dia)}</strong>, en <strong>${esc(evento)}</strong>.${varios ? ` Son ${totalDias} clases en vivo, a la misma hora.` : ''}`
+      : `Hoy, <strong>${esc(dia)}</strong>, nos vemos en ${varios ? `la clase ${numeroDia} de ${totalDias} de ` : ''}<strong>${esc(evento)}</strong>.`,
+    `<strong>Hora:</strong> ${esc(hora)}`,
+    ...(horas?.length ? [`<strong>La hora en tu país</strong>${tablaHoras(horas)}`] : []),
+    `<strong>Cómo entrar</strong>${lista([
+      'Pulsa <strong>«Entrar a la clase»</strong> en este correo (o en tu portal) unos <strong>10 minutos antes</strong>.',
+      'Si te pide iniciar sesión, usa el mismo correo con el que compraste tu cupo.',
+      'La clase se abre dentro de la web: no necesitas instalar Zoom.',
+      'Usa Chrome o Edge en un computador y permite el micrófono y la cámara. Diana te dará paso desde la sala de espera.',
+    ])}`,
+    ...(tipo === 'vispera' ? ['<strong>Ten a mano</strong> tu plataforma de opciones y un cuaderno para los ejercicios.'] : []),
+  ];
+  return {
+    asunto: tipo === 'vispera' ? `Mañana: ${evento}` : `Hoy a las ${hora.split(' hora')[0]}: ${evento}`,
+    html: marco({ sitio, previa: `${tipo === 'vispera' ? 'Mañana' : 'Hoy'}, ${hora}. Entra a la clase desde la web.`, etiqueta: tipo === 'vispera' ? 'Recordatorio · mañana' : 'Recordatorio · hoy', titulo, parrafos,
+      boton: { texto: 'Entrar a la clase', enlace: enlaceSala },
+      nota: '¿Problemas para entrar? Responde a este correo o escríbenos a hola@dianagamboa.com.<br><br>Este taller es educativo y no es una recomendación de inversión ni asesoría financiera.' }),
+    texto: textoPlano(titulo, parrafos.slice(0, 2), [horas?.length ? horasTexto(horas) : '', `Entrar a la clase: ${enlaceSala}`]),
   };
 }
 
@@ -154,48 +212,26 @@ function correoPorVerificar({ sitio, evento, nombre, correo, monto, ocupados, cu
 }
 
 /**
- * Bienvenida al taller: se envía antes de la primera clase a todas las personas con su cupo pagado.
- * Si aún no hay enlace de Zoom, el correo avisa que llegará antes de la clase.
+ * Bienvenida al taller: se envía (desde la administración) a todas las personas con su cupo pagado.
+ * La clase se abre dentro de la web: no lleva enlace de Zoom.
  */
-export function correoBienvenidaTaller({ sitio, nombre, evento, fechas, hora, duracion, enlaceZoom, enlacePortal }: {
-  sitio: string; nombre: string; evento: string; fechas: string; hora: string; duracion?: string; enlaceZoom?: string; enlacePortal: string;
+export function correoBienvenidaTaller({ sitio, nombre, evento, fechas, hora, horas, enlacePortal }: {
+  sitio: string; nombre: string; evento: string; fechas: string; hora: string; horas?: FilaHora[]; enlacePortal: string;
 }) {
   const titulo = `¡Te damos la bienvenida${nombre ? `, ${nombre}` : ''}!`;
-  const fila = (lugar: string, h: string) => `<tr><td style="padding:6px 10px;border-bottom:1px solid #E3E8E5;color:#4A5952">${lugar}</td><td style="padding:6px 10px;border-bottom:1px solid #E3E8E5;color:#0F4131;font-weight:bold;text-align:right;white-space:nowrap">${h}</td></tr>`;
-  const zonas = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E3E8E5;border-radius:12px;border-collapse:separate;font-size:14px;background:#FAFBFA">
-    ${fila('Nueva York, Miami (hora del Este)', '2:00 p. m.')}
-    ${fila('Chicago, Texas · Ciudad de México', '1:00 p. m.')}
-    ${fila('Denver, Arizona (hora de la Montaña)', '12:00 m.')}
-    ${fila('Los Ángeles, Oregón (hora del Pacífico)', '11:00 a. m.')}
-    ${fila('Colombia · Perú · Ecuador · Panamá', '2:00 p. m.')}
-    ${fila('Venezuela · Puerto Rico · Rep. Dominicana', '3:00 p. m.')}
-    ${fila('Argentina · Chile', '4:00 p. m.')}
-    ${fila('España', '8:00 p. m.')}
-  </table>`;
-  const lista = (items: string[]) => `<ul style="margin:8px 0 0;padding-left:20px;color:#4A5952;font-size:16px;line-height:1.6">${items.map(i => `<li style="margin:0 0 6px;color:#4A5952;font-size:16px">${i}</li>`).join('')}</ul>`;
   const parrafos = [
     `Tu cupo en <strong>${esc(evento)}</strong> está confirmado. Gracias por tu confianza: nos vemos muy pronto en clase.`,
-    `<strong>Fechas:</strong> ${esc(fechas)}<br><strong>Hora:</strong> ${esc(hora)}${duracion ? `<br><strong>Duración:</strong> ${esc(duracion)}` : ''}`,
-    `<strong>La hora en tu país</strong> (las dos clases empiezan a la misma hora):${zonas}`,
-    `<strong>Cómo entrar a la clase</strong>${lista([
-      enlaceZoom ? 'Pulsa el botón «Entrar a la clase por Zoom» de este correo. Es el mismo enlace para los dos días.' : 'Te enviaremos el enlace de Zoom por correo antes de la primera clase.',
-      'Entra 10 minutos antes para probar tu audio y tu video.',
-      'Escribe tu nombre completo en Zoom: así te reconocemos en la sala de espera y te damos paso.',
-    ])}`,
-    `<strong>Ten a mano</strong>${lista([
-      'Tu plataforma de opciones, por si quieres ubicar la cadena de opciones mientras explicamos.',
-      'Un cuaderno o tus notas para los ejercicios de comparación.',
-      'Un computador y una conexión estable: así verás bien las gráficas y las cadenas de opciones.',
-    ])}`,
-    'Si no puedes estar en vivo, recibirás la grabación de las dos clases.',
+    `<strong>Fechas:</strong> ${esc(fechas)}${hora ? `<br><strong>Hora:</strong> ${esc(hora)}` : ''}`,
+    ...(horas?.length ? [`<strong>La hora en tu país</strong>${tablaHoras(horas)}`] : []),
+    `<strong>Cómo entrar a la clase</strong>${lista([...COMO_ENTRAR, 'Entra 10 minutos antes y escribe tu nombre completo si te lo piden: así te reconocemos en la sala de espera.', 'Te enviaremos un recordatorio un día antes y otro el mismo día.'])}`,
+    `<strong>Ten a mano</strong>${lista(['Tu plataforma de opciones, por si quieres ubicar la cadena de opciones mientras explicamos.', 'Un cuaderno o tus notas para los ejercicios de comparación.'])}`,
   ];
   return {
-    asunto: `Bienvenida al taller · ${evento}`,
-    html: marco({ sitio, previa: `Tu cupo está confirmado. ${fechas}, ${hora}.`, etiqueta: 'Bienvenida al taller', titulo, parrafos,
-      boton: enlaceZoom ? { texto: 'Entrar a la clase por Zoom', enlace: enlaceZoom } : { texto: 'Ver el taller en mi portal', enlace: enlacePortal },
+    asunto: `Bienvenida · ${evento}`,
+    html: marco({ sitio, previa: `Tu cupo está confirmado. ${fechas}${hora ? `, ${hora}` : ''}.`, etiqueta: 'Bienvenida', titulo, parrafos,
+      boton: { texto: 'Ver el taller en mi portal', enlace: enlacePortal },
       nota: '¿Tienes alguna duda? Responde a este correo o escríbenos a hola@dianagamboa.com.<br><br>Este taller es educativo y no es una recomendación de inversión ni asesoría financiera. Operar opciones tiene alto riesgo.' }),
-    texto: textoPlano(titulo, [parrafos[0], parrafos[1], 'Hora en tu país: Nueva York 2:00 p. m. · Ciudad de México 1:00 p. m. · Oregón 11:00 a. m. · Colombia 2:00 p. m. · Venezuela 3:00 p. m. · Argentina y Chile 4:00 p. m. · España 8:00 p. m.'],
-      [enlaceZoom ? `Enlace de Zoom: ${enlaceZoom}` : 'Te enviaremos el enlace de Zoom antes de la primera clase.', 'Entra 10 minutos antes y escribe tu nombre completo en Zoom.']),
+    texto: textoPlano(titulo, parrafos.slice(0, 2), [horas?.length ? horasTexto(horas) : '', 'El día de la clase entra a tu portal y pulsa «Entrar a la clase».', `Tu portal: ${enlacePortal}`]),
   };
 }
 

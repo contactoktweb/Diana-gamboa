@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { AlertTriangle, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3 } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3, Video } from 'lucide-react';
 import Inscripcion, { type EstadoUsuario } from '@/components/eventos/Inscripcion';
 import TextoEvento from '@/components/eventos/TextoEvento';
 import HoraLocal from '@/components/eventos/HoraLocal';
@@ -10,6 +10,7 @@ import { supabaseServidor } from '@/lib/supabase/servidor';
 import { getSesion } from '@/lib/sesion';
 import { stripeActivo } from '@/lib/stripe';
 import { procesarSesionPagada, vincularPorCorreo } from '@/lib/eventos/pago';
+import { salaLista } from '@/lib/eventos/sala';
 import { fechaEvento, precioTexto, type Evento } from '@/lib/eventos/formato';
 
 export const dynamic = 'force-dynamic';
@@ -47,10 +48,11 @@ export default async function EventoPage({ params, searchParams }: Props) {
   }
   const { data: hayCupo } = await supabase.rpc('evento_hay_cupo', { p_evento: evento.id });
   const precio = precioTexto(evento.precio_centavos);
-  // Con claves de Stripe: pago automático. Sin claves pero con enlace de pago: pago por enlace y verificación.
-  const modo = stripeActivo ? 'stripe' : evento.enlace_pago ? 'enlace' : 'preinscripcion';
+  // Pago con Stripe dentro de la web (claves en Vercel). Sin claves, preinscripción.
+  const modo = stripeActivo ? 'stripe' : 'preinscripcion';
   const inscripcion = (boton?: string) => <Inscripcion eventoId={evento.id} precio={precio} hayCupo={Boolean(hayCupo)} abierta={evento.inscripcion_abierta}
-    modo={modo} enlacePago={evento.enlace_pago} correo={sesion?.correo} estado={estado} boton={boton} />;
+    modo={modo} estado={estado} boton={boton} />;
+  const conSala = estado === 'pagada' && await salaLista(evento.id);
 
   return <>
     <section className="lesson-head evento-head">
@@ -70,7 +72,7 @@ export default async function EventoPage({ params, searchParams }: Props) {
           {evento.horario && <li><Clock3 size={18} aria-hidden="true" /> {evento.horario}</li>}
           {evento.hora_inicio && <HoraLocal iso={evento.hora_inicio} />}
         </ul>
-        {q.pago === 'ok' && estado === 'pagada' && <p className="auth-ok evento-aviso" role="status"><CheckCircle2 size={18} aria-hidden="true" /> ¡Pago aprobado! Ya tienes tu cupo. Te enviamos la confirmación por correo.</p>}
+        {q.pago === 'ok' && estado === 'pagada' && <p className="auth-ok evento-aviso" role="status"><CheckCircle2 size={18} aria-hidden="true" /> ¡Gracias por tu confianza! Tu pago fue aprobado y ya tienes tu cupo. Te enviamos la confirmación por correo.</p>}
         {q.pago === 'ok' && estado !== 'pagada' && <p className="auth-ok evento-aviso" role="status">Estamos confirmando tu pago con Stripe. Si en unos minutos no aparece tu cupo, recarga esta página. {errorPago}</p>}
         {q.pago === 'cancelado' && <p className="auth-error evento-aviso" role="alert">El pago no se completó y no se te cobró nada. Puedes intentarlo de nuevo.</p>}
         {inscripcion()}
@@ -78,9 +80,13 @@ export default async function EventoPage({ params, searchParams }: Props) {
     </section>
 
     <div className="wrap lesson-body evento-cuerpo">
-      {estado === 'pagada' && evento.acceso && <section className="evento-acceso" aria-label="Tu acceso">
+      {estado === 'pagada' && (evento.acceso || conSala) && <section className="evento-acceso" aria-label="Tu acceso">
         <h2><CheckCircle2 size={22} aria-hidden="true" /> Tu acceso al evento</h2>
-        <TextoEvento texto={evento.acceso} />
+        {conSala && <div className="evento-sala">
+          <p>La clase se abre aquí mismo, dentro de la web. No necesitas instalar Zoom. Entra unos 10 minutos antes.</p>
+          <Link href={`/portal/eventos/${evento.slug}/sala`} className="btn btn-green btn-lg"><Video size={20} aria-hidden="true" /> Entrar a la clase</Link>
+        </div>}
+        {evento.acceso && <TextoEvento texto={evento.acceso} />}
       </section>}
 
       <article className="evento-texto"><TextoEvento texto={evento.contenido} /></article>

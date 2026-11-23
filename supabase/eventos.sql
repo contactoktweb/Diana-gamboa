@@ -228,7 +228,7 @@ Sí. Puedes pedir el reembolso total hasta 48 horas antes del inicio de la prime
 
 ### ¿Esto es asesoría financiera?
 No. Es un taller educativo. No es una recomendación de inversión.$txt$,
-  $txt$Gracias por inscribirte. Antes del taller publicaremos aquí el enlace de las clases en vivo y te lo enviaremos por correo.
+  $txt$Gracias por tu confianza. El día de cada clase pulsa «Entrar a la clase» aquí arriba: la clase se abre dentro de la web, sin instalar Zoom. Te enviaremos un recordatorio un día antes y otro el mismo día.
 
 Después de cada clase encontrarás aquí la grabación y la hoja de chequeo.$txt$,
   $txt$Este taller es educativo y no es una recomendación de inversión ni asesoría financiera. Operar opciones tiene alto riesgo y puedes perder el 100% de lo que pagas por un contrato. Los casos que veremos son de sesiones anteriores y se usan solo con fines educativos. Los resultados pasados no garantizan resultados futuros. Cada persona es responsable de sus propias decisiones.$txt$,
@@ -275,10 +275,6 @@ grant execute on function public.registrar_verificacion(uuid, uuid, text, text, 
 -- Comprobantes: espacio privado. Solo el servidor los guarda y la administración los ve con enlaces temporales.
 insert into storage.buckets (id, name, public) values ('comprobantes', 'comprobantes', false)
 on conflict (id) do update set public = false;
-
--- Enlace de pago provisional del primer evento (solo si aún no tiene uno).
-update public.eventos_privados set enlace_pago = 'https://buy.stripe.com/eVqaEXc9D8fA83TenIejK00'
-where slug = 'call-o-put' and enlace_pago = '';
 
 -- Valor del taller: US$99.00 (igual al enlace de pago de Stripe).
 update public.eventos_privados set precio_centavos = 9900, visible = true

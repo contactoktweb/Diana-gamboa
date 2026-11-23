@@ -707,7 +707,7 @@ Sí. Puedes pedir el reembolso total hasta 48 horas antes del inicio de la prime
 
 ### ¿Esto es asesoría financiera?
 No. Es un taller educativo. No es una recomendación de inversión.$txt$,
-  $txt$Gracias por inscribirte. Antes del taller publicaremos aquí el enlace de las clases en vivo y te lo enviaremos por correo.
+  $txt$Gracias por tu confianza. El día de cada clase pulsa «Entrar a la clase» aquí arriba: la clase se abre dentro de la web, sin instalar Zoom. Te enviaremos un recordatorio un día antes y otro el mismo día.
 
 Después de cada clase encontrarás aquí la grabación y la hoja de chequeo.$txt$,
   $txt$Este taller es educativo y no es una recomendación de inversión ni asesoría financiera. Operar opciones tiene alto riesgo y puedes perder el 100% de lo que pagas por un contrato. Los casos que veremos son de sesiones anteriores y se usan solo con fines educativos. Los resultados pasados no garantizan resultados futuros. Cada persona es responsable de sus propias decisiones.$txt$,
@@ -755,10 +755,6 @@ grant execute on function public.registrar_verificacion(uuid, uuid, text, text, 
 insert into storage.buckets (id, name, public) values ('comprobantes', 'comprobantes', false)
 on conflict (id) do update set public = false;
 
--- Enlace de pago provisional del primer evento (solo si aún no tiene uno).
-update public.eventos_privados set enlace_pago = 'https://buy.stripe.com/eVqaEXc9D8fA83TenIejK00'
-where slug = 'call-o-put' and enlace_pago = '';
-
 -- Valor del taller: US$99.00 (igual al enlace de pago de Stripe).
 update public.eventos_privados set precio_centavos = 9900, visible = true
 where slug = 'call-o-put' and precio_centavos = 9899;
@@ -774,3 +770,53 @@ where slug = 'call-o-put' and fecha_tipo = 'aproximada';
 
 -- Fin. Siguiente paso: registrar la cuenta de Diana en la web y ejecutar
 --   select public.hacer_admin('correo-de-diana@ejemplo.com');
+
+-- =====================================================================
+-- 10. Sala de clase con Zoom, recordatorios automáticos y pagos solo con Stripe.
+-- =====================================================================
+
+-- Datos de la reunión de Zoom de cada evento. Tabla aparte para que ningún alumno
+-- pueda leer el número ni el código: el servidor solo se los da a quien pagó.
+create table if not exists public.eventos_zoom (
+  evento_id       uuid primary key references public.eventos_privados (id) on delete cascade,
+  reunion         text not null check (reunion ~ '^[0-9]{9,12}$'),
+  clave           text not null default '',
+  actualizado_en  timestamptz not null default now()
+);
+alter table public.eventos_zoom enable row level security;
+drop policy if exists eventos_zoom_admin on public.eventos_zoom;
+create policy eventos_zoom_admin on public.eventos_zoom for all to authenticated
+  using (public.es_admin()) with check (public.es_admin());
+revoke all on public.eventos_zoom from anon;
+grant select, insert, update, delete on public.eventos_zoom to authenticated;
+grant all on public.eventos_zoom to service_role;
+
+-- Recordatorios ya enviados (uno por evento y tipo: la víspera y cada día de clase).
+-- Evita que un recordatorio se envíe dos veces.
+create table if not exists public.recordatorios_enviados (
+  evento_id  uuid not null references public.eventos_privados (id) on delete cascade,
+  clave      text not null,
+  enviados   integer not null default 0,
+  fallidos   integer not null default 0,
+  manual     boolean not null default false,
+  creado_en  timestamptz not null default now(),
+  primary key (evento_id, clave)
+);
+alter table public.recordatorios_enviados enable row level security;
+drop policy if exists recordatorios_admin on public.recordatorios_enviados;
+create policy recordatorios_admin on public.recordatorios_enviados for select to authenticated using (public.es_admin());
+revoke all on public.recordatorios_enviados from anon;
+grant select on public.recordatorios_enviados to authenticated;
+grant all on public.recordatorios_enviados to service_role;
+
+-- Cada evento puede apagar sus recordatorios automáticos.
+alter table public.eventos_privados add column if not exists recordatorios boolean not null default true;
+
+-- Los pagos ahora solo pasan por Stripe con las claves: se quita el enlace de pago provisional.
+update public.eventos_privados set enlace_pago = '' where enlace_pago <> '';
+
+-- Texto de acceso del primer taller: ahora la clase se abre dentro de la web (solo si aún tiene el texto original).
+update public.eventos_privados set acceso = replace(acceso,
+  'Gracias por inscribirte. Antes del taller publicaremos aquí el enlace de las clases en vivo y te lo enviaremos por correo.',
+  'Gracias por tu confianza. El día de cada clase pulsa «Entrar a la clase» aquí arriba: la clase se abre dentro de la web, sin instalar Zoom. Te enviaremos un recordatorio un día antes y otro el mismo día.')
+where slug = 'call-o-put' and acceso like 'Gracias por inscribirte. Antes del taller publicaremos%';
