@@ -151,18 +151,6 @@ y vuelve inscrito. Recibe el correo «Gracias por tu confianza» y Diana el avis
 Sin claves de Stripe, los alumnos solo pueden preinscribirse.
 Recomendado: probar primero con las claves de prueba de Stripe (`sk_test_…`) y la tarjeta `4242 4242 4242 4242`.
 
-**Notas del panel nuevo de Stripe:**
-
-- **Clave restringida (recomendada):** Claves de API → *Crea una clave secreta* → restringida, con permiso
-  **Checkout Sessions: Escritura** (es lo único que usa la web). Si al reservar sale «No se pudo abrir la página de pago»,
-  añade también *Products* y *Prices* en Escritura, o usa la clave secreta estándar.
-- **Claves de prueba:** están en un **Sandbox** (menú de la cuenta, arriba a la izquierda). El sandbox necesita su propio
-  webhook y su propio `whsec_…`. No pongas claves de prueba en *Production* de Vercel: los alumnos no podrían pagar.
-- **Comprobar que las claves están activas** (después de desplegar): una petición `POST` vacía a `/api/stripe/webhook`
-  debe responder `400 Firma no válida`. Si responde `503 Stripe no está configurado`, faltan variables o falta desplegar.
-- **Prueba real sin riesgo:** crea un evento oculto de US$1, cómpralo con la cuenta de administradora y reembólsalo desde
-  Stripe; la inscripción debe pasar a «reembolsada».
-
 **Página pública:** cada evento visible tiene una página para compartir sin cuenta: `/eventos/<dirección>`
 (por ejemplo `/eventos/call-o-put`; el atajo `/taller` lleva ahí). La compra y el acceso siguen dentro del portal.
 
