@@ -1142,3 +1142,15 @@ button{font:inherit;cursor:pointer}
 .girando{animation:girar 1s linear infinite}
 @keyframes girar{to{transform:rotate(360deg)}}
 .accion-aviso{margin:8px 0 0;font-size:.92rem}
+
+/* ---------- Cargando un módulo de la administración ---------- */
+.admin-cargando{display:grid;gap:22px;animation:fade-in .25s ease .12s backwards}
+.admin-cargando-texto{display:inline-flex;align-items:center;gap:10px;margin:0;font-weight:700;color:var(--green-900)}
+.admin-cargando-texto svg{color:var(--gold)}
+.admin-cargando-esqueleto{display:grid;gap:14px}
+.admin-cargando-esqueleto span{display:block;border-radius:14px;background:linear-gradient(90deg,#DFE6E2 25%,#EDF1EF 50%,#DFE6E2 75%);background-size:200% 100%;animation:esqueleto 1.3s ease-in-out infinite}
+.admin-cargando-esqueleto .es-titulo{height:38px;width:min(320px,70%)}
+.admin-cargando-esqueleto .es-linea{height:16px;width:min(560px,90%);margin-bottom:10px}
+.admin-cargando-esqueleto .es-bloque{height:140px}
+@keyframes esqueleto{from{background-position:100% 0}to{background-position:-100% 0}}
+@media (prefers-reduced-motion:reduce){.admin-cargando-esqueleto span{animation:none!important}}
