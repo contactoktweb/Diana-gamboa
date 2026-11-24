@@ -15,23 +15,23 @@ export default async function EventosPage() {
   let eventos: Evento[] = [];
   const cupo = new Map<string, boolean>();
   const inscrito = new Set<string>();
-  // Cupos aprobados desde la administración con el correo de esta cuenta.
-  if (sesion) await vincularPorCorreo(sesion.id, sesion.correo);
   if (supabase) {
-    const { data } = await supabase.from('eventos_privados').select('*').eq('visible', true).order('creado_en', { ascending: false });
+    // Todo lo que no depende de otra consulta sale a la vez: vincular cupos aprobados por correo,
+    // los eventos visibles y las inscripciones de esta cuenta.
+    const [, { data }, { data: mias }] = await Promise.all([
+      sesion ? vincularPorCorreo(sesion.id, sesion.correo) : null,
+      supabase.from('eventos_privados').select('*').eq('visible', true).order('creado_en', { ascending: false }),
+      sesion ? supabase.from('inscripciones').select('evento_id, estado').eq('usuario_id', sesion.id) : Promise.resolve({ data: [] as { evento_id: string; estado: string }[] }),
+    ]);
     eventos = (data as Evento[]) ?? [];
+    const propias = new Set((mias ?? []).filter(m => m.estado === 'pagada' || m.estado === 'verificacion').map(m => m.evento_id as string));
     // Grupos fuera de la lista (etapa de prioridad): solo los ve su lista de espera o quien ya tiene cupo.
     if (eventos.some(e => e.en_lista === false)) {
-      const { data: mias } = sesion ? await supabase.from('inscripciones').select('evento_id, estado').eq('usuario_id', sesion.id) : { data: [] };
       const espera = new Set((mias ?? []).filter(m => m.estado === 'espera').map(m => m.evento_id as string));
-      const propias = new Set((mias ?? []).filter(m => m.estado === 'pagada' || m.estado === 'verificacion').map(m => m.evento_id as string));
       eventos = eventos.filter(e => e.en_lista !== false || propias.has(e.id) || (e.lista_de && espera.has(e.lista_de)) || sesion?.perfil?.rol === 'admin');
     }
     await Promise.all(eventos.map(async e => { const { data: hay } = await supabase.rpc('evento_hay_cupo', { p_evento: e.id }); cupo.set(e.id, Boolean(hay)); }));
-    if (sesion && eventos.length) {
-      const { data: mias } = await supabase.from('inscripciones').select('evento_id').eq('usuario_id', sesion.id).in('estado', ['pagada', 'verificacion']);
-      for (const m of mias ?? []) inscrito.add(m.evento_id as string);
-    }
+    for (const id of propias) inscrito.add(id);
   }
 
   return <>

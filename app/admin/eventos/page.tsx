@@ -12,10 +12,12 @@ export default async function EventosAdminPage() {
   let falta = false;
   const cuenta = new Map<string, Record<string, number>>();
   if (supabase) {
-    const { data, error } = await supabase.from('eventos_privados').select('*').order('creado_en', { ascending: false });
+    const [{ data, error }, { data: ins }] = await Promise.all([
+      supabase.from('eventos_privados').select('*').order('creado_en', { ascending: false }),
+      supabase.from('inscripciones').select('evento_id, estado'),
+    ]);
     falta = Boolean(error);
     eventos = (data as Evento[]) ?? [];
-    const { data: ins } = await supabase.from('inscripciones').select('evento_id, estado');
     for (const i of ins ?? []) {
       const c = cuenta.get(i.evento_id as string) ?? {};
       c[i.estado as string] = (c[i.estado as string] ?? 0) + 1;

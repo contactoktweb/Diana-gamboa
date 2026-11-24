@@ -8,8 +8,7 @@ import { supabaseActivo } from '@/lib/supabase/config';
 export const metadata: Metadata = { title: 'Portal del Alumno | Diana Gamboa', robots: { index: false } };
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
-  const sesion = await exigirSesion('/portal');
-  const { global: g, portal } = await getContenido();
+  const [sesion, { global: g, portal }] = await Promise.all([exigirSesion('/portal'), getContenido()]);
   return <div className="portal">
     <a className="skip-link" href="#contenido">Saltar al contenido</a>
     <PortalHeader logo={g.logo} nombre={g.nombreSitio} admin={sesion?.perfil?.rol === 'admin'} />

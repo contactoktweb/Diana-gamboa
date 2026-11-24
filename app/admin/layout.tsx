@@ -7,8 +7,7 @@ import { supabaseActivo } from '@/lib/supabase/config';
 export const metadata: Metadata = { title: 'Administración | Diana Gamboa', robots: { index: false, follow: false } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const sesion = await exigirAdmin();
-  const { global: g } = await getContenido();
+  const [sesion, { global: g }] = await Promise.all([exigirAdmin(), getContenido()]);
   return <div className="admin">
     <AdminNav logo={g.logo} nombre={sesion?.perfil?.nombre ?? ''} />
     <main className="admin-main" id="contenido">

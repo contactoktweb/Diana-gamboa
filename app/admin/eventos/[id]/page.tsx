@@ -33,31 +33,33 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const supabase = await supabaseServidor();
   if (!supabase || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const { data: e } = await supabase.from('eventos_privados').select('*').eq('id', id).maybeSingle<Evento>();
+  const servidor = supabaseAdmin();
+  // Todas las consultas del evento salen a la vez (antes iban una detrás de otra).
+  const [{ data: e }, { data }, { data: todos }, { data: sala }, { data: enviados }] = await Promise.all([
+    supabase.from('eventos_privados').select('*').eq('id', id).maybeSingle<Evento>(),
+    supabase.from('inscripciones').select('id, nombre, correo, estado, monto_centavos, creado_en, pagado_en, comprobante, telefono, correo_pago').eq('evento_id', id).order('creado_en', { ascending: false }),
+    supabase.from('eventos_privados').select('id, titulo, fecha_tipo, fecha, fecha_fin, fecha_periodo, fecha_mes, fecha_anio').neq('id', id).order('creado_en', { ascending: false }),
+    // Sala de Zoom y correos programados (tablas de supabase/sala-y-recordatorios.sql).
+    servidor ? servidor.from('eventos_zoom').select('reunion, clave').eq('evento_id', id).maybeSingle() : Promise.resolve({ data: null }),
+    servidor ? servidor.from('recordatorios_enviados').select('clave, enviados, fallidos, manual, creado_en').eq('evento_id', id) : Promise.resolve({ data: null }),
+  ]);
   if (!e) notFound();
-  const { data } = await supabase.from('inscripciones').select('id, nombre, correo, estado, monto_centavos, creado_en, pagado_en, comprobante, telefono, correo_pago').eq('evento_id', id).order('creado_en', { ascending: false });
   const filas = (data as Fila[]) ?? [];
   const pagadas = filas.filter(f => f.estado === 'pagada');
   // Enlaces temporales (1 hora) a los comprobantes, que están en un espacio privado.
   const comprobantes = new Map<string, string>();
-  const servidor = supabaseAdmin();
   const conComprobante = filas.filter(f => f.comprobante && (f.estado === 'verificacion' || f.estado === 'pagada'));
-  if (servidor && conComprobante.length) {
-    const { data: firmados } = await servidor.storage.from('comprobantes').createSignedUrls(conComprobante.map(f => f.comprobante!), 3600);
-    (firmados ?? []).forEach((x, k) => { if (x.signedUrl) comprobantes.set(conComprobante[k].id, x.signedUrl); });
-  }
-  const { data: todos } = await supabase.from('eventos_privados').select('id, titulo, fecha_tipo, fecha, fecha_fin, fecha_periodo, fecha_mes, fecha_anio').neq('id', id).order('creado_en', { ascending: false });
+  const conLanzamiento = Boolean(e.lista_de || e.aviso_publico_en || e.en_lista === false);
+  const [firmados, [espera, general], sitio] = await Promise.all([
+    servidor && conComprobante.length ? servidor.storage.from('comprobantes').createSignedUrls(conComprobante.map(f => f.comprobante!), 3600).then(r => r.data) : null,
+    conLanzamiento ? Promise.all([estadoAviso(e, 'lista_espera'), estadoAviso(e, 'nuevo_grupo')]) : [null, null],
+    urlDelSitio(),
+  ]);
+  (firmados ?? []).forEach((x, k) => { if (x.signedUrl) comprobantes.set(conComprobante[k].id, x.signedUrl); });
   const otros = (todos ?? []).map(o => ({ id: o.id as string, titulo: o.titulo as string, fecha: fechaEvento(o as Evento) }));
   const total = pagadas.reduce((s, f) => s + (f.monto_centavos ?? 0), 0);
 
-  // Sala de Zoom y correos programados (tablas de supabase/sala-y-recordatorios.sql).
-  const { data: sala } = servidor ? await servidor.from('eventos_zoom').select('reunion, clave').eq('evento_id', id).maybeSingle() : { data: null };
-  const { data: enviados } = servidor ? await servidor.from('recordatorios_enviados').select('clave, enviados, fallidos, manual, creado_en').eq('evento_id', id) : { data: null };
-  // Lanzamiento por etapas (lista de espera con prioridad y aviso general).
-  const conLanzamiento = Boolean(e.lista_de || e.aviso_publico_en || e.en_lista === false);
-  const [espera, general] = conLanzamiento ? await Promise.all([estadoAviso(e, 'lista_espera'), estadoAviso(e, 'nuevo_grupo')]) : [null, null];
   const listaNombre = e.lista_de ? otros.find(o => o.id === e.lista_de) : null;
-  const sitio = await urlDelSitio();
   const ahora = Date.now();
   const recordatorios: FilaRecordatorio[] = planRecordatorios(e).map(r => {
     const hecho = enviados?.find(x => x.clave === r.clave);
