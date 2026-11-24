@@ -91,8 +91,8 @@ export async function crearReunionZoom({ titulo, inicio, dias, duracionMin }: { 
       auto_recording: 'cloud', meeting_authentication: false,
     },
   };
-  const d = await api<{ id: number; password?: string }>(`/users/${encodeURIComponent(ANFITRIONA)}/meetings`, { method: 'POST', body: JSON.stringify(cuerpo) });
-  return { reunion: String(d.id), clave: d.password ?? '' };
+  const d = await api<{ id: number; password?: string; join_url?: string }>(`/users/${encodeURIComponent(ANFITRIONA)}/meetings`, { method: 'POST', body: JSON.stringify(cuerpo) });
+  return { reunion: String(d.id), clave: unirClave(d.password ?? '', pwdDeEnlace(d.join_url ?? '')) };
 }
 
 /** «https://us06web.zoom.us/j/81234567890?pwd=…» o «812 3456 7890» → «81234567890». */
@@ -101,4 +101,24 @@ export function numeroReunion(texto: string) {
   if (enlace) return enlace[1];
   const solo = texto.replace(/[\s-]/g, '');
   return /^\d{9,12}$/.test(solo) ? solo : '';
+}
+
+/*
+ * La columna «clave» guarda el código de acceso y, si se pegó el enlace de invitación,
+ * su parte cifrada «pwd» (así el enlace abre Zoom sin pedir el código): «482913#pwd=Abc…».
+ */
+export function pwdDeEnlace(texto: string) {
+  return texto.match(/[?&]pwd=([A-Za-z0-9._-]+)/)?.[1] ?? '';
+}
+export function unirClave(codigo: string, pwd: string) {
+  return pwd ? `${codigo}#pwd=${pwd}` : codigo;
+}
+export function partesClave(guardada: string) {
+  const [codigo, pwd = ''] = (guardada ?? '').split('#pwd=');
+  return { codigo, pwd };
+}
+/** Enlace para entrar a la reunión con la aplicación de Zoom. */
+export function enlaceUnirse(reunion: string, guardada: string) {
+  const { pwd } = partesClave(guardada);
+  return `https://zoom.us/j/${reunion}${pwd ? `?pwd=${pwd}` : ''}`;
 }

@@ -11,7 +11,7 @@ import { estadoAviso, LIMITE_AVISOS } from '@/lib/eventos/avisos';
 import { urlDelSitio } from '@/lib/sitio';
 import RecordatoriosAdmin, { type FilaRecordatorio } from '@/components/admin/RecordatoriosAdmin';
 import { planRecordatorios } from '@/lib/eventos/recordatorios';
-import { zoomApiActiva, zoomSdkActivo } from '@/lib/zoom';
+import { enlaceUnirse, partesClave, zoomApiActiva, zoomSdkActivo } from '@/lib/zoom';
 import { supabaseServidor } from '@/lib/supabase/servidor';
 import { diaLargo, fechaEvento, horaEnZona, precioTexto, type EstadoInscripcion, type Evento } from '@/lib/eventos/formato';
 
@@ -85,7 +85,8 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
 
     {conLanzamiento && espera && general && <LanzamientoAdmin eventoId={e.id} enlace={`${sitio}/portal/eventos/${e.slug}`} prioridad={Boolean(e.solo_lista_espera && e.lista_de)}
       listaNombre={listaNombre ? `${listaNombre.titulo} · ${listaNombre.fecha}` : ''} espera={espera} general={general} abierto={Boolean(e.aviso_publico_en)} limite={LIMITE_AVISOS} />}
-    <SalaZoomAdmin eventoId={e.id} slug={e.slug} sala={sala as { reunion: string; clave: string } | null} sdkActivo={zoomSdkActivo} apiActiva={zoomApiActiva} />
+    <SalaZoomAdmin eventoId={e.id} slug={e.slug} sala={sala ? { reunion: sala.reunion as string, clave: partesClave(sala.clave as string).codigo } : null}
+      enlace={sala ? enlaceUnirse(sala.reunion as string, sala.clave as string) : ''} sdkActivo={zoomSdkActivo} apiActiva={zoomApiActiva} />
     <RecordatoriosAdmin eventoId={e.id} filas={recordatorios} activos={e.recordatorios !== false} cron={Boolean(process.env.CRON_SECRET)} inscritos={new Set(pagadas.map(f => f.correo.toLowerCase())).size} />
 
     {GRUPOS.map(g => {

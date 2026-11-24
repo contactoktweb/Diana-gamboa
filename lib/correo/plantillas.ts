@@ -142,7 +142,7 @@ const horasTexto = (filas: FilaHora[]) => 'Hora en tu país: ' + filas.map(f => 
 
 const COMO_ENTRAR = [
   'El día de la clase entra a <strong>tu portal</strong> con el mismo correo con el que compraste tu cupo y pulsa <strong>«Entrar a la clase»</strong>.',
-  'La clase se abre <strong>dentro de la web</strong>: no necesitas instalar Zoom ni abrir enlaces externos.',
+  'El botón te lleva directo a la clase por Zoom. Si no tienes Zoom instalado, puedes entrar desde el navegador.',
   'Usa un computador con Google Chrome o Microsoft Edge y permite el micrófono y la cámara cuando el navegador lo pida.',
 ];
 
@@ -161,13 +161,13 @@ export function correoGraciasEvento({ sitio, nombre, evento, fecha, hora, horas,
     asunto: `Gracias por tu confianza · Tu cupo en ${evento} está confirmado`,
     html: marco({ sitio, previa: 'Tu pago fue aprobado. Ya tienes tu cupo.', etiqueta: 'Inscripción confirmada', titulo, parrafos, boton: { texto: 'Ver el evento en mi portal', enlace },
       nota: `¿Tienes alguna duda? Responde a este correo o escríbenos a hola@dianagamboa.com. Si necesitas pedir un reembolso, revisa la política en ${sitio}/reembolsos.` }),
-    texto: textoPlano(titulo, parrafos.slice(0, 2), [horas?.length ? horasTexto(horas) : '', 'El día de la clase entra a tu portal y pulsa «Entrar a la clase». La clase se abre dentro de la web.', `Ver el evento: ${enlace}`]),
+    texto: textoPlano(titulo, parrafos.slice(0, 2), [horas?.length ? horasTexto(horas) : '', 'El día de la clase entra a tu portal y pulsa «Entrar a la clase».', `Ver el evento: ${enlace}`]),
   };
 }
 
 /**
  * Recordatorio de la clase: la víspera («mañana») o el mismo día («hoy»).
- * El botón lleva a la sala de clase dentro de la web.
+ * El botón lleva a la sala de clase del portal (que abre la reunión de Zoom).
  */
 export function correoRecordatorio({ sitio, nombre, evento, tipo, dia, numeroDia, totalDias, hora, horas, enlaceSala }: {
   sitio: string; nombre: string; evento: string; tipo: 'vispera' | 'hoy'; dia: string; numeroDia: number; totalDias: number;
@@ -185,7 +185,7 @@ export function correoRecordatorio({ sitio, nombre, evento, tipo, dia, numeroDia
     `<strong>Cómo entrar</strong>${lista([
       'Pulsa <strong>«Entrar a la clase»</strong> en este correo (o en tu portal) unos <strong>10 minutos antes</strong>.',
       'Si te pide iniciar sesión, usa el mismo correo con el que compraste tu cupo.',
-      'La clase se abre dentro de la web: no necesitas instalar Zoom.',
+      'El botón te lleva directo a la clase por Zoom (también puedes entrar desde el navegador).',
       'Usa Chrome o Edge en un computador y permite el micrófono y la cámara. Diana te dará paso desde la sala de espera.',
     ])}`,
     ...(tipo === 'vispera' ? ['<strong>Ten a mano</strong> tu plataforma de opciones y un cuaderno para los ejercicios.'] : []),

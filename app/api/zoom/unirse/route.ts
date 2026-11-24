@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { accesoSala } from '@/lib/eventos/sala';
-import { firmaZoom, zakAnfitriona, zoomApiActiva } from '@/lib/zoom';
+import { firmaZoom, zakAnfitriona, zoomApiActiva, zoomSdkActivo } from '@/lib/zoom';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +22,7 @@ export async function GET(req: Request) {
   if (!/^[a-z0-9-]{2,60}$/.test(slug)) return NextResponse.json({ error: MENSAJES.evento }, { status: 400, headers: sinCache });
   const a = await accesoSala(slug);
   if (!a.ok) return NextResponse.json({ error: MENSAJES[a.motivo], motivo: a.motivo }, { status: a.motivo === 'sesion' ? 401 : 403, headers: sinCache });
+  if (!zoomSdkActivo) return NextResponse.json({ error: MENSAJES.sin_zoom, motivo: 'sin_zoom' }, { status: 403, headers: sinCache });
 
   // La anfitriona inicia la reunión desde la web si está la app Server-to-Server de Zoom.
   let zak = '';

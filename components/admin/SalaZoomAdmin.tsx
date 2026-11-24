@@ -4,10 +4,11 @@ import { useState } from 'react';
 import { CheckCircle2, ExternalLink, Loader2, Save, Sparkles, Trash2, Video } from 'lucide-react';
 import { crearSalaZoom, guardarSalaZoom, quitarSalaZoom } from '@/app/admin/eventos/acciones';
 import { useAccion } from './useAccion';
+import CopiarTexto from './CopiarTexto';
 
 /** Sala de clase de Zoom del evento: crearla, guardarla y entrar como anfitriona. */
-export default function SalaZoomAdmin({ eventoId, slug, sala, sdkActivo, apiActiva }: {
-  eventoId: string; slug: string; sala: { reunion: string; clave: string } | null; sdkActivo: boolean; apiActiva: boolean;
+export default function SalaZoomAdmin({ eventoId, slug, sala, sdkActivo, apiActiva, enlace }: {
+  eventoId: string; slug: string; sala: { reunion: string; clave: string } | null; sdkActivo: boolean; apiActiva: boolean; enlace: string;
 }) {
   const [reunion, setReunion] = useState(sala?.reunion ?? '');
   const [clave, setClave] = useState(sala?.clave ?? '');
@@ -17,12 +18,20 @@ export default function SalaZoomAdmin({ eventoId, slug, sala, sdkActivo, apiActi
   const formato = (n: string) => n.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1 $2 $3');
 
   return <section className="admin-panel sala-admin">
-    <h2><Video size={20} aria-hidden="true" /> Sala de clase (Zoom dentro de la web)</h2>
-    {!sdkActivo && <p className="auth-error">Falta conectar Zoom: sube a Vercel las variables <code>ZOOM_SDK_CLIENT_ID</code> y <code>ZOOM_SDK_CLIENT_SECRET</code> (app «General App» con Meeting SDK) y vuelve a desplegar. Puedes guardar la reunión desde ya.</p>}
-    <p className="admin-nota">Los inscritos entran desde su portal con el botón «Entrar a la clase», sin salir de la web y sin ver el enlace de Zoom. La reunión debe ser de la cuenta de Zoom Pro de Diana y tener la <strong>sala de espera activada</strong>: así das paso solo a quienes reconoces.</p>
+    <h2><Video size={20} aria-hidden="true" /> Sala de clase (Zoom)</h2>
+    {sdkActivo
+      ? <p className="admin-nota">Los inscritos entran desde su portal con el botón «Entrar a la clase», sin salir de la web y sin ver el enlace de Zoom. La reunión debe ser de la cuenta de Zoom Pro de Diana y tener la <strong>sala de espera activada</strong>: así das paso solo a quienes reconoces.</p>
+      : <p className="admin-nota">Pega el <strong>enlace de invitación</strong> de tu reunión de Zoom. Los inscritos con pago verán en su portal el botón «Entrar a la clase», que abre Zoom con ese enlace (los demás no lo ven). Activa la <strong>sala de espera</strong> en Zoom para dar paso solo a quienes reconoces.</p>}
 
     {sala
-      ? <p className="auth-ok"><CheckCircle2 size={18} aria-hidden="true" /> Sala lista: reunión <strong>{formato(sala.reunion)}</strong>{sala.clave ? <> · código <strong>{sala.clave}</strong></> : null}</p>
+      ? <div className="sala-lista">
+        <p className="auth-ok"><CheckCircle2 size={18} aria-hidden="true" /> Sala lista: reunión <strong>{formato(sala.reunion)}</strong>{sala.clave ? <> · código <strong>{sala.clave}</strong></> : null}</p>
+        <p className="sala-enlace-admin"><span>Enlace para entrar:</span> <a href={enlace} target="_blank" rel="noopener noreferrer">{enlace}</a></p>
+        <div className="admin-botones">
+          <CopiarTexto texto={enlace} etiqueta="Copiar enlace de Zoom" />
+          {sala.clave && <CopiarTexto texto={sala.clave} etiqueta="Copiar código" />}
+        </div>
+      </div>
       : <p className="admin-vacio">Todavía no hay sala. Crea la reunión o pega sus datos.</p>}
 
     {apiActiva && <div className="form-evento-fila">
@@ -34,11 +43,11 @@ export default function SalaZoomAdmin({ eventoId, slug, sala, sdkActivo, apiActi
     </div>}
 
     <details className="sala-manual" open={!apiActiva && !sala}>
-      <summary>{apiActiva ? 'O escribe los datos de una reunión que ya creaste' : 'Datos de la reunión (créala en zoom.us → Reuniones → Programar)'}</summary>
+      <summary>{apiActiva ? 'O pega una reunión que ya creaste' : sala ? 'Cambiar la reunión' : 'Datos de la reunión (créala en zoom.us → Reuniones → Programar → Copiar invitación)'}</summary>
       <div className="form-evento-fila">
-        <label className="editor-campo"><span className="editor-etiqueta">ID de la reunión o enlace de invitación</span>
-          <input value={reunion} onChange={e => setReunion(e.target.value)} placeholder="812 3456 7890 o https://us06web.zoom.us/j/…" /></label>
-        <label className="editor-campo"><span className="editor-etiqueta">Código de acceso (passcode)</span>
+        <label className="editor-campo"><span className="editor-etiqueta">Enlace de invitación de Zoom (o el ID de la reunión)</span>
+          <input value={reunion} onChange={e => setReunion(e.target.value)} placeholder="https://us06web.zoom.us/j/81234567890?pwd=…" /></label>
+        <label className="editor-campo"><span className="editor-etiqueta">Código de acceso (passcode, opcional)</span>
           <input value={clave} onChange={e => setClave(e.target.value)} placeholder="Ej.: 482913" /></label>
       </div>
       <small className="editor-ayuda">Para una clase de varios días, crea en Zoom una reunión <strong>recurrente</strong> (diaria) para usar la misma sala todos los días.</small>
@@ -48,10 +57,10 @@ export default function SalaZoomAdmin({ eventoId, slug, sala, sdkActivo, apiActi
     </details>
 
     {sala && <div className="admin-botones">
-      <a className="btn btn-green btn-sm" href={`/portal/eventos/${slug}/sala`} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden="true" /> Entrar a la sala como anfitriona</a>
+      <a className="btn btn-green btn-sm" href={`/portal/eventos/${slug}/sala`} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden="true" /> Ver la sala como la ven los alumnos</a>
       <button type="button" className="btn btn-outline btn-sm es-peligro" disabled={pendiente} onClick={() => { if (confirm('¿Quitar la sala? Los inscritos dejarán de ver el botón «Entrar a la clase».')) ejecutar(() => quitarSalaZoom(eventoId)); }}><Trash2 size={16} aria-hidden="true" /> Quitar sala</button>
     </div>}
-    {sala && !apiActiva && <small className="editor-ayuda">Para iniciar la clase como anfitriona desde la web falta la app Server-to-Server de Zoom. Sin ella, inicia la reunión en la aplicación de Zoom (con tu cuenta Pro): los alumnos igual entran desde la web.</small>}
+    {sala && !apiActiva && <small className="editor-ayuda">Inicia la reunión en tu aplicación de Zoom con la cuenta Pro de Diana; los alumnos entran con el botón de su portal.</small>}
     {enCurso('sala') && <p className="admin-tenue"><Loader2 size={14} className="girando" aria-hidden="true" /> Guardando…</p>}
     {aviso('sala')}
   </section>;

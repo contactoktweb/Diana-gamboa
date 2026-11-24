@@ -1180,3 +1180,9 @@ html:has(.barra-navegacion.is-activa){cursor:progress}
 .form-evento-avanzado:not([open]){gap:0}
 .aprobar-todas{margin:0 0 16px;display:grid;gap:8px;justify-items:start}
 .form-evento-publicacion{border:0;padding:0;margin:0;display:grid;gap:10px}
+.sala-enlace{display:grid;gap:18px}
+.sala-codigo{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:1.05rem}
+.sala-pasos{margin:0;padding-left:20px;color:var(--muted);display:grid;gap:6px;max-width:680px}
+.sala-lista{display:grid;gap:10px;margin-bottom:16px}
+.sala-enlace-admin{margin:0;overflow-wrap:anywhere}
+.sala-enlace-admin span{color:var(--muted)}

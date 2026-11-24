@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { getSesion } from '@/lib/sesion';
 import { supabaseServidor } from '@/lib/supabase/servidor';
 import { aInstante, diasEvento, ZONAS, type Evento } from '@/lib/eventos/formato';
-import { crearReunionZoom, numeroReunion, zoomApiActiva } from '@/lib/zoom';
+import { crearReunionZoom, numeroReunion, pwdDeEnlace, unirClave, zoomApiActiva } from '@/lib/zoom';
 import { enviarRecordatorio, planRecordatorios } from '@/lib/eventos/recordatorios';
 import { enviarAviso, type TipoAviso } from '@/lib/eventos/avisos';
 import { CORREO_ADMINISTRADORA } from '@/lib/administradora';
@@ -169,7 +169,7 @@ export async function guardarSalaZoom(eventoId: string, reunionTexto: string, cl
   const reunion = numeroReunion(reunionTexto);
   if (!reunion) return { ok: false, error: 'Escribe el ID de la reunión de Zoom (9 a 12 números) o pega el enlace de invitación.' };
   const codigo = recortar(clave, 40);
-  const { error } = await servidor.from('eventos_zoom').upsert({ evento_id: eventoId, reunion, clave: codigo, actualizado_en: new Date().toISOString() });
+  const { error } = await servidor.from('eventos_zoom').upsert({ evento_id: eventoId, reunion, clave: unirClave(codigo, pwdDeEnlace(reunionTexto)), actualizado_en: new Date().toISOString() });
   if (error) return { ok: false, error: /eventos_zoom/.test(error.message) ? 'Falta ejecutar supabase/sala-y-recordatorios.sql en Supabase.' : error.message };
   revalidatePath('/admin/eventos', 'layout');
   revalidatePath('/portal/eventos', 'layout');
