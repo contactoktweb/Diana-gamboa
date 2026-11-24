@@ -7,8 +7,8 @@ export function parseYouTube(url: string) {
     if (!videoId && u.hostname.includes('youtu.be')) videoId = u.pathname.slice(1);
     if (!videoId && u.pathname.startsWith('/shorts/')) videoId = u.pathname.split('/')[2] ?? '';
     if (!videoId && u.pathname.startsWith('/live/')) videoId = u.pathname.split('/')[2] ?? '';
-    // Los ids de lista válidos tienen 34 caracteres; los recortados se ignoran.
-    const listId = list && list.length >= 24 ? list : undefined;
+    // Ids de lista: letras, números, «-» y «_» (YouTube tiene listas con ids cortos, como PLbBQjGvksi1Y).
+    const listId = list && /^[A-Za-z0-9_-]{10,}$/.test(list) ? list : undefined;
     if (!videoId && !listId) return null;
     return { videoId, listId };
   } catch {
