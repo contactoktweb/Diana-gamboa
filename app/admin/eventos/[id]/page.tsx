@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import AccionesCompra from '@/components/admin/AccionesCompra';
 import AprobarPagos from '@/components/admin/AprobarPagos';
+import AprobarTodas from '@/components/admin/AprobarTodas';
 import CopiarTexto from '@/components/admin/CopiarTexto';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import FormEvento from '@/components/admin/FormEvento';
@@ -96,6 +97,7 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
       return <section className="admin-panel" key={g.estado}>
         <h2>{g.titulo} ({lista.length})</h2>
         <p className="admin-nota">{g.nota}</p>
+        {verificar && lista.length > 1 && <AprobarTodas eventoId={e.id} cantidad={lista.length} />}
         {lista.length === 0 ? <p className="admin-vacio">Todavía nadie.</p> : <>
           <div className="admin-tabla-contenedor"><table className="admin-tabla">
             <thead><tr><th>Nombre</th><th>Correo</th>{(g.estado === 'pagada' || verificar) && <th>Teléfono</th>}<th>Fecha (hora del Este)</th>{(g.estado === 'pagada' || verificar) && <th>Pago</th>}{verificar && <th>Comprobante</th>}{verificar && <th><span className="sr-only">Acciones</span></th>}</tr></thead>
