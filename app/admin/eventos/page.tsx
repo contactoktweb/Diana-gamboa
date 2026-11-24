@@ -28,9 +28,7 @@ export default async function EventosAdminPage() {
       <h1>Eventos</h1>
       <p>Talleres y clases privadas para tus alumnos. Aparecen en «Eventos» del Portal y se pagan con Stripe.</p>
     </header>
-    {stripeActivo
-      ? <p className="correos-estado es-ok">Stripe está conectado: los alumnos pagan directamente en la página del evento.</p>
-      : <p className="correos-estado es-pendiente">Stripe aún no está conectado. Los eventos con «Enlace de pago de Stripe» se pagan con ese enlace y cada compra queda por verificar aquí; los que no lo tienen reciben preinscripciones.</p>}
+    {!stripeActivo && <p className="correos-estado es-pendiente">Stripe aún no está conectado. Los eventos con «Enlace de pago de Stripe» se pagan con ese enlace y cada compra queda por verificar aquí; los que no lo tienen reciben preinscripciones.</p>}
     {falta && <p className="admin-aviso" role="status">Falta crear las tablas de eventos en Supabase: ejecuta el archivo <code>supabase/eventos.sql</code> en el SQL Editor.</p>}
 
     <div className="admin-barra-tabla">

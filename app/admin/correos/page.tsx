@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { CheckCircle2, CircleAlert, Download } from 'lucide-react';
+import { CircleAlert, Download } from 'lucide-react';
 import CopiarTexto from '@/components/admin/CopiarTexto';
 import { correoConfirmacion, correoInvitacionAdmin, correoProvisional, correoRecuperacion } from '@/lib/correo/plantillas';
-import { envioPropio, REMITENTE } from '@/lib/correo/enviar';
+import { envioPropio } from '@/lib/correo/enviar';
 import { getContenido } from '@/lib/contenido';
 import { supabaseServidor } from '@/lib/supabase/servidor';
 import { urlDelSitio } from '@/lib/sitio';
@@ -50,9 +50,7 @@ export default async function CorreosPage() {
 
     <section className="admin-panel">
       <h2>Correos automáticos</h2>
-      {envioPropio
-        ? <p className="correos-estado es-ok"><CheckCircle2 size={20} aria-hidden="true" /> Los correos se envían con Resend desde <strong>{REMITENTE}</strong>.</p>
-        : <p className="correos-estado es-pendiente"><CircleAlert size={20} aria-hidden="true" /> Resend aún no está configurado: por ahora los correos de registro y recuperación los envía Supabase con su diseño básico.</p>}
+      {!envioPropio && <p className="correos-estado es-pendiente"><CircleAlert size={20} aria-hidden="true" /> Resend aún no está configurado: por ahora los correos de registro y recuperación los envía Supabase con su diseño básico.</p>}
       <ul className="correos-lista">
         {correos.map(c => <li key={c.nombre}>
           <div><h3>{c.nombre}</h3><p>{c.cuando}</p></div>
