@@ -237,7 +237,6 @@ export function GestorRecursos({ inicial }: { inicial: Recurso[] }) {
           <label className="editor-campo"><span className="editor-etiqueta">Título</span><input value={r.titulo} onChange={e => editar(i, { titulo: e.target.value })} /></label>
           <label className="editor-campo"><span className="editor-etiqueta">Descripción</span><textarea rows={2} value={r.descripcion} onChange={e => editar(i, { descripcion: e.target.value })} /></label>
           <div className="gestor-recurso-archivo">
-            <label className="editor-campo"><span className="editor-etiqueta">Formato</span><input value={r.formato} onChange={e => editar(i, { formato: e.target.value })} size={6} /></label>
             <div className="editor-campo"><span className="editor-etiqueta">Archivo {r.archivo ? '' : <em className="admin-tenue">(Próximamente)</em>}</span>
               <SubirArchivo tipo="archivo" valor={r.archivo} onChange={url => {
                 const ext = url.split('.').pop()?.toUpperCase();

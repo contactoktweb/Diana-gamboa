@@ -229,11 +229,10 @@ export const SECCIONES: DefSeccion[] = [
     descripcion: 'Los PDF y materiales descargables. El primero es también el regalo de bienvenida.',
     campos: [
       { clave: 'recursos', etiqueta: 'Recursos', tipo: 'lista', elemento: 'Recurso', tituloDe: 'titulo',
-        ayuda: 'Mientras un recurso no tenga archivo, la tarjeta muestra «Próximamente». Al subir el PDF aparece «Descargar».',
+        ayuda: 'Mientras un recurso no tenga archivo, la tarjeta muestra «Próximamente». Al subir el archivo aparece «Descargar» con su formato (PDF, XLSX…), que se detecta solo.',
         campos: [
           { clave: 'titulo', etiqueta: 'Título', tipo: 'texto' },
           { clave: 'descripcion', etiqueta: 'Descripción', tipo: 'parrafos' },
-          { clave: 'formato', etiqueta: 'Formato (PDF, XLSX…)', tipo: 'texto' },
           { clave: 'archivo', etiqueta: 'Archivo', tipo: 'archivo' },
         ] },
     ],
