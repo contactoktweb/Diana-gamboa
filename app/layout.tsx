@@ -3,6 +3,7 @@ import localFont from 'next/font/local';
 import './globals.css';
 import Script from 'next/script';
 import HeaderShadow from '@/components/HeaderShadow';
+import BarraNavegacion from '@/components/BarraNavegacion';
 import { getContenido } from '@/lib/contenido';
 
 /* Tipografías del manual de marca, servidas desde el propio sitio. */
@@ -44,7 +45,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const { global: g } = await getContenido();
   const clarity = /^[a-z0-9]{6,20}$/i.test(g.clarityId.trim()) ? g.clarityId.trim() : '';
   return <html lang="es" className={`${centuryGothic.variable} ${meshitara.variable}`}><body>
-    <HeaderShadow />{children}
+    <BarraNavegacion /><HeaderShadow />{children}
     {/* Microsoft Clarity: solo si la administración configuró su código. */}
     {clarity && <Script id="clarity" strategy="afterInteractive">{`(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${clarity}");`}</Script>}
   </body></html>;

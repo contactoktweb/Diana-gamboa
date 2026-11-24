@@ -1157,3 +1157,10 @@ button{font:inherit;cursor:pointer}
 .portal-cargando{padding:48px 0 80px;min-height:60vh;animation:fade-in .25s ease .12s backwards}
 .portal-cargando .wrap{display:grid;gap:22px}
 .serie-vacia{margin:8px 0 40px;padding:32px 20px;text-align:center}
+
+/* Barra de carga al cambiar de página */
+.barra-navegacion{position:fixed;top:0;left:0;z-index:1000;height:3px;width:100%;pointer-events:none;background:linear-gradient(90deg,var(--gold),var(--gold-light));box-shadow:0 0 10px rgba(203,165,47,.6);transform:scaleX(0);transform-origin:left;opacity:0;transition:opacity .3s ease .1s,transform .2s ease}
+.barra-navegacion.is-activa{opacity:1;transition:opacity .1s;animation:barra-avance 8s cubic-bezier(.1,.7,.2,1) forwards}
+@keyframes barra-avance{0%{transform:scaleX(.05)}20%{transform:scaleX(.45)}60%{transform:scaleX(.8)}100%{transform:scaleX(.95)}}
+html:has(.barra-navegacion.is-activa){cursor:progress}
+.error-pagina{padding:56px 0;display:grid;gap:14px;max-width:640px}
