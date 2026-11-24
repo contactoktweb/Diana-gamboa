@@ -1179,3 +1179,4 @@ html:has(.barra-navegacion.is-activa){cursor:progress}
 .form-evento-avanzado summary{cursor:pointer;font-weight:700;color:var(--green-900)}
 .form-evento-avanzado:not([open]){gap:0}
 .aprobar-todas{margin:0 0 16px;display:grid;gap:8px;justify-items:start}
+.form-evento-publicacion{border:0;padding:0;margin:0;display:grid;gap:10px}

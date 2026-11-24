@@ -99,10 +99,14 @@ export default function FormEvento({ inicial, otros = [] }: { inicial: DatosEven
     </div>
     <small className="editor-ayuda">El pago es con tarjeta en Stripe: al pagar, el alumno queda inscrito solo y recibe su correo de bienvenida. Los alumnos no ven cuántos cupos quedan, solo si hay o no.</small>
     <label className="check"><input type="checkbox" checked={d.inscripcion_abierta} onChange={e => cambiar({ inscripcion_abierta: e.target.checked })} /> <span>Inscripciones abiertas</span></label>
-    <label className="check"><input type="checkbox" checked={d.visible} onChange={e => cambiar({ visible: e.target.checked })} /> <span><strong>Publicar:</strong> los alumnos ya pueden ver el evento (si no, queda oculto y solo tú lo ves en vista previa)</span></label>
+    <fieldset className="form-evento-publicacion">
+      <legend className="editor-etiqueta">¿Quién puede ver el evento?</legend>
+      <label className="check"><input type="radio" name="publicacion" checked={!d.visible} onChange={() => cambiar({ visible: false })} /> <span><strong>Oculto:</strong> solo tú lo ves (vista previa mientras lo preparas)</span></label>
+      <label className="check"><input type="radio" name="publicacion" checked={d.visible && d.en_lista !== false} onChange={() => cambiar({ visible: true, en_lista: true })} /> <span><strong>Publicado:</strong> aparece en la lista de Eventos para todos los alumnos</span></label>
+      <label className="check"><input type="radio" name="publicacion" checked={d.visible && d.en_lista === false} onChange={() => cambiar({ visible: true, en_lista: false })} /> <span><strong>Solo con enlace:</strong> no aparece en la lista; entra quien tenga el enlace directo</span></label>
+    </fieldset>
     <details className="form-evento-avanzado">
-      <summary>Más opciones de publicación (opcional)</summary>
-      <label className="check"><input type="checkbox" checked={d.en_lista !== false} onChange={e => cambiar({ en_lista: e.target.checked })} /> <span>Mostrar en la lista de Eventos (si no, solo se entra con el enlace directo)</span></label>
+      <summary>Prioridad para una lista de espera (opcional)</summary>
       <label className="check"><input type="checkbox" checked={Boolean(d.solo_lista_espera)} onChange={e => cambiar({ solo_lista_espera: e.target.checked, lista_de: e.target.checked ? d.lista_de ?? otros[0]?.id ?? null : d.lista_de })} /> <span>Prioridad: por ahora solo puede comprar la lista de espera de otro evento</span></label>
       {d.solo_lista_espera && <label className="editor-campo"><span className="editor-etiqueta">Lista de espera con prioridad</span>
         <select value={d.lista_de ?? ''} onChange={e => cambiar({ lista_de: e.target.value || null })}>
