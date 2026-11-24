@@ -49,7 +49,8 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
   // Enlaces temporales (1 hora) a los comprobantes, que están en un espacio privado.
   const comprobantes = new Map<string, string>();
   const conComprobante = filas.filter(f => f.comprobante && (f.estado === 'verificacion' || f.estado === 'pagada'));
-  const conLanzamiento = Boolean(e.lista_de || e.aviso_publico_en || e.en_lista === false);
+  // Panel de lanzamiento solo para grupos con prioridad de lista de espera (o ya anunciados).
+  const conLanzamiento = Boolean(e.lista_de || e.aviso_publico_en);
   const [firmados, [espera, general], sitio] = await Promise.all([
     servidor && conComprobante.length ? servidor.storage.from('comprobantes').createSignedUrls(conComprobante.map(f => f.comprobante!), 3600).then(r => r.data) : null,
     conLanzamiento ? Promise.all([estadoAviso(e, 'lista_espera'), estadoAviso(e, 'nuevo_grupo')]) : [null, null],

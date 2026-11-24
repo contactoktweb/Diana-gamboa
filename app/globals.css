@@ -1164,3 +1164,17 @@ button{font:inherit;cursor:pointer}
 @keyframes barra-avance{0%{transform:scaleX(.05)}20%{transform:scaleX(.45)}60%{transform:scaleX(.8)}100%{transform:scaleX(.95)}}
 html:has(.barra-navegacion.is-activa){cursor:progress}
 .error-pagina{padding:56px 0;display:grid;gap:14px;max-width:640px}
+.no-encontrada{min-height:70vh;display:grid;align-content:center;justify-items:start;gap:14px;max-width:640px;margin:0 auto;padding:48px 20px;background:var(--cream)}
+
+/* Editor visual de los textos de eventos */
+.editor-visual{border:1.5px solid var(--line);border-radius:14px;background:var(--white);overflow:hidden}
+.editor-visual:focus-within{border-color:var(--green-700);box-shadow:0 0 0 3px rgba(23,98,68,.12)}
+.editor-visual-barra{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:4px;padding:8px;border-bottom:1px solid var(--line);background:var(--green-50)}
+.editor-visual-barra button{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 10px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--green-900);font-weight:700;font-size:.88rem;cursor:pointer}
+.editor-visual-barra button:hover{background:var(--white);border-color:var(--line)}
+.editor-visual-area{padding:18px 20px;outline:none;overflow-wrap:anywhere}
+.editor-visual-area:empty::before,.editor-visual-area:has(>p:only-child>br:only-child)::before{content:attr(data-placeholder);color:#9AA59F;pointer-events:none;position:absolute}
+.editor-visual-area{position:relative}
+.form-evento-avanzado{border:1px dashed var(--line);border-radius:14px;padding:12px 16px;display:grid;gap:14px}
+.form-evento-avanzado summary{cursor:pointer;font-weight:700;color:var(--green-900)}
+.form-evento-avanzado:not([open]){gap:0}

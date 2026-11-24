@@ -5,10 +5,10 @@ import { useState, useTransition } from 'react';
 import { ExternalLink, Save, Trash2 } from 'lucide-react';
 import { eliminarEvento, guardarEvento, type DatosEvento } from '@/app/admin/eventos/acciones';
 import { fechaEvento, MESES, ZONAS } from '@/lib/eventos/formato';
+import EditorTexto from '@/components/admin/EditorTexto';
 
 const slugDe = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 
-const AYUDA_FORMATO = 'Formato: «## » título de sección · «### » pregunta · «- » punto de lista (dos espacios antes del guion = subpunto) · «> » frase destacada · **negrita** · [texto](/direccion). Deja una línea en blanco entre párrafos.';
 
 export default function FormEvento({ inicial, otros = [] }: { inicial: DatosEvento; otros?: { id: string; titulo: string; fecha: string }[] }) {
   const router = useRouter();
@@ -49,15 +49,18 @@ export default function FormEvento({ inicial, otros = [] }: { inicial: DatosEven
 
   return <form className="admin-panel form-evento" onSubmit={guardar}>
     <h2>Datos principales</h2>
-    {campo('etiqueta', 'Texto sobre el título (opcional)', { placeholder: 'Ej.: NUEVO GRUPO · DICIEMBRE', ayuda: 'Aparece arriba del título, en la tarjeta de Eventos y en la página del taller.' })}
-    <label className="editor-campo"><span className="editor-etiqueta">Título</span>
-      <input required value={d.titulo} onChange={e => cambiar({ titulo: e.target.value, ...(slugTocado ? {} : { slug: slugDe(e.target.value) }) })} /></label>
-    <label className="editor-campo"><span className="editor-etiqueta">Dirección del evento</span>
-      <span className="form-evento-slug"><span>/portal/eventos/</span><input required value={d.slug} onChange={e => { setSlugTocado(true); cambiar({ slug: e.target.value.toLowerCase() }); }} /></span>
-      <small className="editor-ayuda">Solo letras minúsculas, números y guiones. La página pública (para compartir) es /eventos/{d.slug || '…'}. No la cambies si ya compartiste el enlace.</small></label>
-    {campo('subtitulo', 'Subtítulo', { placeholder: 'Ej.: Taller práctico en vivo para…' })}
-    {campo('detalles', 'Datos destacados', { placeholder: 'Ej.: Nivel intermedio · 2 clases en vivo · Solo 50 cupos', ayuda: 'Aparece sobre el título y en el bloque «Reserva tu lugar».' })}
-    {campo('resumen', 'Resumen (tarjeta en la lista de eventos)', { filas: 2 })}
+    <label className="editor-campo"><span className="editor-etiqueta">Nombre del evento</span>
+      <input required value={d.titulo} placeholder="Ej.: Antes de Comprar Ese Call o Ese Put" onChange={e => cambiar({ titulo: e.target.value, ...(slugTocado ? {} : { slug: slugDe(e.target.value) }) })} /></label>
+    {campo('subtitulo', 'Frase corta debajo del nombre', { placeholder: 'Ej.: Taller práctico en vivo para escoger mejor tu contrato de opciones.' })}
+    {campo('resumen', 'Descripción para la tarjeta de «Eventos»', { filas: 2, placeholder: 'Ej.: Dos clases en vivo con Diana. Incluye las grabaciones.', ayuda: 'Dos o tres líneas: es lo que se lee en la lista de eventos antes de entrar.' })}
+    <details className="form-evento-avanzado">
+      <summary>Opciones avanzadas (opcional)</summary>
+      {campo('etiqueta', 'Texto pequeño sobre el nombre', { placeholder: 'Ej.: NUEVO GRUPO · DICIEMBRE', ayuda: 'Aparece en letras pequeñas encima del nombre.' })}
+      {campo('detalles', 'Datos destacados', { placeholder: 'Ej.: Nivel intermedio · 2 clases en vivo · Solo 50 cupos', ayuda: 'Aparece sobre el nombre y en el bloque «Reserva tu lugar».' })}
+      <label className="editor-campo"><span className="editor-etiqueta">Dirección del evento</span>
+        <span className="form-evento-slug"><span>/portal/eventos/</span><input required value={d.slug} onChange={e => { setSlugTocado(true); cambiar({ slug: e.target.value.toLowerCase() }); }} /></span>
+        <small className="editor-ayuda">Se crea sola a partir del nombre. Solo cámbiala si lo necesitas, y nunca después de haber compartido el enlace.</small></label>
+    </details>
 
     <h2>Fecha</h2>
     <div className="form-evento-fila">
@@ -94,23 +97,31 @@ export default function FormEvento({ inicial, otros = [] }: { inicial: DatosEven
       <label className="editor-campo"><span className="editor-etiqueta">Valor (USD)</span><input inputMode="decimal" value={d.precio} onChange={e => cambiar({ precio: e.target.value })} placeholder="98.99" /></label>
       <label className="editor-campo"><span className="editor-etiqueta">Cupos</span><input type="number" min={1} value={d.cupos} onChange={e => cambiar({ cupos: Number(e.target.value) })} /></label>
     </div>
-    {campo('enlace_pago', 'Enlace de pago de Stripe (solo mientras no estén las claves)', { placeholder: 'https://buy.stripe.com/…', ayuda: 'Con las claves de Stripe en Vercel, el pago es automático y este enlace no se usa. Sin claves, el botón abre este enlace y el alumno avisa que pagó (con comprobante opcional); tú apruebas cada compra aquí. El valor del enlace en Stripe debe coincidir con el de arriba.' })}
-    <small className="editor-ayuda">Con las claves de Stripe, al pagar el alumno queda inscrito solo y recibe su correo de agradecimiento. El valor solo se muestra cuando el alumno pulsa «Reserva tu lugar». Los alumnos nunca ven cuántos cupos quedan: solo si hay o no.</small>
+    <small className="editor-ayuda">El pago es con tarjeta en Stripe: al pagar, el alumno queda inscrito solo y recibe su correo de bienvenida. Los alumnos no ven cuántos cupos quedan, solo si hay o no.</small>
     <label className="check"><input type="checkbox" checked={d.inscripcion_abierta} onChange={e => cambiar({ inscripcion_abierta: e.target.checked })} /> <span>Inscripciones abiertas</span></label>
-    <label className="check"><input type="checkbox" checked={d.visible} onChange={e => cambiar({ visible: e.target.checked })} /> <span>Visible en la web (página pública del evento y «Eventos» del portal)</span></label>
-    <label className="check"><input type="checkbox" checked={d.en_lista !== false} onChange={e => cambiar({ en_lista: e.target.checked })} /> <span>Mostrar en la lista de Eventos (si no, solo se entra con el enlace directo)</span></label>
-    <label className="check"><input type="checkbox" checked={Boolean(d.solo_lista_espera)} onChange={e => cambiar({ solo_lista_espera: e.target.checked, lista_de: e.target.checked ? d.lista_de ?? otros[0]?.id ?? null : d.lista_de })} /> <span>Prioridad: por ahora solo puede comprar la lista de espera de otro evento</span></label>
-    {d.solo_lista_espera && <label className="editor-campo"><span className="editor-etiqueta">Lista de espera con prioridad</span>
-      <select value={d.lista_de ?? ''} onChange={e => cambiar({ lista_de: e.target.value || null })}>
-        <option value="">Elige…</option>{otros.map(o => <option key={o.id} value={o.id}>{o.titulo} · {o.fecha}</option>)}
-      </select>
-      <small className="editor-ayuda">Para abrirlo a todos usa «Abrir a todos y avisar» en el panel de lanzamiento: quita la prioridad, lo muestra en Eventos y envía el aviso.</small></label>}
+    <label className="check"><input type="checkbox" checked={d.visible} onChange={e => cambiar({ visible: e.target.checked })} /> <span><strong>Publicar:</strong> los alumnos ya pueden ver el evento (si no, queda oculto y solo tú lo ves en vista previa)</span></label>
+    <details className="form-evento-avanzado">
+      <summary>Más opciones de publicación (opcional)</summary>
+      <label className="check"><input type="checkbox" checked={d.en_lista !== false} onChange={e => cambiar({ en_lista: e.target.checked })} /> <span>Mostrar en la lista de Eventos (si no, solo se entra con el enlace directo)</span></label>
+      <label className="check"><input type="checkbox" checked={Boolean(d.solo_lista_espera)} onChange={e => cambiar({ solo_lista_espera: e.target.checked, lista_de: e.target.checked ? d.lista_de ?? otros[0]?.id ?? null : d.lista_de })} /> <span>Prioridad: por ahora solo puede comprar la lista de espera de otro evento</span></label>
+      {d.solo_lista_espera && <label className="editor-campo"><span className="editor-etiqueta">Lista de espera con prioridad</span>
+        <select value={d.lista_de ?? ''} onChange={e => cambiar({ lista_de: e.target.value || null })}>
+          <option value="">Elige…</option>{otros.map(o => <option key={o.id} value={o.id}>{o.titulo} · {o.fecha}</option>)}
+        </select>
+        <small className="editor-ayuda">Para abrirlo a todos usa «Abrir a todos y avisar» en el panel de lanzamiento: quita la prioridad, lo muestra en Eventos y envía el aviso.</small></label>}
+    </details>
     <label className="check"><input type="checkbox" checked={d.recordatorios !== false} onChange={e => cambiar({ recordatorios: e.target.checked })} /> <span>Enviar recordatorios automáticos a los inscritos (un día antes y el día de cada clase)</span></label>
 
     <h2>Página del evento</h2>
-    {campo('contenido', 'Texto de la página', { filas: 18, ayuda: AYUDA_FORMATO })}
-    {campo('acceso', 'Acceso para inscritos (solo lo ven quienes pagaron)', { filas: 5, ayuda: 'Grabaciones, hoja de chequeo, indicaciones… El botón «Entrar a la clase» aparece solo cuando configuras la sala de Zoom. ' + AYUDA_FORMATO })}
-    {campo('aviso', 'Aviso de riesgo (siempre visible al final de la página)', { filas: 4 })}
+    <div className="editor-campo"><span className="editor-etiqueta">Texto de la página</span>
+      <EditorTexto valor={d.contenido} onChange={t => cambiar({ contenido: t })} alto={360}
+        placeholder="Cuenta de qué trata el evento, para quién es y qué van a aprender. Usa los botones de arriba para poner títulos, listas o negritas." />
+      <small className="editor-ayuda">Escribe como en Word. Selecciona el texto y usa los botones: «Título» para cada sección, «Lista» para puntos (Tab = subpunto) y «Destacar» para una frase importante.</small></div>
+    <div className="editor-campo"><span className="editor-etiqueta">Información solo para quienes pagaron (opcional)</span>
+      <EditorTexto valor={d.acceso} onChange={t => cambiar({ acceso: t })} alto={140}
+        placeholder="Ej.: Aquí encontrarás la grabación de cada clase y la hoja de trabajo." />
+      <small className="editor-ayuda">Solo la ven los inscritos con pago. Por ejemplo, el enlace a las grabaciones o a los materiales. Puedes dejarla vacía y completarla después de la clase. El botón «Entrar a la clase» aparece solo cuando configuras la sala de Zoom.</small></div>
+    {campo('aviso', 'Aviso de riesgo (ya viene escrito; normalmente no hay que cambiarlo)', { filas: 4 })}
 
     {mensaje && <p className={mensaje.ok ? 'auth-ok' : 'auth-error'} role={mensaje.ok ? 'status' : 'alert'}>{mensaje.texto}</p>}
     <div className="form-evento-botones">

@@ -30,8 +30,10 @@ export default async function EventoPage({ params, searchParams }: Props) {
   const supabase = await supabaseServidor();
   const sesion = await getSesion();
   if (!supabase) notFound();
-  const { data: evento } = await supabase.from('eventos_privados').select('*').eq('slug', slug).eq('visible', true).maybeSingle<Evento>();
-  if (!evento) notFound();
+  // La administradora también ve los eventos ocultos (vista previa antes de publicarlos).
+  const esAdmin = sesion?.perfil?.rol === 'admin';
+  const { data: evento } = await supabase.from('eventos_privados').select('*').eq('slug', slug).maybeSingle<Evento>();
+  if (!evento || (!evento.visible && !esAdmin)) notFound();
 
   // Regreso desde Stripe: se confirma el pago aquí mismo por si el aviso de Stripe aún no llegó.
   let errorPago = '';
@@ -65,6 +67,7 @@ export default async function EventoPage({ params, searchParams }: Props) {
   return <>
     <section className="lesson-head evento-head">
       <div className="wrap">
+        {!evento.visible && <p className="admin-aviso" role="status"><strong>Vista previa:</strong> este evento está oculto y solo tú puedes verlo. Para publicarlo, marca «Visible en la web» en Administración → Eventos.</p>}
         <nav className="breadcrumb" aria-label="Estás aquí">
           <Link href="/portal/eventos" className="back-link"><ArrowLeft size={18} aria-hidden="true" /> Eventos</Link>
           <ChevronRight size={16} aria-hidden="true" />

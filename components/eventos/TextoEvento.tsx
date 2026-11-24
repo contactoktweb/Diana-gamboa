@@ -8,11 +8,11 @@ import { Fragment, type ReactNode } from 'react';
  * Una línea en blanco separa los párrafos.
  */
 
-type Bloque =
+export type Bloque =
   | { tipo: 'h2' | 'h3' | 'cita' | 'p'; texto: string }
   | { tipo: 'lista'; items: { texto: string; sub: string[] }[] };
 
-function analizar(texto: string): Bloque[] {
+export function analizar(texto: string): Bloque[] {
   const bloques: Bloque[] = [];
   let parrafo: string[] = [];
   const cerrarParrafo = () => { if (parrafo.length) bloques.push({ tipo: 'p', texto: parrafo.join(' ') }); parrafo = []; };
