@@ -49,7 +49,11 @@ export default async function EventoPage({ params, searchParams }: Props) {
     sesion
       ? supabase.from('inscripciones').select('estado').eq('evento_id', evento.id).eq('usuario_id', sesion.id).in('estado', ['pagada', 'verificacion', 'preinscrita', 'espera'])
       : Promise.resolve({ data: null }),
-    supabase.rpc('evento_hay_cupo', { p_evento: evento.id }),
+    evento.visible
+      ? supabase.rpc('evento_hay_cupo', { p_evento: evento.id })
+      // Vista previa de un evento oculto: la función de la base de datos solo cuenta eventos publicados.
+      : supabase.from('inscripciones').select('id', { count: 'exact', head: true }).eq('evento_id', evento.id).in('estado', ['pagada', 'verificacion'])
+        .then(r => ({ data: evento.inscripcion_abierta && (r.count ?? 0) < evento.cupos })),
   ]);
   if (sesion) {
     const estados = (mias ?? []).map(m => m.estado as string);
@@ -67,7 +71,7 @@ export default async function EventoPage({ params, searchParams }: Props) {
   return <>
     <section className="lesson-head evento-head">
       <div className="wrap">
-        {!evento.visible && <p className="admin-aviso" role="status"><strong>Vista previa:</strong> este evento está oculto y solo tú puedes verlo. Para publicarlo, marca «Visible en la web» en Administración → Eventos.</p>}
+        {!evento.visible && <p className="admin-aviso" role="status"><strong>Vista previa:</strong> este evento está oculto y solo tú puedes verlo. Para publicarlo, en Administración → Eventos elige «Publicado» en «¿Quién puede ver el evento?». La compra se puede probar cuando esté publicado.</p>}
         <nav className="breadcrumb" aria-label="Estás aquí">
           <Link href="/portal/eventos" className="back-link"><ArrowLeft size={18} aria-hidden="true" /> Eventos</Link>
           <ChevronRight size={16} aria-hidden="true" />
