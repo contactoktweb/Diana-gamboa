@@ -1,9 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-import AccionesCompra from '@/components/admin/AccionesCompra';
-import AprobarPagos from '@/components/admin/AprobarPagos';
-import AprobarTodas from '@/components/admin/AprobarTodas';
+import InscribirAlumno from '@/components/admin/InscribirAlumno';
 import CopiarTexto from '@/components/admin/CopiarTexto';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import FormEvento from '@/components/admin/FormEvento';
@@ -23,7 +21,6 @@ interface Fila { id: string; nombre: string; correo: string; estado: EstadoInscr
 
 const fecha = (d: string) => new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/New_York' }).format(new Date(d));
 const GRUPOS: { estado: EstadoInscripcion; titulo: string; nota: string }[] = [
-  { estado: 'verificacion', titulo: 'Compras por verificar', nota: 'Pagaron con el enlace de Stripe y esperan tu revisión. En Stripe › Payments busca el pago por su correo (o por el «correo de Stripe» si es distinto), confirma el valor y el estado «Succeeded», revisa el comprobante si lo subieron y apruébalo: le llega su correo «Gracias por tu confianza». Su cupo queda apartado mientras tanto. El teléfono abre WhatsApp.' },
   { estado: 'pagada', titulo: 'Inscritos (pago aprobado)', nota: 'Tienen su cupo, ven el acceso del evento en su portal y reciben los recordatorios. El teléfono (si lo escribieron en Stripe) abre WhatsApp.' },
   { estado: 'preinscrita', titulo: 'Preinscritos', nota: 'Se preinscribieron sin pagar (Stripe aún no estaba conectado). Envíales el enlace del evento para que paguen; no tienen cupo apartado.' },
   { estado: 'espera', titulo: 'Lista de espera', nota: 'Quisieron entrar con los cupos agotados. Te sirve para decidir si abres otra fecha o amplías cupos.' },
@@ -36,15 +33,17 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
   if (!supabase || !/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const servidor = supabaseAdmin();
   // Todas las consultas del evento salen a la vez (antes iban una detrás de otra).
-  const [{ data: e }, { data }, { data: todos }, { data: sala }, { data: enviados }] = await Promise.all([
+  const [{ data: e }, { data }, { data: todos }, { data: sala }, { data: enviados }, { data: perfiles }] = await Promise.all([
     supabase.from('eventos_privados').select('*').eq('id', id).maybeSingle<Evento>(),
     supabase.from('inscripciones').select('id, nombre, correo, estado, monto_centavos, creado_en, pagado_en, comprobante, telefono, correo_pago').eq('evento_id', id).order('creado_en', { ascending: false }),
     supabase.from('eventos_privados').select('id, titulo, fecha_tipo, fecha, fecha_fin, fecha_periodo, fecha_mes, fecha_anio').neq('id', id).order('creado_en', { ascending: false }),
     // Sala de Zoom y correos programados (tablas de supabase/sala-y-recordatorios.sql).
     servidor ? servidor.from('eventos_zoom').select('reunion, clave').eq('evento_id', id).maybeSingle() : Promise.resolve({ data: null }),
     servidor ? servidor.from('recordatorios_enviados').select('clave, enviados, fallidos, manual, creado_en').eq('evento_id', id) : Promise.resolve({ data: null }),
+    (servidor ?? supabase).from('perfiles').select('nombre, correo').order('nombre').limit(5000),
   ]);
   if (!e) notFound();
+  const alumnos = (perfiles ?? []).filter(p => p.correo).map(p => ({ nombre: (p.nombre as string) || (p.correo as string), correo: (p.correo as string).toLowerCase() }));
   const filas = (data as Fila[]) ?? [];
   const pagadas = filas.filter(f => f.estado === 'pagada');
   // Enlaces temporales (1 hora) a los comprobantes, que están en un espacio privado.
@@ -80,7 +79,6 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
     <section className="cifras" aria-label="Cifras del evento">
       <div className="cifra"><span>Cupos pagados</span><strong>{pagadas.length} de {e.cupos}</strong><small>{e.cupos - pagadas.length > 0 ? `${e.cupos - pagadas.length} disponibles` : 'Cupos agotados'}</small></div>
       <div className="cifra"><span>Ingresos</span><strong>{precioTexto(total)}</strong><small>Antes de la comisión de Stripe</small></div>
-            {filas.some(f => f.estado === 'verificacion') && <div className="cifra"><span>Por verificar</span><strong>{filas.filter(f => f.estado === 'verificacion').length}</strong><small>Pagaron con el enlace</small></div>}
       <div className="cifra"><span>Preinscritos</span><strong>{filas.filter(f => f.estado === 'preinscrita').length}</strong><small>Sin pagar</small></div>
       <div className="cifra"><span>Lista de espera</span><strong>{filas.filter(f => f.estado === 'espera').length}</strong><small>Con cupos agotados</small></div>
     </section>
@@ -93,25 +91,21 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
     {GRUPOS.map(g => {
       const lista = filas.filter(f => f.estado === g.estado);
       if (!lista.length && g.estado !== 'pagada') return null;
-      const verificar = g.estado === 'verificacion';
       return <section className="admin-panel" key={g.estado}>
         <h2>{g.titulo} ({lista.length})</h2>
         <p className="admin-nota">{g.nota}</p>
-        {verificar && lista.length > 1 && <AprobarTodas eventoId={e.id} cantidad={lista.length} />}
         {lista.length === 0 ? <p className="admin-vacio">Todavía nadie.</p> : <>
           <div className="admin-tabla-contenedor"><table className="admin-tabla">
-            <thead><tr><th>Nombre</th><th>Correo</th>{(g.estado === 'pagada' || verificar) && <th>Teléfono</th>}<th>Fecha (hora del Este)</th>{(g.estado === 'pagada' || verificar) && <th>Pago</th>}{verificar && <th>Comprobante</th>}{verificar && <th><span className="sr-only">Acciones</span></th>}</tr></thead>
+            <thead><tr><th>Nombre</th><th>Correo</th>{g.estado === 'pagada' && <th>Teléfono</th>}<th>Fecha (hora del Este)</th>{g.estado === 'pagada' && <th>Pago</th>}</tr></thead>
             <tbody>{lista.map(f => <tr key={f.id}>
               <td data-titulo="Nombre"><strong>{f.nombre || '—'}</strong></td>
               <td data-titulo="Correo"><a href={`mailto:${f.correo}`}>{f.correo}</a>
                 {f.correo_pago && <small className="correo-pago">Pagó en Stripe con: <strong>{f.correo_pago}</strong></small>}</td>
-              {(g.estado === 'pagada' || verificar) && <td data-titulo="Teléfono">{f.telefono
+              {g.estado === 'pagada' && <td data-titulo="Teléfono">{f.telefono
                 ? <a href={`https://wa.me/${f.telefono.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">{f.telefono}</a>
                 : <span className="admin-tenue">—</span>}</td>}
               <td data-titulo="Fecha">{fecha(f.pagado_en ?? f.creado_en)}</td>
-              {(g.estado === 'pagada' || verificar) && <td data-titulo="Pago">{precioTexto(f.monto_centavos ?? 0)}{comprobantes.has(f.id) && !verificar && <small><a href={comprobantes.get(f.id)} target="_blank" rel="noopener noreferrer">Ver comprobante</a></small>}</td>}
-              {verificar && <td data-titulo="Comprobante">{comprobantes.has(f.id) ? <a href={comprobantes.get(f.id)} target="_blank" rel="noopener noreferrer">Ver comprobante</a> : <span className="admin-tenue">No subió</span>}</td>}
-              {verificar && <td><AccionesCompra id={f.id} nombre={f.nombre || f.correo} /></td>}
+              {g.estado === 'pagada' && <td data-titulo="Pago">{precioTexto(f.monto_centavos ?? 0)}{comprobantes.has(f.id) && <small><a href={comprobantes.get(f.id)} target="_blank" rel="noopener noreferrer">Ver comprobante</a></small>}</td>}
             </tr>)}</tbody>
           </table></div>
           <div className="admin-botones"><CopiarTexto texto={lista.map(f => f.correo).join(', ')} etiqueta="Copiar todos los correos" /></div>
@@ -120,9 +114,9 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
     })}
 
     <details className="admin-panel aprobar-manual">
-      <summary>Casos especiales: aprobar pagos a mano</summary>
-      <p className="admin-nota">Los pagos con Stripe se aprueban solos. Usa esto solo si alguien pagó por fuera de la web y necesitas darle su cupo.</p>
-      <AprobarPagos eventoId={e.id} />
+      <summary>Inscribir a un alumno manualmente</summary>
+      <p className="admin-nota">Los pagos con Stripe inscriben solos. Usa esto solo si hubo algún error con un pago o si alguien pagó por fuera de la web: la persona queda con su cupo pagado en este evento.</p>
+      <InscribirAlumno eventoId={e.id} alumnos={alumnos} />
     </details>
 
     <FormEvento otros={otros} inicial={{ ...e, precio: (e.precio_centavos / 100).toFixed(2), zona: 'America/New_York', hora_local: e.hora_inicio ? horaEnZona(e.hora_inicio, 'America/New_York') : '' }} />

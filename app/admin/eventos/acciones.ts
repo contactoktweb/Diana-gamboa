@@ -3,15 +3,15 @@
 import { revalidatePath } from 'next/cache';
 import { getSesion } from '@/lib/sesion';
 import { supabaseServidor } from '@/lib/supabase/servidor';
-import { aInstante, diasEvento, fechaEvento, horarioCorreo, ZONAS, type Evento } from '@/lib/eventos/formato';
+import { aInstante, diasEvento, ZONAS, type Evento } from '@/lib/eventos/formato';
 import { crearReunionZoom, numeroReunion, zoomApiActiva } from '@/lib/zoom';
 import { enviarRecordatorio, planRecordatorios } from '@/lib/eventos/recordatorios';
 import { enviarAviso, type TipoAviso } from '@/lib/eventos/avisos';
 import { CORREO_ADMINISTRADORA } from '@/lib/administradora';
-import { avisarInscripcion, primerNombre } from '@/lib/eventos/pago';
+import { primerNombre } from '@/lib/eventos/pago';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { enviarCorreosLote } from '@/lib/correo/enviar';
-import { correoCupoAprobado, correoGraciasEvento } from '@/lib/correo/plantillas';
+import { correoCupoAprobado } from '@/lib/correo/plantillas';
 import { urlDelSitio } from '@/lib/sitio';
 
 export type DatosEvento = Omit<Evento, 'id' | 'precio_centavos' | 'aviso_publico_en' | 'aviso_solo_novedades'> & { id?: string; precio: string; hora_local?: string; zona?: string };
@@ -85,58 +85,6 @@ export async function eliminarEvento(id: string): Promise<{ ok: true } | { ok: f
   revalidatePath('/admin/eventos');
   revalidatePath('/portal/eventos', 'layout');
   return { ok: true };
-}
-
-/** Compra por enlace verificada en Stripe: la persona queda inscrita y recibe su correo de agradecimiento. */
-export async function aprobarCompra(inscripcionId: string): Promise<{ ok: true; aviso?: string } | { ok: false; error: string }> {
-  // Las inscripciones solo las modifica el servidor, después de comprobar que es la administradora.
-  const servidor = (await clienteAdmin()) && supabaseAdmin();
-  if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
-  const { data, error } = await servidor.from('inscripciones').update({ estado: 'pagada', pagado_en: new Date().toISOString(), actualizado_en: new Date().toISOString() })
-    .eq('id', inscripcionId).eq('estado', 'verificacion').select('id');
-  if (error) return { ok: false, error: 'No se pudo aprobar: ' + error.message };
-  if (!data?.length) return { ok: false, error: 'Esta compra ya no está en verificación.' };
-  const llego = await avisarInscripcion(inscripcionId, { alumno: true }).catch(() => false);
-  revalidatePath('/admin/eventos', 'layout');
-  return llego
-    ? { ok: true, aviso: 'Aprobado. Se envió su correo «Gracias por tu confianza».' }
-    : { ok: false, error: 'La compra quedó aprobada, pero el correo de confirmación no salió. Revisa Resend → Emails; puedes enviarle la bienvenida desde «Correos a los inscritos».' };
-}
-
-/** Aprueba de una vez todas las compras en verificación de un evento y envía a cada persona «Gracias por tu confianza». */
-export async function aprobarTodasCompras(eventoId: string): Promise<{ ok: true; aviso: string } | { ok: false; error: string }> {
-  const servidor = (await clienteAdmin()) && supabaseAdmin();
-  if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
-  const { data: e } = await servidor.from('eventos_privados').select('*').eq('id', eventoId).maybeSingle<Evento>();
-  if (!e) return { ok: false, error: 'No se encontró el evento.' };
-  const ahora = new Date().toISOString();
-  // Solo las que siguen «en verificación» (si otra pestaña ya aprobó alguna, no se repite).
-  const { data, error } = await servidor.from('inscripciones').update({ estado: 'pagada', pagado_en: ahora, actualizado_en: ahora })
-    .eq('evento_id', eventoId).eq('estado', 'verificacion').select('nombre, correo');
-  if (error) return { ok: false, error: 'No se pudieron aprobar: ' + error.message };
-  const filas = data ?? [];
-  revalidatePath('/admin/eventos', 'layout');
-  if (!filas.length) return { ok: false, error: 'No hay compras por verificar.' };
-  const sitio = await urlDelSitio();
-  const r = await enviarCorreosLote(filas.map(f => ({
-    para: f.correo as string,
-    ...correoGraciasEvento({ sitio, nombre: primerNombre((f.nombre as string) || ''), evento: e.titulo, fecha: fechaEvento(e), ...horarioCorreo(e), enlace: `${sitio}/portal/eventos/${e.slug}` }),
-  })));
-  const n = filas.length;
-  const base = `${n} ${n === 1 ? 'compra aprobada' : 'compras aprobadas'}`;
-  return r.fallidos.length
-    ? { ok: false, error: `${base}, pero ${r.fallidos.length} correos no salieron: ${r.fallidos.join(', ')}. Puedes enviarles la bienvenida desde «Correos a los inscritos».` }
-    : { ok: true, aviso: `${base}. Se envió a cada persona su correo «Gracias por tu confianza».` };
-}
-
-/** El pago no aparece en Stripe: se rechaza y el cupo se libera. */
-export async function rechazarCompra(inscripcionId: string): Promise<{ ok: true; aviso?: string } | { ok: false; error: string }> {
-  const servidor = (await clienteAdmin()) && supabaseAdmin();
-  if (!servidor) return { ok: false, error: 'Tu sesión expiró o no tienes permiso.' };
-  const { error } = await servidor.from('inscripciones').update({ estado: 'cancelada', actualizado_en: new Date().toISOString() }).eq('id', inscripcionId).eq('estado', 'verificacion');
-  if (error) return { ok: false, error: 'No se pudo rechazar: ' + error.message };
-  revalidatePath('/admin/eventos', 'layout');
-  return { ok: true, aviso: 'Compra rechazada: el cupo quedó libre.' };
 }
 
 export type FilaImportada = { correo: string; nombre: string; resultado: 'aprobado' | 'aprobado_verificacion' | 'ya_aprobado' | 'repetido' | 'no_valido' | 'error' };
