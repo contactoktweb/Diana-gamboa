@@ -16,7 +16,9 @@ export async function proxy(request: NextRequest) {
       },
     },
   });
-  const { data: { user } } = await supabase.auth.getUser();
+  // Renueva la sesión si venció y verifica su firma (sin consultar a Supabase en cada visita).
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims?.sub;
   // Sin sesión: a iniciar sesión, recordando la página exacta (por ejemplo, el enlace de un evento).
   const ruta = request.nextUrl.pathname;
   if (!user && (ruta.startsWith('/portal') || ruta.startsWith('/admin'))) {

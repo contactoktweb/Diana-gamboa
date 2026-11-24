@@ -13,11 +13,14 @@ export interface Perfil {
 export const getSesion = cache(async (): Promise<{ id: string; correo: string; debeCambiarClave: boolean; perfil: Perfil | null } | null> => {
   const supabase = await supabaseServidor();
   if (!supabase) return null;
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  // getClaims verifica la firma de la sesión sin consultar cada vez al servidor de Supabase (más rápido que getUser).
+  const { data } = await supabase.auth.getClaims();
+  const c = data?.claims;
+  if (!c?.sub) return null;
   const { data: perfil } = await supabase.from('perfiles')
-    .select('id, nombre, correo, rol, acepta_novedades, pais, experiencia, intereses').eq('id', user.id).maybeSingle();
-  return { id: user.id, correo: user.email ?? '', debeCambiarClave: Boolean(user.user_metadata?.debe_cambiar_clave), perfil: (perfil as Perfil | null) ?? null };
+    .select('id, nombre, correo, rol, acepta_novedades, pais, experiencia, intereses').eq('id', c.sub).maybeSingle();
+  const meta = (c.user_metadata ?? {}) as Record<string, unknown>;
+  return { id: c.sub, correo: typeof c.email === 'string' ? c.email : '', debeCambiarClave: Boolean(meta.debe_cambiar_clave), perfil: (perfil as Perfil | null) ?? null };
 });
 
 /** Exige sesión iniciada (solo si Supabase está activo; sin él, el portal funciona en modo demostración). */

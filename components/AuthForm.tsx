@@ -108,6 +108,8 @@ export default function AuthForm({ mode, confirmacion, envioPropio = false }: { 
         if (clave !== String(data.get('clave2') ?? '')) throw new Aviso('Las contraseñas no coinciden.');
         const { data: r, error: e } = await sb.auth.updateUser({ password: clave, data: { debe_cambiar_clave: false } });
         if (e) throw e;
+        // Sesión nueva: el servidor lee los datos de la cuenta desde ella (ya sin «contraseña provisional»).
+        await sb.auth.refreshSession();
         const { data: perfil } = await sb.from('perfiles').select('rol').eq('id', r.user.id).maybeSingle();
         await entrar(perfil?.rol === 'admin' ? '/admin' : '/portal');
       }

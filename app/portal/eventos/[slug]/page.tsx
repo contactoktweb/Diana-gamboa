@@ -42,12 +42,17 @@ export default async function EventoPage({ params, searchParams }: Props) {
   // Cupos aprobados desde la administración con el correo de esta cuenta.
   if (sesion) await vincularPorCorreo(sesion.id, sesion.correo);
   let estado: EstadoUsuario = 'ninguno';
+  // Consultas independientes en paralelo (la página carga más rápido).
+  const [{ data: mias }, { data: hayCupo }] = await Promise.all([
+    sesion
+      ? supabase.from('inscripciones').select('estado').eq('evento_id', evento.id).eq('usuario_id', sesion.id).in('estado', ['pagada', 'verificacion', 'preinscrita', 'espera'])
+      : Promise.resolve({ data: null }),
+    supabase.rpc('evento_hay_cupo', { p_evento: evento.id }),
+  ]);
   if (sesion) {
-    const { data: mias } = await supabase.from('inscripciones').select('estado').eq('evento_id', evento.id).eq('usuario_id', sesion.id).in('estado', ['pagada', 'verificacion', 'preinscrita', 'espera']);
     const estados = (mias ?? []).map(m => m.estado as string);
     estado = estados.includes('pagada') ? 'pagada' : estados.includes('verificacion') ? 'verificacion' : estados.includes('preinscrita') ? 'preinscrita' : estados.includes('espera') ? 'espera' : 'ninguno';
   }
-  const { data: hayCupo } = await supabase.rpc('evento_hay_cupo', { p_evento: evento.id });
   const precio = precioTexto(evento.precio_centavos);
   // Con claves de Stripe: pago automático. Sin claves pero con enlace de pago: pago por enlace y verificación.
   const modo = stripeActivo ? 'stripe' : evento.enlace_pago ? 'enlace' : 'preinscripcion';
