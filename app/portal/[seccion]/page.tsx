@@ -60,6 +60,8 @@ export default async function SeccionPage({ params }: Props) {
         <a href={g.youtubeLives} target="_blank" rel="noopener noreferrer" className="btn btn-gold">{p.livesBoton} <ExternalLink size={18} aria-hidden="true" /></a>
       </section>}
 
+      {!s.videos.length && !s.lives && !s.laboratorio && <p className="admin-vacio serie-vacia">Muy pronto encontrarás aquí los videos de esta serie.</p>}
+
       {s.videos.map((v, i) => {
         const yt = parseYouTube(v.url);
         const poster = yt && !yt.videoId ? portadas[i] : undefined;
