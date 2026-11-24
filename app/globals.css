@@ -1123,6 +1123,13 @@ button{font:inherit;cursor:pointer}
 .sala-manual{margin:12px 0;border:1px dashed var(--line);border-radius:14px;padding:12px 16px}
 .sala-manual summary,.aprobar-manual summary{cursor:pointer;font-weight:700;color:var(--green-900)}
 .aprobar-manual[open] summary{margin-bottom:10px}
+.correos-plegable summary{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 16px;cursor:pointer;list-style:none}
+.correos-plegable summary::-webkit-details-marker{display:none}
+.correos-plegable summary::after{content:"Ver";font-weight:700;font-size:.9rem;color:var(--green-700);text-decoration:underline}
+.correos-plegable[open] summary::after{content:"Ocultar"}
+.correos-plegable[open] summary{margin-bottom:12px}
+.correos-plegable-titulo{display:inline-flex;align-items:center;gap:8px;font-size:1.2rem;font-weight:700;color:var(--green-900)}
+.correos-plegable summary .admin-tenue{flex:1;font-size:.92rem}
 @media (max-width:760px){
   .sala-zoom{width:100%}
   .sala-zoom iframe{height:calc(100vh - 170px);min-height:460px;border-radius:0;border-left:0;border-right:0}

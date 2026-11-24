@@ -21,8 +21,10 @@ export default function RecordatoriosAdmin({ eventoId, filas, activos, cron, ins
     ejecutar(prueba ? f.clave + ':prueba' : f.clave, () => enviarRecordatorioAhora(eventoId, f.clave, prueba));
   }
 
-  return <section className="admin-panel">
-    <h2><BellRing size={20} aria-hidden="true" /> Correos a los inscritos</h2>
+  // Todo funciona solo: la sección queda plegada en una línea. Si algo falla, se muestra abierta.
+  const automatico = activos && cron;
+  const proximo = filas.find(f => f.automatico && !f.enviado && !f.vencido);
+  const contenido = <>
     <p className="admin-nota">Los recordatorios salen solos a las 8:00 a. m. (hora de Nueva York) del día indicado, con la hora de la clase en cada país y el botón «Entrar a la clase». Cada uno se envía una sola vez. Con «Probar» te llega a ti primero.</p>
     {!activos && <p className="auth-error">Los recordatorios automáticos de este evento están apagados (actívalos en «Cupos y pago», abajo).</p>}
     {activos && !cron && <p className="auth-error">Falta la variable <code>CRON_SECRET</code> en Vercel: sin ella la tarea diaria no se ejecuta y los recordatorios no salen solos. Mientras tanto puedes enviarlos con «Enviar ahora».</p>}
@@ -46,5 +48,19 @@ export default function RecordatoriosAdmin({ eventoId, filas, activos, cron, ins
           {aviso(f.clave)}{aviso(f.clave + ':prueba')}</td>
         </tr>)}</tbody>
       </table></div>}
+  </>;
+
+  if (automatico) return <section className="admin-panel">
+    <details className="correos-plegable">
+      <summary>
+        <span className="correos-plegable-titulo"><BellRing size={20} aria-hidden="true" /> Correos a los inscritos</span>
+        <span className="admin-tenue">Automáticos{proximo ? ` · próximo: ${proximo.cuando}` : ''}</span>
+      </summary>
+      {contenido}
+    </details>
+  </section>;
+  return <section className="admin-panel">
+    <h2><BellRing size={20} aria-hidden="true" /> Correos a los inscritos</h2>
+    {contenido}
   </section>;
 }
