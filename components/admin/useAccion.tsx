@@ -26,7 +26,13 @@ export function useAccion() {
         router.refresh();
       } catch (e) {
         console.error(e);
-        setMensaje({ clave, ok: false, texto: 'No se pudo completar: se perdió la conexión o el servidor tardó demasiado. Revisa en Resend → Emails si alcanzó a salir antes de volver a intentarlo.' });
+        // La página quedó con una versión anterior de la web (se publicaron cambios): se recarga sola.
+        if (/Server Action|failed-to-find|deployment/i.test(String((e as Error)?.message ?? e))) {
+          setMensaje({ clave, ok: false, texto: 'La web se actualizó mientras tenías esta página abierta. Recargando… vuelve a pulsar el botón.' });
+          setTimeout(() => window.location.reload(), 1500);
+          return;
+        }
+        setMensaje({ clave, ok: false, texto: 'No se pudo completar: se perdió la conexión o el servidor tardó demasiado. Recarga la página (Cmd + Shift + R) e inténtalo de nuevo. Si era un envío de correos, revisa antes en Resend → Emails si alcanzó a salir.' });
       } finally {
         setActiva(null);
       }
