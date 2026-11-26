@@ -45,9 +45,10 @@ export default function SalaZoomAdmin({ eventoId, slug, sala, sdkActivo, apiActi
       <div className="sala-lista">
         <p className="auth-ok"><CheckCircle2 size={18} aria-hidden="true" /> Sala lista: reunión <strong>{formato(sala.reunion)}</strong>{sala.clave ? <> · código <strong>{sala.clave}</strong></> : null}</p>
         <div className="admin-botones">
-          <a className="btn btn-green" href={`/portal/eventos/${slug}/sala`} target="_blank" rel="noopener noreferrer"><Video size={18} aria-hidden="true" /> {apiActiva ? 'Entrar a la clase como anfitriona' : 'Ver la sala como la ven los alumnos'}</a>
+          <a className="btn btn-green" href={`/api/zoom/iniciar?evento=${encodeURIComponent(slug)}`} target="_blank" rel="noopener noreferrer"><Video size={18} aria-hidden="true" /> Iniciar la clase en Zoom (anfitriona)</a>
+          <a className="btn btn-outline btn-sm" href={`/portal/eventos/${slug}/sala`} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden="true" /> Ver la sala como la ven los alumnos</a>
         </div>
-        {!apiActiva && <small className="editor-ayuda">Inicia la reunión en tu aplicación de Zoom con la cuenta Pro de Diana; los alumnos entran con el botón de su portal.</small>}
+        <small className="editor-ayuda">La clase se abre en Zoom ya iniciada como anfitriona{apiActiva ? '' : ' (inicia sesión con la cuenta de Zoom de Diana si te lo pide)'}. Los alumnos entran desde su portal, dentro de la web.</small>
         <p className="sala-enlace-admin"><span>Enlace de Zoom:</span> <a href={enlace} target="_blank" rel="noopener noreferrer">{enlace}</a></p>
         <div className="admin-botones">
           <CopiarTexto texto={enlace} etiqueta="Copiar enlace de Zoom" pequeno />

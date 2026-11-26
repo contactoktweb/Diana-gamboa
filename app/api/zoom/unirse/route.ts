@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { accesoSala } from '@/lib/eventos/sala';
-import { firmaZoom, zakAnfitriona, zoomApiActiva, zoomSdkActivo } from '@/lib/zoom';
+import { firmaZoom, zoomSdkActivo } from '@/lib/zoom';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,15 +24,11 @@ export async function GET(req: Request) {
   if (!a.ok) return NextResponse.json({ error: MENSAJES[a.motivo], motivo: a.motivo }, { status: a.motivo === 'sesion' ? 401 : 403, headers: sinCache });
   if (!zoomSdkActivo) return NextResponse.json({ error: MENSAJES.sin_zoom, motivo: 'sin_zoom' }, { status: 403, headers: sinCache });
 
-  // La anfitriona inicia la reunión desde la web si está la app Server-to-Server de Zoom.
-  let zak = '';
-  let aviso = '';
-  if (a.anfitriona) {
-    if (zoomApiActiva) {
-      try { zak = await zakAnfitriona(); } catch (e) { aviso = (e as Error).message; }
-    } else aviso = 'Para iniciar la clase como anfitriona desde la web falta la app Server-to-Server de Zoom. Mientras tanto, inicia la reunión en la aplicación de Zoom y aquí entrarás como participante.';
-  }
-  const rol = a.anfitriona && zak ? 1 : 0;
+  // Dentro de la web todos entran como participantes: la anfitriona inicia la clase en Zoom
+  // (botón «Iniciar la clase en Zoom»), así su sesión de anfitriona no se cierra al abrir esta vista.
+  const rol = 0;
+  const zak = '';
+  const aviso = '';
   return NextResponse.json({
     signature: firmaZoom(a.reunion, rol),
     meetingNumber: a.reunion,
@@ -40,7 +36,7 @@ export async function GET(req: Request) {
     userName: a.nombre,
     userEmail: a.correo,
     zak,
-    anfitriona: rol === 1,
+    anfitriona: false,
     aviso,
     titulo: a.evento.titulo,
     volver: `/portal/eventos/${a.evento.slug}`,

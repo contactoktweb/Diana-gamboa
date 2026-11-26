@@ -67,6 +67,13 @@ async function api<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
   return (r.status === 204 ? null : await r.json()) as T;
 }
 
+/** Enlace para que la anfitriona inicie la reunión en Zoom (aplicación o zoom.us). Vence en unas horas: se pide al momento. */
+export async function enlaceInicio(reunion: string) {
+  const d = await api<{ start_url?: string }>(`/meetings/${encodeURIComponent(reunion)}`);
+  if (!d.start_url) throw new Error('Zoom no devolvió el enlace de inicio.');
+  return d.start_url;
+}
+
 /** Clave ZAK de la anfitriona: permite iniciar la reunión desde la web. */
 export async function zakAnfitriona() {
   const d = await api<{ token: string }>(`/users/${encodeURIComponent(ANFITRIONA)}/token?type=zak`);

@@ -57,13 +57,13 @@ export default async function SalaPage({ params }: { params: Promise<{ slug: str
     <div className="wrap sala-cabecera">
       {volver}
       <h1><Video size={20} aria-hidden="true" /> {a.evento.titulo}</h1>
-      {a.anfitriona && <span className="sala-rol">Anfitriona</span>}
+      {a.anfitriona && <span className="sala-rol">Vista de alumno</span>}
       <details className="sala-ayuda">
         <summary><HelpCircle size={16} aria-hidden="true" /> Ayuda</summary>
         <ul>
           <li><strong>Cambiar cámara o micrófono:</strong> en la barra inferior, flechita <strong>^</strong> junto a «Video» o «Audio».</li>
           {a.anfitriona
-            ? <li><strong>Al entrar se inicia la clase</strong> y los inscritos entran directo.</li>
+            ? <li><strong>Esta es la vista de los alumnos.</strong> Para dar la clase usa «Iniciar la clase en Zoom» en la administración.</li>
             : <li><strong>¿Dice «Esperando al anfitrión»?</strong> La clase aún no empieza: entrarás solo cuando Diana la inicie.</li>}
           <li><strong>No te escuchan o no te ven:</strong> permite el micrófono y la cámara en el candado de la barra de direcciones y recarga.</li>
         </ul>
