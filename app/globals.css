@@ -1192,3 +1192,4 @@ html:has(.barra-navegacion.is-activa){cursor:progress}
 .enlace-compartir{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:6px;color:var(--muted)}
 .enlace-compartir a{color:var(--green-900);overflow-wrap:anywhere}
 .sala-ayuda{margin:6px 0 0;padding:10px 14px;border-radius:12px;background:var(--green-50);color:var(--green-900);font-size:.92rem;line-height:1.5}
+.sala-crear{align-items:end}
