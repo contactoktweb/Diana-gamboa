@@ -74,7 +74,14 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
 
   return <>
     <p><Link href="/admin/eventos" className="admin-volver"><ArrowLeft size={16} aria-hidden="true" /> Eventos</Link></p>
-    <header className="admin-cabecera"><h1>{e.titulo}</h1><p>Enlace para compartir: <strong>/portal/eventos/{e.slug}</strong></p></header>
+    <header className="admin-cabecera"><h1>{e.titulo}</h1>
+      <div className="enlace-compartir">
+        <span>Enlace para compartir:</span>
+        <a href={`${sitio}/portal/eventos/${e.slug}`} target="_blank" rel="noopener noreferrer"><strong>{`${sitio}/portal/eventos/${e.slug}`}</strong></a>
+        <CopiarTexto texto={`${sitio}/portal/eventos/${e.slug}`} etiqueta="Copiar enlace" pequeno />
+        {e.visible && <CopiarTexto texto={`${sitio}/eventos/${e.slug}`} etiqueta="Copiar página pública (sin cuenta)" pequeno />}
+      </div>
+    </header>
 
     <section className="cifras" aria-label="Cifras del evento">
       <div className="cifra"><span>Cupos pagados</span><strong>{pagadas.length} de {e.cupos}</strong><small>{e.cupos - pagadas.length > 0 ? `${e.cupos - pagadas.length} disponibles` : 'Cupos agotados'}</small></div>
