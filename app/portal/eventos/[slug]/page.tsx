@@ -99,7 +99,7 @@ export default async function EventoPage({ params, searchParams }: Props) {
     <div className="wrap lesson-body evento-cuerpo">
       {estado === 'pagada' && <section className="evento-acceso" aria-label="Tu acceso">
         <h2><CheckCircle2 size={22} aria-hidden="true" /> Tu acceso al evento</h2>
-        {!conSala && <p className="evento-sala-pronto"><Clock3 size={18} aria-hidden="true" /> El botón <strong>«Entrar a la clase»</strong> aparecerá aquí cuando la sala esté disponible, antes de la hora de inicio. También te avisaremos por correo.</p>}
+        {!conSala && <p className="evento-sala-pronto"><Clock3 size={18} aria-hidden="true" /><span>El botón <strong>«Entrar a la clase»</strong> aparecerá aquí cuando la sala esté disponible, antes de la hora de inicio. También te avisaremos por correo.</span></p>}
         {conSala && <div className="evento-sala">
           <p>{zoomSdkActivo ? 'La clase se abre aquí mismo, dentro de la web. No necesitas instalar Zoom.' : 'La clase es por Zoom.'} Entra unos 10 minutos antes.</p>
           <Link href={`/portal/eventos/${evento.slug}/sala`} className="btn btn-green btn-lg"><Video size={20} aria-hidden="true" /> Entrar a la clase</Link>

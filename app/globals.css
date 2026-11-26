@@ -1194,4 +1194,7 @@ html:has(.barra-navegacion.is-activa){cursor:progress}
 .sala-ayuda{margin:6px 0 0;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(203,165,47,.35);color:#E8EFEB;font-size:.92rem;line-height:1.5}
 .sala-ayuda strong{color:#fff}
 .sala-crear{align-items:end}
-.evento-sala-pronto{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:12px 14px;border-radius:12px;background:var(--green-50);color:var(--green-900);line-height:1.5}
+.evento-sala-pronto{display:flex;gap:10px;align-items:flex-start;}
+.evento-sala-pronto svg{flex:none;margin-top:3px}
+.evento-sala-pronto span{flex:1}
+.evento-sala-pronto{margin:0 0 12px;padding:12px 14px;border-radius:12px;background:var(--green-50);color:var(--green-900);line-height:1.5}
