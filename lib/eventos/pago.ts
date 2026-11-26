@@ -67,7 +67,7 @@ export async function avisarInscripcion(inscripcionId: string, enviar: { admin?:
  */
 export async function vincularPorCorreo(usuarioId: string, correo: string) {
   const admin = supabaseAdmin();
-  if (!admin || !correo) return;
+  if (!admin || !correo) return 0;
   const { data: sueltas } = await admin.from('inscripciones').select('id, evento_id')
     .eq('correo', correo.toLowerCase()).is('usuario_id', null).in('estado', ['pagada', 'verificacion']);
   for (const fila of sueltas ?? []) {
@@ -76,6 +76,7 @@ export async function vincularPorCorreo(usuarioId: string, correo: string) {
       .eq('evento_id', fila.evento_id).eq('usuario_id', usuarioId).in('estado', ['pendiente', 'preinscrita', 'espera']);
     await admin.from('inscripciones').update({ usuario_id: usuarioId, actualizado_en: new Date().toISOString() }).eq('id', fila.id);
   }
+  return sueltas?.length ?? 0;
 }
 
 /** «MARIA DEL ROSARIO NIEVES» → «Maria»; «(sin nombre)» → «». */

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AlertTriangle, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3, Video } from 'lucide-react';
@@ -18,22 +19,28 @@ import { fechaEvento, precioTexto, type Evento } from '@/lib/eventos/formato';
 export const dynamic = 'force-dynamic';
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<Record<string, string | undefined>> };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+/** El evento se busca una sola vez por visita (lo usan el título de la pestaña y la página). */
+const buscarEvento = cache(async (slug: string) => {
   const supabase = await supabaseServidor();
+  if (!supabase) return null;
+  const { data } = await supabase.from('eventos_privados').select('*').eq('slug', slug).maybeSingle<Evento>();
+  return data;
+});
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const { data } = supabase ? await supabase.from('eventos_privados').select('titulo').eq('slug', slug).maybeSingle() : { data: null };
-  return { title: `${data?.titulo ?? 'Evento'} | Portal del Alumno` };
+  const evento = await buscarEvento(slug);
+  return { title: `${evento?.titulo ?? 'Evento'} | Portal del Alumno` };
 }
 
 export default async function EventoPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const q = await searchParams;
   const supabase = await supabaseServidor();
-  const sesion = await getSesion();
   if (!supabase) notFound();
+  const [sesion, evento] = await Promise.all([getSesion(), buscarEvento(slug)]);
   // La administradora también ve los eventos ocultos (vista previa antes de publicarlos).
   const esAdmin = sesion?.perfil?.rol === 'admin';
-  const { data: evento } = await supabase.from('eventos_privados').select('*').eq('slug', slug).maybeSingle<Evento>();
   if (!evento || (!evento.visible && !esAdmin)) notFound();
 
   // Regreso desde Stripe: se confirma el pago aquí mismo por si el aviso de Stripe aún no llegó.
@@ -42,20 +49,26 @@ export default async function EventoPage({ params, searchParams }: Props) {
     try { await procesarSesionPagada(q.session_id); } catch (e) { errorPago = (e as Error).message; }
   }
 
-  // Cupos aprobados desde la administración con el correo de esta cuenta.
-  if (sesion) await vincularPorCorreo(sesion.id, sesion.correo);
-  let estado: EstadoUsuario = 'ninguno';
-  // Consultas independientes en paralelo (la página carga más rápido).
-  const [{ data: mias }, { data: hayCupo }] = await Promise.all([
-    sesion
-      ? supabase.from('inscripciones').select('estado').eq('evento_id', evento.id).eq('usuario_id', sesion.id).in('estado', ['pagada', 'verificacion', 'preinscrita', 'espera'])
-      : Promise.resolve({ data: null }),
+  const misInscripciones = () => sesion
+    ? supabase.from('inscripciones').select('estado').eq('evento_id', evento.id).eq('usuario_id', sesion.id).in('estado', ['pagada', 'verificacion', 'preinscrita', 'espera'])
+    : Promise.resolve({ data: null as { estado: string }[] | null });
+  // Todo lo que no depende de otra consulta sale a la vez (antes iba una detrás de otra).
+  const [vinculados, primera, { data: hayCupo }, salaGuardada, sinPrio] = await Promise.all([
+    // Cupos aprobados desde la administración con el correo de esta cuenta.
+    sesion ? vincularPorCorreo(sesion.id, sesion.correo) : 0,
+    misInscripciones(),
     evento.visible
       ? supabase.rpc('evento_hay_cupo', { p_evento: evento.id })
       // Vista previa de un evento oculto: la función de la base de datos solo cuenta eventos publicados.
       : supabase.from('inscripciones').select('id', { count: 'exact', head: true }).eq('evento_id', evento.id).in('estado', ['pagada', 'verificacion'])
         .then(r => ({ data: evento.inscripcion_abierta && (r.count ?? 0) < evento.cupos })),
+    sesion ? salaLista(evento.id) : false,
+    // Etapa de prioridad: solo compra la lista de espera del grupo anterior.
+    sesion ? sinPrioridad(evento, sesion.id, sesion.correo, esAdmin) : false,
   ]);
+  // Si se acaba de asignar un cupo por correo, se vuelve a leer el estado de esta cuenta.
+  const { data: mias } = vinculados ? await misInscripciones() : primera;
+  let estado: EstadoUsuario = 'ninguno';
   if (sesion) {
     const estados = (mias ?? []).map(m => m.estado as string);
     estado = estados.includes('pagada') ? 'pagada' : estados.includes('verificacion') ? 'verificacion' : estados.includes('preinscrita') ? 'preinscrita' : estados.includes('espera') ? 'espera' : 'ninguno';
@@ -63,11 +76,10 @@ export default async function EventoPage({ params, searchParams }: Props) {
   const precio = evento.precio_centavos === 0 ? 'Gratis' : precioTexto(evento.precio_centavos);
   // Con claves de Stripe: pago automático. Sin claves pero con enlace de pago: pago por enlace y verificación.
   const modo = evento.precio_centavos === 0 ? 'gratis' : stripeActivo ? 'stripe' : evento.enlace_pago ? 'enlace' : 'preinscripcion';
-  // Etapa de prioridad: solo compra la lista de espera del grupo anterior.
-  const bloqueo = sesion && estado === 'ninguno' && await sinPrioridad(evento, sesion.id, sesion.correo, sesion.perfil?.rol === 'admin') ? MENSAJE_PRIORIDAD : undefined;
+  const bloqueo = sesion && estado === 'ninguno' && sinPrio ? MENSAJE_PRIORIDAD : undefined;
   const inscripcion = (boton?: string) => <Inscripcion eventoId={evento.id} precio={precio} hayCupo={Boolean(hayCupo)} abierta={evento.inscripcion_abierta}
     modo={modo} enlacePago={evento.enlace_pago} correo={sesion?.correo} estado={estado} boton={boton} bloqueo={bloqueo} />;
-  const conSala = estado === 'pagada' && await salaLista(evento.id);
+  const conSala = estado === 'pagada' && salaGuardada;
 
   return <>
     <section className="lesson-head evento-head">
