@@ -46,7 +46,7 @@ export default async function EventosAdminPage() {
           return <tr key={e.id}>
             <td data-titulo="Evento"><Link href={`/admin/eventos/${e.id}`}><strong>{e.titulo}</strong></Link><small>/portal/eventos/{e.slug}</small></td>
             <td data-titulo="Fecha">{fechaEvento(e)}</td>
-            <td data-titulo="Valor">{precioTexto(e.precio_centavos)}</td>
+            <td data-titulo="Valor">{e.precio_centavos === 0 ? "Gratis" : precioTexto(e.precio_centavos)}</td>
             <td data-titulo="Cupos pagados"><strong>{c.pagada ?? 0}</strong> de {e.cupos}</td>
             <td data-titulo="Preinscritos / espera">{c.preinscrita ?? 0} / {c.espera ?? 0}</td>
             <td data-titulo="Estado">{!e.visible ? <span className="admin-tenue">Oculto</span> : e.inscripcion_abierta ? 'Inscripciones abiertas' : 'Inscripciones cerradas'}</td>
