@@ -59,6 +59,8 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
   (firmados ?? []).forEach((x, k) => { if (x.signedUrl) comprobantes.set(conComprobante[k].id, x.signedUrl); });
   const otros = (todos ?? []).map(o => ({ id: o.id as string, titulo: o.titulo as string, fecha: fechaEvento(o as Evento) }));
   const total = pagadas.reduce((s, f) => s + (f.monto_centavos ?? 0), 0);
+  // Evento gratis: sin ingresos ni pagos pendientes.
+  const gratis = e.precio_centavos === 0;
 
   const listaNombre = e.lista_de ? otros.find(o => o.id === e.lista_de) : null;
   const ahora = Date.now();
@@ -84,9 +86,9 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
     </header>
 
     <section className="cifras" aria-label="Cifras del evento">
-      <div className="cifra"><span>Cupos pagados</span><strong>{pagadas.length} de {e.cupos}</strong><small>{e.cupos - pagadas.length > 0 ? `${e.cupos - pagadas.length} disponibles` : 'Cupos agotados'}</small></div>
-      <div className="cifra"><span>Ingresos</span><strong>{precioTexto(total)}</strong><small>Antes de la comisión de Stripe</small></div>
-      <div className="cifra"><span>Preinscritos</span><strong>{filas.filter(f => f.estado === 'preinscrita').length}</strong><small>Sin pagar</small></div>
+      <div className="cifra"><span>{gratis ? 'Inscritos' : 'Cupos pagados'}</span><strong>{pagadas.length} de {e.cupos}</strong><small>{e.cupos - pagadas.length > 0 ? `${e.cupos - pagadas.length} disponibles` : 'Cupos agotados'}</small></div>
+      {!gratis && <div className="cifra"><span>Ingresos</span><strong>{precioTexto(total)}</strong><small>Antes de la comisión de Stripe</small></div>}
+      {!gratis && <div className="cifra"><span>Preinscritos</span><strong>{filas.filter(f => f.estado === 'preinscrita').length}</strong><small>Sin pagar</small></div>}
       <div className="cifra"><span>Lista de espera</span><strong>{filas.filter(f => f.estado === 'espera').length}</strong><small>Con cupos agotados</small></div>
     </section>
 
@@ -100,11 +102,11 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
       const lista = filas.filter(f => f.estado === g.estado);
       if (!lista.length && g.estado !== 'pagada') return null;
       return <section className="admin-panel" key={g.estado}>
-        <h2>{g.titulo} ({lista.length})</h2>
-        <p className="admin-nota">{g.nota}</p>
+        <h2>{gratis && g.estado === 'pagada' ? 'Inscritos' : g.titulo} ({lista.length})</h2>
+        <p className="admin-nota">{gratis && g.estado === 'pagada' ? 'Tienen su cupo, ven el acceso del evento en su portal y reciben los recordatorios.' : g.nota}</p>
         {lista.length === 0 ? <p className="admin-vacio">Todavía nadie.</p> : <>
           <div className="admin-tabla-contenedor"><table className="admin-tabla">
-            <thead><tr><th>Nombre</th><th>Correo</th>{g.estado === 'pagada' && <th>Teléfono</th>}<th>Fecha (hora del Este)</th>{g.estado === 'pagada' && <th>Pago</th>}</tr></thead>
+            <thead><tr><th>Nombre</th><th>Correo</th>{g.estado === 'pagada' && <th>Teléfono</th>}<th>Fecha (hora del Este)</th>{g.estado === 'pagada' && !gratis && <th>Pago</th>}</tr></thead>
             <tbody>{lista.map(f => <tr key={f.id}>
               <td data-titulo="Nombre"><strong>{f.nombre || '—'}</strong></td>
               <td data-titulo="Correo"><a href={`mailto:${f.correo}`}>{f.correo}</a>
@@ -113,7 +115,7 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
                 ? <a href={`https://wa.me/${f.telefono.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">{f.telefono}</a>
                 : <span className="admin-tenue">—</span>}</td>}
               <td data-titulo="Fecha">{fecha(f.pagado_en ?? f.creado_en)}</td>
-              {g.estado === 'pagada' && <td data-titulo="Pago">{precioTexto(f.monto_centavos ?? 0)}{comprobantes.has(f.id) && <small><a href={comprobantes.get(f.id)} target="_blank" rel="noopener noreferrer">Ver comprobante</a></small>}</td>}
+              {g.estado === 'pagada' && !gratis && <td data-titulo="Pago">{precioTexto(f.monto_centavos ?? 0)}{comprobantes.has(f.id) && <small><a href={comprobantes.get(f.id)} target="_blank" rel="noopener noreferrer">Ver comprobante</a></small>}</td>}
             </tr>)}</tbody>
           </table></div>
           <div className="admin-botones"><CopiarTexto texto={lista.map(f => f.correo).join(', ')} etiqueta="Copiar todos los correos" /></div>
