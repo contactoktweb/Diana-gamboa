@@ -6,7 +6,7 @@ import { NIVELES } from '@/data/reto';
 import { supabaseServidor } from '@/lib/supabase/servidor';
 
 interface Alumno {
-  id: string; nombre: string; correo: string; rol: 'alumno' | 'admin'; creado_en: string; acepta_novedades: boolean;
+  id: string; nombre: string; correo: string; rol: 'alumno' | 'admin' | 'moderador'; creado_en: string; acepta_novedades: boolean;
   pais: string | null; primer_nivel: string | null; primer_puntaje: number | null; ultimo_nivel: string | null; ultimo_puntaje: number | null; retos_completos: number;
 }
 
@@ -60,13 +60,13 @@ export default async function AlumnosPage({ searchParams }: Props) {
       : <div className="admin-tabla-contenedor"><table className="admin-tabla">
         <thead><tr><th>Nombre</th><th>Correo</th><th>Registro</th><th>Nivel inicial</th><th>Nivel actual</th><th>Novedades</th><th><span className="sr-only">Acciones</span></th></tr></thead>
         <tbody>{alumnos.map(a => <tr key={a.id}>
-          <td data-titulo="Nombre"><strong>{a.nombre}</strong>{a.rol === 'admin' && <span className="admin-insignia">Administración</span>}{a.pais && <small>{a.pais}</small>}</td>
+          <td data-titulo="Nombre"><strong>{a.nombre}</strong>{a.rol === 'admin' && <span className="admin-insignia">Administración</span>}{a.rol === 'moderador' && <span className="admin-insignia">Moderador</span>}{a.pais && <small>{a.pais}</small>}</td>
           <td data-titulo="Correo"><a href={`mailto:${a.correo}`}>{a.correo}</a></td>
           <td data-titulo="Registro">{fecha(a.creado_en)}</td>
           <td data-titulo="Nivel inicial">{a.primer_nivel ? <>{a.primer_nivel} ({a.primer_puntaje}/20)<small><a href={`/admin/reto?usuario=${a.id}&estado=todos`}>Ver {a.retos_completos === 1 ? 'su reto' : `sus ${a.retos_completos} retos`}</a></small></> : <span className="admin-tenue">Sin reto</span>}</td>
           <td data-titulo="Nivel actual">{a.ultimo_nivel && a.retos_completos > 1 ? `${a.ultimo_nivel} (${a.ultimo_puntaje}/20)` : <span className="admin-tenue">—</span>}</td>
           <td data-titulo="Novedades">{a.acepta_novedades ? 'Sí' : 'No'}</td>
-          <td><AccionesAlumno id={a.id} nombre={a.nombre} esAdmin={a.rol === 'admin'} /></td>
+          <td><AccionesAlumno id={a.id} nombre={a.nombre} esAdmin={a.rol === 'admin'} esModerador={a.rol === 'moderador'} /></td>
         </tr>)}</tbody>
       </table></div>}
   </>;

@@ -5,7 +5,7 @@ import { supabaseActivo } from '@/lib/supabase/config';
 import { supabaseServidor } from '@/lib/supabase/servidor';
 
 export interface Perfil {
-  id: string; nombre: string; correo: string; rol: 'alumno' | 'admin';
+  id: string; nombre: string; correo: string; rol: 'alumno' | 'admin' | 'moderador';
   acepta_novedades: boolean; pais: string | null; experiencia: string | null; intereses: string | null;
 }
 

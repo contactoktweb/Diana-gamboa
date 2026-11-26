@@ -92,6 +92,16 @@ export async function crearAlumnoProvisional(nombreIngresado: string, correoIngr
   return { ok: true };
 }
 
+/** Da o quita el rol de moderador de las clases (coanfitrión en Zoom). */
+export async function cambiarModerador(usuario: string, moderador: boolean): Promise<Resultado> {
+  const c = await clienteAdmin();
+  if ('error' in c) return { ok: false, error: c.error! };
+  const { error } = await c.supabase.rpc('admin_cambiar_rol', { p_usuario: usuario, p_rol: moderador ? 'moderador' : 'alumno' });
+  if (error) return { ok: false, error: /Rol no válido|check/i.test(error.message) ? 'Falta ejecutar supabase/moderador.sql en Supabase.' : error.message };
+  revalidatePath('/admin/alumnos');
+  return { ok: true };
+}
+
 export async function eliminarUsuario(usuario: string): Promise<Resultado> {
   const c = await clienteAdmin();
   if ('error' in c) return { ok: false, error: c.error! };

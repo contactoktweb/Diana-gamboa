@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         'Nivel inicial (primer reto)', 'Puntaje inicial', ...cats.map(c => `${CATEGORIAS[c].nombre} (aciertos)`), 'Nivel actual (último reto)', 'Puntaje actual', 'Retos completados', 'Último reto'];
       filas = lista.map(a => {
         const pc = a.primer_por_categoria as Record<string, { aciertos: number; total: number }> | null;
-        return [a.nombre as string, a.correo as string, a.rol === 'admin' ? 'Administración' : 'Alumno', fecha(a.creado_en as string), Boolean(a.acepta_novedades),
+        return [a.nombre as string, a.correo as string, a.rol === 'admin' ? 'Administración' : a.rol === 'moderador' ? 'Moderador' : 'Alumno', fecha(a.creado_en as string), Boolean(a.acepta_novedades),
           (a.pais as string) ?? '', (a.experiencia as string) ?? '', (a.intereses as string) ?? '',
           (a.primer_nivel as string) ?? 'Sin reto', (a.primer_puntaje as number) ?? null,
           ...cats.map(c => (pc?.[c] ? `${pc[c].aciertos}/${pc[c].total}` : '')),

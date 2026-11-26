@@ -22,7 +22,8 @@ export async function accesoSala(slug: string): Promise<AccesoSala> {
   const { data: evento } = await admin.from('eventos_privados').select('*').eq('slug', slug).maybeSingle<Evento>();
   const anfitriona = sesion.perfil?.rol === 'admin';
   if (!evento || (!evento.visible && !anfitriona)) return { ok: false, motivo: 'evento' };
-  if (!anfitriona) {
+  const moderador = sesion.perfil?.rol === 'moderador';
+  if (!anfitriona && !moderador) {
     const { data: pago } = await admin.from('inscripciones').select('id').eq('evento_id', evento.id).eq('usuario_id', sesion.id).eq('estado', 'pagada').limit(1).maybeSingle();
     if (!pago) return { ok: false, motivo: 'sin_pago', evento };
   }

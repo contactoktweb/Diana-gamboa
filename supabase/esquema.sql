@@ -24,7 +24,7 @@ create table if not exists public.perfiles (
   id                  uuid primary key references auth.users (id) on delete cascade,
   nombre              text not null default '',
   correo              text not null default '',
-  rol                 text not null default 'alumno' check (rol in ('alumno', 'admin')),
+  rol                 text not null default 'alumno' check (rol in ('alumno', 'admin', 'moderador')),
   acepta_terminos_en  timestamptz,
   acepta_novedades    boolean not null default false,
   pais                text,
@@ -393,7 +393,7 @@ create or replace function public.admin_cambiar_rol(p_usuario uuid, p_rol text)
 returns void language plpgsql security definer set search_path = public as $$
 begin
   if not public.es_admin() then raise exception 'No autorizado'; end if;
-  if p_rol not in ('alumno', 'admin') then raise exception 'Rol no válido'; end if;
+  if p_rol not in ('alumno', 'admin', 'moderador') then raise exception 'Rol no válido'; end if;
   if p_usuario = auth.uid() and p_rol <> 'admin' then raise exception 'No puedes quitarte tu propio acceso de administración'; end if;
   update perfiles set rol = p_rol, actualizado_en = now() where id = p_usuario;
 end $$;

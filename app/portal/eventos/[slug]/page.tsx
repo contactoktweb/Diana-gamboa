@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { AlertTriangle, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3, Video } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CalendarDays, CheckCircle2, ChevronRight, Clock3, ShieldCheck, Video } from 'lucide-react';
 import Inscripcion, { type EstadoUsuario } from '@/components/eventos/Inscripcion';
 import TextoEvento from '@/components/eventos/TextoEvento';
 import HoraLocal from '@/components/eventos/HoraLocal';
@@ -41,6 +41,7 @@ export default async function EventoPage({ params, searchParams }: Props) {
   const [sesion, evento] = await Promise.all([getSesion(), buscarEvento(slug)]);
   // La administradora también ve los eventos ocultos (vista previa antes de publicarlos).
   const esAdmin = sesion?.perfil?.rol === 'admin';
+  const esModerador = sesion?.perfil?.rol === 'moderador';
   if (!evento || (!evento.visible && !esAdmin)) notFound();
 
   // Regreso desde Stripe: se confirma el pago aquí mismo por si el aviso de Stripe aún no llegó.
@@ -104,12 +105,25 @@ export default async function EventoPage({ params, searchParams }: Props) {
         {q.pago === 'ok' && estado === 'pagada' && <p className="auth-ok evento-aviso" role="status"><CheckCircle2 size={18} aria-hidden="true" /> ¡Gracias por tu confianza! Tu pago fue aprobado y ya tienes tu cupo. Te enviamos la confirmación por correo.</p>}
         {q.pago === 'ok' && estado !== 'pagada' && <p className="auth-ok evento-aviso" role="status">Estamos confirmando tu pago con Stripe. Si en unos minutos no aparece tu cupo, recarga esta página. {errorPago}</p>}
         {q.pago === 'cancelado' && <p className="auth-error evento-aviso" role="alert">El pago no se completó y no se te cobró nada. Puedes intentarlo de nuevo.</p>}
-        {inscripcion()}
+        {esModerador ? <p className="evento-estado es-ok"><ShieldCheck size={20} aria-hidden="true" /> Eres moderador de este evento: no necesitas inscribirte.</p> : inscripcion()}
       </div>
     </section>
 
     <div className="wrap lesson-body evento-cuerpo">
-      {estado === 'pagada' && <section className="evento-acceso" aria-label="Tu acceso">
+      {esModerador && <section className="evento-acceso evento-moderacion" aria-label="Moderación">
+        <h2><ShieldCheck size={22} aria-hidden="true" /> Moderación de la clase</h2>
+        {salaGuardada ? <>
+          <a href={`/api/zoom/moderar?evento=${encodeURIComponent(evento.slug)}`} target="_blank" rel="noopener noreferrer" className="btn btn-green btn-lg"><Video size={20} aria-hidden="true" /> Entrar como moderador (Zoom)</a>
+          <ol className="evento-moderacion-pasos">
+            <li>Se abre la clase en tu <strong>aplicación de Zoom</strong>, con tu nombre (moderador).</li>
+            <li>Diana te nombra <strong>coanfitrión</strong> (Participantes → tu nombre → Más → Nombrar coanfitrión).</li>
+            <li>Desde <strong>Participantes</strong> puedes silenciar, detener el video o sacar a alguien; en el <strong>chat</strong>, borrar mensajes y elegir quién puede escribir.</li>
+            <li>Para cambiar lo que Diana muestra: cuando comparta su pantalla completa, pulsa <strong>Ver opciones → Solicitar control remoto</strong>. O comparte tú la pantalla desde tu computador.</li>
+          </ol>
+        </> : <p className="evento-sala-pronto"><Clock3 size={18} aria-hidden="true" /><span>El botón para entrar como moderador aparecerá aquí cuando la sala de la clase esté creada.</span></p>}
+      </section>}
+
+      {estado === 'pagada' && !esModerador && <section className="evento-acceso" aria-label="Tu acceso">
         <h2><CheckCircle2 size={22} aria-hidden="true" /> Tu acceso al evento</h2>
         {!conSala && <p className="evento-sala-pronto"><Clock3 size={18} aria-hidden="true" /><span>El botón <strong>«Entrar a la clase»</strong> aparecerá aquí cuando la sala esté disponible, antes de la hora de inicio. También te avisaremos por correo.</span></p>}
         {conSala && <div className="evento-sala">
@@ -121,7 +135,7 @@ export default async function EventoPage({ params, searchParams }: Props) {
 
       <article className="evento-texto"><TextoEvento texto={evento.contenido} /></article>
 
-      {estado !== 'pagada' && <section className="evento-reserva" aria-labelledby="reserva-titulo">
+      {estado !== 'pagada' && !esModerador && <section className="evento-reserva" aria-labelledby="reserva-titulo">
         <h2 id="reserva-titulo">Reserva tu cupo</h2>
         {evento.detalles && <p>{evento.detalles}</p>}
         <p className="evento-nota">Inscripciones abiertas hasta llenar los cupos.</p>
