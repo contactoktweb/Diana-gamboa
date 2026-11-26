@@ -58,6 +58,7 @@ export default async function SalaPage({ params }: { params: Promise<{ slug: str
       {volver}
       <h1><Video size={20} aria-hidden="true" /> {a.evento.titulo}</h1>
       <p>{a.anfitriona ? 'Entras como anfitriona: das paso a los alumnos desde la sala de espera.' : 'Escribe tu nombre completo si Zoom te lo pide: así te reconocemos en la sala de espera.'}</p>
+      <p className="sala-ayuda"><strong>¿Cambiar de cámara o micrófono?</strong> En la barra inferior de la clase, pulsa la flechita <strong>^</strong> junto a <strong>«Video»</strong> (o junto a <strong>«Audio»</strong>) y elige el dispositivo. También en <strong>Más → Configuración → Video</strong>.</p>
     </div>
     <SalaZoom slug={a.evento.slug} />
   </section>;
