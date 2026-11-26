@@ -70,7 +70,7 @@ export default function SalaZoomAdmin({ eventoId, slug, sala, sdkActivo, apiActi
     </details>
 
     {sala && <div className="admin-botones">
-      <a className="btn btn-green btn-sm" href={`/portal/eventos/${slug}/sala`} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden="true" /> Ver la sala como la ven los alumnos</a>
+      <a className="btn btn-green btn-sm" href={`/portal/eventos/${slug}/sala`} target="_blank" rel="noopener noreferrer"><Video size={16} aria-hidden="true" /> {apiActiva ? 'Entrar a la clase como anfitriona' : 'Ver la sala como la ven los alumnos'}</a>
       <button type="button" className="btn btn-outline btn-sm es-peligro" disabled={pendiente} onClick={() => { if (confirm('¿Quitar la sala? Los inscritos dejarán de ver el botón «Entrar a la clase».')) ejecutar(() => quitarSalaZoom(eventoId)); }}><Trash2 size={16} aria-hidden="true" /> Quitar sala</button>
     </div>}
     {sala && !apiActiva && <small className="editor-ayuda">Inicia la reunión en tu aplicación de Zoom con la cuenta Pro de Diana; los alumnos entran con el botón de su portal.</small>}
