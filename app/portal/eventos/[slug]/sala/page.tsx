@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowLeft, Clock3, ExternalLink, Lock, Video } from 'lucide-react';
+import { ArrowLeft, Clock3, ExternalLink, HelpCircle, Lock, Video } from 'lucide-react';
 import CopiarTexto from '@/components/admin/CopiarTexto';
 import SalaZoom from '@/components/eventos/SalaZoom';
 import HoraLocal from '@/components/eventos/HoraLocal';
@@ -57,8 +57,17 @@ export default async function SalaPage({ params }: { params: Promise<{ slug: str
     <div className="wrap sala-cabecera">
       {volver}
       <h1><Video size={20} aria-hidden="true" /> {a.evento.titulo}</h1>
-      <p>{a.anfitriona ? 'Entras como anfitriona: al entrar se inicia la clase y los inscritos entran directo.' : 'Si la clase aún no empieza, verás «Esperando a que el anfitrión inicie la reunión»: entrarás solo en cuanto Diana la inicie.'}</p>
-      <p className="sala-ayuda"><strong>¿Cambiar de cámara o micrófono?</strong> En la barra inferior de la clase, pulsa la flechita <strong>^</strong> junto a <strong>«Video»</strong> (o junto a <strong>«Audio»</strong>) y elige el dispositivo. También en <strong>Más → Configuración → Video</strong>.</p>
+      {a.anfitriona && <span className="sala-rol">Anfitriona</span>}
+      <details className="sala-ayuda">
+        <summary><HelpCircle size={16} aria-hidden="true" /> Ayuda</summary>
+        <ul>
+          <li><strong>Cambiar cámara o micrófono:</strong> en la barra inferior, flechita <strong>^</strong> junto a «Video» o «Audio».</li>
+          {a.anfitriona
+            ? <li><strong>Al entrar se inicia la clase</strong> y los inscritos entran directo.</li>
+            : <li><strong>¿Dice «Esperando al anfitrión»?</strong> La clase aún no empieza: entrarás solo cuando Diana la inicie.</li>}
+          <li><strong>No te escuchan o no te ven:</strong> permite el micrófono y la cámara en el candado de la barra de direcciones y recarga.</li>
+        </ul>
+      </details>
     </div>
     <SalaZoom slug={a.evento.slug} />
   </section>;
