@@ -1191,6 +1191,7 @@ html:has(.barra-navegacion.is-activa){cursor:progress}
 .sala-express ol{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--ink)}
 .enlace-compartir{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:6px;color:var(--muted)}
 .enlace-compartir a{color:var(--green-900);overflow-wrap:anywhere}
-.sala-ayuda{margin:6px 0 0;padding:10px 14px;border-radius:12px;background:var(--green-50);color:var(--green-900);font-size:.92rem;line-height:1.5}
+.sala-ayuda{margin:6px 0 0;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(203,165,47,.35);color:#E8EFEB;font-size:.92rem;line-height:1.5}
+.sala-ayuda strong{color:#fff}
 .sala-crear{align-items:end}
 .evento-sala-pronto{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:12px 14px;border-radius:12px;background:var(--green-50);color:var(--green-900);line-height:1.5}

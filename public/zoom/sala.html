@@ -90,7 +90,15 @@
         mostrar('No puedes entrar todavía', d.error || 'Vuelve a intentarlo.', botones);
         return;
       }
-      if (d.aviso) { var av = document.getElementById('aviso'); av.textContent = d.aviso; av.style.display = 'block'; setTimeout(function () { av.style.display = 'none'; }, 15000); }
+      if (d.aviso) {
+        // Aviso para la anfitriona (por ejemplo, Zoom no dio permiso de anfitriona): queda visible hasta cerrarlo.
+        var av = document.getElementById('aviso');
+        av.innerHTML = '';
+        var t = document.createElement('span'); t.textContent = 'No se pudo entrar como anfitriona: ' + d.aviso + ' Entraste como participante.';
+        var x = document.createElement('button'); x.type = 'button'; x.textContent = 'Cerrar'; x.style.cssText = 'margin-left:10px;border:0;background:#5B4A12;color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer';
+        x.onclick = function () { av.style.display = 'none'; };
+        av.appendChild(t); av.appendChild(x); av.style.display = 'block';
+      }
       var salir = location.origin + location.pathname + '?evento=' + encodeURIComponent(evento) + '&salio=1';
       var raiz = document.getElementById('zmmtg-root');
       if (raiz) raiz.style.display = 'block';
