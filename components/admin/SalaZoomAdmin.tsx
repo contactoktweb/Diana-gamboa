@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, ExternalLink, Loader2, Save, Sparkles, Trash2, Video } from 'lucide-react';
+import { CheckCircle2, ExternalLink, Loader2, Save, Sparkles, Trash2, Video, Zap } from 'lucide-react';
 import { crearSalaZoom, guardarSalaZoom, quitarSalaZoom } from '@/app/admin/eventos/acciones';
 import { useAccion } from './useAccion';
 import CopiarTexto from './CopiarTexto';
@@ -42,7 +42,21 @@ export default function SalaZoomAdmin({ eventoId, slug, sala, sdkActivo, apiActi
       }}><Sparkles size={16} aria-hidden="true" /> {sala ? 'Crear una reunión nueva en Zoom' : 'Crear la reunión en Zoom automáticamente'}</button>
     </div>}
 
-    <details className="sala-manual" open={!apiActiva && !sala}>
+    {!apiActiva && <div className="sala-express">
+      <h3><Zap size={18} aria-hidden="true" /> Reunión express (para probar o para empezar ya)</h3>
+      <ol>
+        <li>Pulsa <strong>«Crear reunión express»</strong>: se abre Zoom e inicia una reunión al instante con tu cuenta (sirve también una cuenta gratis, con límite de 40 minutos).</li>
+        <li>En Zoom pulsa <strong>Participantes → Invitar → Copiar enlace de invitación</strong> (o el ícono de información <strong>ⓘ</strong> → Copiar enlace).</li>
+        <li>Pégalo abajo en «Enlace de invitación de Zoom» y pulsa <strong>Guardar sala</strong>. Los inscritos ya pueden entrar.</li>
+      </ol>
+      <div className="admin-botones">
+        <a className="btn btn-gold btn-sm" href="https://zoom.us/start/videomeeting" target="_blank" rel="noopener noreferrer"><Zap size={16} aria-hidden="true" /> Crear reunión express</a>
+        <a className="btn btn-outline btn-sm" href="https://zoom.us/meeting/schedule" target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden="true" /> Programar una reunión con fecha</a>
+      </div>
+      <small className="editor-ayuda">La reunión debe ser de la misma cuenta de Zoom donde creaste la app del Meeting SDK. Activa la sala de espera para dar paso solo a quienes reconoces.</small>
+    </div>}
+
+    <details className="sala-manual" open={!apiActiva}>
       <summary>{apiActiva ? 'O pega una reunión que ya creaste' : sala ? 'Cambiar la reunión' : 'Datos de la reunión (créala en zoom.us → Reuniones → Programar → Copiar invitación)'}</summary>
       <div className="form-evento-fila">
         <label className="editor-campo"><span className="editor-etiqueta">Enlace de invitación de Zoom (o el ID de la reunión)</span>
