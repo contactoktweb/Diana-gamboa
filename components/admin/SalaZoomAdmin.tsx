@@ -53,7 +53,6 @@ export default function SalaZoomAdmin({ eventoId, slug, sala, sdkActivo, apiActi
         <a className="btn btn-gold btn-sm" href="https://zoom.us/start/videomeeting" target="_blank" rel="noopener noreferrer"><Zap size={16} aria-hidden="true" /> Crear reunión express</a>
         <a className="btn btn-outline btn-sm" href="https://zoom.us/meeting/schedule" target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden="true" /> Programar una reunión con fecha</a>
       </div>
-      <small className="editor-ayuda">La reunión debe ser de la misma cuenta de Zoom donde creaste la app del Meeting SDK. Activa la sala de espera para dar paso solo a quienes reconoces.</small>
     </div>}
 
     <details className="sala-manual" open={!apiActiva}>
