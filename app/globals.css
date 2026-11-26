@@ -1193,3 +1193,4 @@ html:has(.barra-navegacion.is-activa){cursor:progress}
 .enlace-compartir a{color:var(--green-900);overflow-wrap:anywhere}
 .sala-ayuda{margin:6px 0 0;padding:10px 14px;border-radius:12px;background:var(--green-50);color:var(--green-900);font-size:.92rem;line-height:1.5}
 .sala-crear{align-items:end}
+.evento-sala-pronto{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:12px 14px;border-radius:12px;background:var(--green-50);color:var(--green-900);line-height:1.5}
