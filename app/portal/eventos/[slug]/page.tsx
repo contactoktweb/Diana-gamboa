@@ -59,9 +59,9 @@ export default async function EventoPage({ params, searchParams }: Props) {
     const estados = (mias ?? []).map(m => m.estado as string);
     estado = estados.includes('pagada') ? 'pagada' : estados.includes('verificacion') ? 'verificacion' : estados.includes('preinscrita') ? 'preinscrita' : estados.includes('espera') ? 'espera' : 'ninguno';
   }
-  const precio = precioTexto(evento.precio_centavos);
+  const precio = evento.precio_centavos === 0 ? 'Gratis' : precioTexto(evento.precio_centavos);
   // Con claves de Stripe: pago automático. Sin claves pero con enlace de pago: pago por enlace y verificación.
-  const modo = stripeActivo ? 'stripe' : evento.enlace_pago ? 'enlace' : 'preinscripcion';
+  const modo = evento.precio_centavos === 0 ? 'gratis' : stripeActivo ? 'stripe' : evento.enlace_pago ? 'enlace' : 'preinscripcion';
   // Etapa de prioridad: solo compra la lista de espera del grupo anterior.
   const bloqueo = sesion && estado === 'ninguno' && await sinPrioridad(evento, sesion.id, sesion.correo, sesion.perfil?.rol === 'admin') ? MENSAJE_PRIORIDAD : undefined;
   const inscripcion = (boton?: string) => <Inscripcion eventoId={evento.id} precio={precio} hayCupo={Boolean(hayCupo)} abierta={evento.inscripcion_abierta}

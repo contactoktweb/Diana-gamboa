@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { ArrowRight, CheckCircle2, Clock3, ExternalLink, Lock, Upload, X } from 'lucide-react';
-import { avisarPagoRealizado, iniciarInscripcion, unirseListaEspera } from '@/app/portal/eventos/acciones';
+import { avisarPagoRealizado, iniciarInscripcion, inscribirGratis, unirseListaEspera } from '@/app/portal/eventos/acciones';
 
 export type EstadoUsuario = 'ninguno' | 'pagada' | 'verificacion' | 'preinscrita' | 'espera';
-type Modo = 'stripe' | 'enlace' | 'preinscripcion';
+type Modo = 'stripe' | 'enlace' | 'preinscripcion' | 'gratis';
 
 /** Reduce las fotos grandes del celular antes de enviarlas (máximo 2000 px, JPEG). */
 async function prepararComprobante(archivo: File): Promise<File> {
@@ -100,7 +100,16 @@ export default function Inscripcion({ eventoId, precio, hayCupo, abierta, modo, 
         ? <button type="button" className="btn btn-green btn-lg" onClick={() => setAbiertoPanel(true)}>{actual === 'preinscrita' ? 'Completar mi pago' : boton} <ArrowRight aria-hidden="true" /></button>
         : <div className="evento-pago" role="region" aria-label="Inscripción">
           <p className="evento-pago-etiqueta">Valor del evento</p>
-          <p className="evento-pago-precio">{precio} <small>USD · pago único</small></p>
+          <p className="evento-pago-precio">{precio} {modo !== 'gratis' && <small>USD · pago único</small>}</p>
+
+          {modo === 'gratis' && <>
+            <p className="evento-nota">Este evento es gratuito. Al inscribirte queda tu cupo y te llega un correo con los detalles.</p>
+            <label className="check"><input type="checkbox" checked={acepta} onChange={e => setAcepta(e.target.checked)} /> <span>Entiendo que es un evento educativo, no asesoría financiera.</span></label>
+            <div className="evento-pago-botones">
+              <button type="button" className="btn btn-green btn-lg" disabled={!acepta || pendiente} onClick={() => ejecutar(() => inscribirGratis(eventoId), 'pagada')}>{pendiente ? 'Un momento…' : 'Inscribirme gratis'} <ArrowRight aria-hidden="true" /></button>
+              <button type="button" className="btn btn-outline btn-sm" onClick={() => setAbiertoPanel(false)} disabled={pendiente}>Cancelar</button>
+            </div>
+          </>}
 
           {modo === 'stripe' && <>
             <p className="evento-nota"><Lock size={16} aria-hidden="true" /> Pago seguro con tarjeta de crédito o débito, Apple Pay o Google Pay, a través de Stripe. Tu cupo queda apartado mientras pagas.</p>

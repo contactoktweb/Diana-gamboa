@@ -29,6 +29,27 @@ async function datos(eventoId: string) {
   return { sesion, admin, evento, nombre, bloqueado };
 }
 
+/** Evento gratis: la persona queda inscrita al instante (sin Stripe) y recibe su correo de bienvenida. */
+export async function inscribirGratis(eventoId: string): Promise<Resultado> {
+  const d = await datos(eventoId);
+  if (!d) return { ok: false, error: 'Inicia sesión de nuevo para inscribirte.' };
+  const { sesion, admin, evento, nombre, bloqueado } = d;
+  if (bloqueado) return { ok: false, error: MENSAJE_PRIORIDAD };
+  if (evento.precio_centavos !== 0) return { ok: false, error: 'Este evento no es gratis.' };
+  // Aparta el cupo con las mismas reglas que un pago (cupos, inscripción abierta, sin duplicados) y lo confirma al momento.
+  const { data, error } = await admin.rpc('reservar_cupo', { p_evento: evento.id, p_usuario: sesion.id, p_nombre: nombre, p_correo: sesion.correo, p_minutos: 30 });
+  const r = (data as { resultado: string; inscripcion: string | null }[] | null)?.[0];
+  if (error || !r) return { ok: false, error: 'No se pudo completar tu inscripción. Inténtalo de nuevo.' };
+  if (r.resultado === 'ya_inscrito') return { ok: false, error: 'Ya estás inscrito en este evento.' };
+  if (r.resultado === 'agotado') return { ok: false, agotado: true, error: 'Los cupos se agotaron.' };
+  if (r.resultado !== 'ok' || !r.inscripcion) return { ok: false, error: 'Las inscripciones de este evento están cerradas.' };
+  const { error: e2 } = await admin.rpc('confirmar_pago', { p_inscripcion: r.inscripcion, p_session: null, p_pago: null, p_monto: 0 });
+  if (e2) return { ok: false, error: 'No se pudo completar tu inscripción. Inténtalo de nuevo.' };
+  await avisarInscripcion(r.inscripcion, { admin: true, alumno: true }).catch(() => null);
+  revalidatePath(`/portal/eventos/${evento.slug}`);
+  return { ok: true, aviso: 'Listo, ya tienes tu cupo. Te enviamos un correo con los detalles.' };
+}
+
 /**
  * «Reserva tu lugar». Con Stripe activo, aparta el cupo y devuelve la página de pago.
  * Sin Stripe, guarda una preinscripción para enviar después el enlace de pago.

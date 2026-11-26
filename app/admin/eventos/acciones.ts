@@ -40,7 +40,7 @@ export async function guardarEvento(d: DatosEvento): Promise<Resultado> {
   const listaDe = d.solo_lista_espera && d.lista_de && d.lista_de !== d.id ? d.lista_de : null;
   if (d.solo_lista_espera && !listaDe) return { ok: false, error: 'Elige de qué evento es la lista de espera con prioridad.' };
   if (!/^[a-z0-9-]{2,60}$/.test(slug)) return { ok: false, error: 'La dirección solo puede tener letras minúsculas, números y guiones.' };
-  if (!Number.isFinite(precio) || precio < 50) return { ok: false, error: 'Escribe un valor válido en dólares (mínimo 0.50).' };
+  if (!Number.isFinite(precio) || precio < 0 || (precio > 0 && precio < 50)) return { ok: false, error: 'Escribe el valor en dólares: 0 para un evento gratis, o desde 0.50 si es de pago.' };
   if (!Number.isInteger(cupos) || cupos < 1 || cupos > 10000) return { ok: false, error: 'Los cupos deben ser un número entre 1 y 10.000.' };
   const exacta = d.fecha_tipo === 'exacta';
   if (exacta && !d.fecha) return { ok: false, error: 'Elige la fecha exacta o cambia a «Fecha aproximada».' };

@@ -94,10 +94,10 @@ export default function FormEvento({ inicial, otros = [] }: { inicial: DatosEven
 
     <h2>Cupos y pago</h2>
     <div className="form-evento-fila">
-      <label className="editor-campo"><span className="editor-etiqueta">Valor (USD)</span><input inputMode="decimal" value={d.precio} onChange={e => cambiar({ precio: e.target.value })} placeholder="98.99" /></label>
+      <label className="editor-campo"><span className="editor-etiqueta">Valor (USD)</span><input inputMode="decimal" value={d.precio} onChange={e => cambiar({ precio: e.target.value })} placeholder="Ej.: 99 · 0 = gratis" /></label>
       <label className="editor-campo"><span className="editor-etiqueta">Cupos</span><input type="number" min={1} value={d.cupos} onChange={e => cambiar({ cupos: Number(e.target.value) })} /></label>
     </div>
-    <small className="editor-ayuda">El pago es con tarjeta en Stripe: al pagar, el alumno queda inscrito solo y recibe su correo de bienvenida. Los alumnos no ven cuántos cupos quedan, solo si hay o no.</small>
+    <small className="editor-ayuda">Escribe <strong>0</strong> para un evento gratis: el alumno se inscribe con un clic, sin pagar. Si tiene valor, el pago es con tarjeta en Stripe: al pagar, el alumno queda inscrito solo y recibe su correo de bienvenida. Los alumnos no ven cuántos cupos quedan, solo si hay o no.</small>
     <label className="check"><input type="checkbox" checked={d.inscripcion_abierta} onChange={e => cambiar({ inscripcion_abierta: e.target.checked })} /> <span>Inscripciones abiertas</span></label>
     <fieldset className="form-evento-publicacion">
       <legend className="editor-etiqueta">¿Quién puede ver el evento?</legend>
