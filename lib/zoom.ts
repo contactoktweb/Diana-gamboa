@@ -75,7 +75,7 @@ export async function zakAnfitriona() {
 
 /**
  * Crea una reunión recurrente (un día por cada día del evento, a la misma hora),
- * con sala de espera y código. Devuelve el número y el código de la reunión.
+ * sin sala de espera (los inscritos entran directo cuando la anfitriona inicia) y con código. Devuelve el número y el código de la reunión.
  */
 export async function crearReunionZoom({ titulo, inicio, dias, duracionMin }: { titulo: string; inicio: string; dias: number; duracionMin: number }) {
   const cuerpo = {
@@ -86,7 +86,7 @@ export async function crearReunionZoom({ titulo, inicio, dias, duracionMin }: { 
     timezone: 'America/New_York',
     ...(dias > 1 ? { recurrence: { type: 1, repeat_interval: 1, end_times: dias } } : {}),
     settings: {
-      waiting_room: true, join_before_host: false, mute_upon_entry: true,
+      waiting_room: false, join_before_host: false, mute_upon_entry: true,
       host_video: true, participant_video: false, approval_type: 2,
       auto_recording: 'cloud', meeting_authentication: false,
     },

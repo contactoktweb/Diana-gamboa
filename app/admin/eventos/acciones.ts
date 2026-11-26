@@ -194,7 +194,7 @@ export async function crearSalaZoom(eventoId: string, duracionMin: number): Prom
   }
   revalidatePath('/admin/eventos', 'layout');
   revalidatePath('/portal/eventos', 'layout');
-  return { ok: true, aviso: 'Reunión creada en tu cuenta de Zoom (con sala de espera y grabación en la nube) y guardada.' };
+  return { ok: true, aviso: 'Reunión creada en tu cuenta de Zoom y guardada. Los inscritos entran directo en cuanto inicias la clase (grabación en la nube activada).' };
 }
 
 export async function quitarSalaZoom(eventoId: string): Promise<Simple> {

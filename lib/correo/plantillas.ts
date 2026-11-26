@@ -186,7 +186,7 @@ export function correoRecordatorio({ sitio, nombre, evento, tipo, dia, numeroDia
       'Pulsa <strong>«Entrar a la clase»</strong> en este correo (o en tu portal) unos <strong>10 minutos antes</strong>.',
       'Si te pide iniciar sesión, usa el mismo correo con el que compraste tu cupo.',
       'El botón te lleva directo a la clase por Zoom (también puedes entrar desde el navegador).',
-      'Usa Chrome o Edge en un computador y permite el micrófono y la cámara. Diana te dará paso desde la sala de espera.',
+      'Usa Chrome o Edge en un computador y permite el micrófono y la cámara. Entrarás en cuanto Diana inicie la clase.',
     ])}`,
     ...(tipo === 'vispera' ? ['<strong>Ten a mano</strong> tu plataforma de opciones y un cuaderno para los ejercicios.'] : []),
   ];
@@ -223,7 +223,7 @@ export function correoBienvenidaTaller({ sitio, nombre, evento, fechas, hora, ho
     `Tu cupo en <strong>${esc(evento)}</strong> está confirmado. Gracias por tu confianza: nos vemos muy pronto en clase.`,
     `<strong>Fechas:</strong> ${esc(fechas)}${hora ? `<br><strong>Hora:</strong> ${esc(hora)}` : ''}`,
     ...(horas?.length ? [`<strong>La hora en tu país</strong>${tablaHoras(horas)}`] : []),
-    `<strong>Cómo entrar a la clase</strong>${lista([...COMO_ENTRAR, 'Entra 10 minutos antes y escribe tu nombre completo si te lo piden: así te reconocemos en la sala de espera.', 'Te enviaremos un recordatorio un día antes y otro el mismo día.'])}`,
+    `<strong>Cómo entrar a la clase</strong>${lista([...COMO_ENTRAR, 'Entra 10 minutos antes y escribe tu nombre completo si te lo piden.', 'Te enviaremos un recordatorio un día antes y otro el mismo día.'])}`,
     `<strong>Ten a mano</strong>${lista(['Tu plataforma de opciones, por si quieres ubicar la cadena de opciones mientras explicamos.', 'Un cuaderno o tus notas para los ejercicios de comparación.'])}`,
   ];
   return {

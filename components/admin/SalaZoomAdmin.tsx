@@ -37,8 +37,8 @@ export default function SalaZoomAdmin({ eventoId, slug, sala, sdkActivo, apiActi
   return <section className="admin-panel sala-admin">
     <h2><Video size={20} aria-hidden="true" /> Sala de clase (Zoom)</h2>
     {sdkActivo
-      ? <p className="admin-nota">Los inscritos entran desde su portal con el botón «Entrar a la clase», sin salir de la web y sin ver el enlace de Zoom. Activa la <strong>sala de espera</strong>: así das paso solo a quienes reconoces.</p>
-      : <p className="admin-nota">Los inscritos con pago verán en su portal el botón «Entrar a la clase», que abre esta reunión de Zoom (los demás no lo ven). Activa la <strong>sala de espera</strong> para dar paso solo a quienes reconoces.</p>}
+      ? <p className="admin-nota">Los inscritos entran desde su portal con el botón «Entrar a la clase», sin salir de la web y sin ver el enlace de Zoom. Entran directo en cuanto inicias la clase; antes de eso esperan a que la anfitriona la inicie.</p>
+      : <p className="admin-nota">Los inscritos con pago verán en su portal el botón «Entrar a la clase», que abre esta reunión de Zoom (los demás no lo ven).</p>}
 
     {sala ? <>
       {/* Sala creada: lo principal es entrar. */}

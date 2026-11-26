@@ -48,7 +48,7 @@ export default async function SalaPage({ params }: { params: Promise<{ slug: str
     {a.clave && <p className="sala-codigo">Código de acceso: <strong>{a.clave}</strong> <CopiarTexto texto={a.clave} etiqueta="Copiar código" pequeno /></p>}
     <ul className="sala-pasos">
       <li>Si no tienes Zoom instalado, la página te deja entrar desde el navegador («Únete desde tu navegador»).</li>
-      <li>Escribe tu <strong>nombre completo</strong> cuando Zoom te lo pida: así te reconocemos en la sala de espera.</li>
+      <li>Escribe tu <strong>nombre completo</strong> si Zoom te lo pide.</li>
       <li>Entra unos 10 minutos antes de la hora de inicio.</li>
     </ul>
   </div></section>;
@@ -57,7 +57,7 @@ export default async function SalaPage({ params }: { params: Promise<{ slug: str
     <div className="wrap sala-cabecera">
       {volver}
       <h1><Video size={20} aria-hidden="true" /> {a.evento.titulo}</h1>
-      <p>{a.anfitriona ? 'Entras como anfitriona: das paso a los alumnos desde la sala de espera.' : 'Escribe tu nombre completo si Zoom te lo pide: así te reconocemos en la sala de espera.'}</p>
+      <p>{a.anfitriona ? 'Entras como anfitriona: al entrar se inicia la clase y los inscritos entran directo.' : 'Si la clase aún no empieza, verás «Esperando a que el anfitrión inicie la reunión»: entrarás solo en cuanto Diana la inicie.'}</p>
       <p className="sala-ayuda"><strong>¿Cambiar de cámara o micrófono?</strong> En la barra inferior de la clase, pulsa la flechita <strong>^</strong> junto a <strong>«Video»</strong> (o junto a <strong>«Audio»</strong>) y elige el dispositivo. También en <strong>Más → Configuración → Video</strong>.</p>
     </div>
     <SalaZoom slug={a.evento.slug} />
