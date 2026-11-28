@@ -20,7 +20,7 @@ export async function GET(req: Request) {
   const slug = new URL(req.url).searchParams.get('evento') ?? '';
   const sinCache = { 'Cache-Control': 'no-store' };
   if (!/^[a-z0-9-]{2,60}$/.test(slug)) return NextResponse.json({ error: MENSAJES.evento }, { status: 400, headers: sinCache });
-  const a = await accesoSala(slug);
+  const a = await accesoSala(slug, new URL(req.url).searchParams.get('t') ?? undefined);
   if (!a.ok) return NextResponse.json({ error: MENSAJES[a.motivo], motivo: a.motivo }, { status: a.motivo === 'sesion' ? 401 : 403, headers: sinCache });
   if (!zoomSdkActivo) return NextResponse.json({ error: MENSAJES.sin_zoom, motivo: 'sin_zoom' }, { status: 403, headers: sinCache });
 

@@ -184,7 +184,7 @@ export function correoRecordatorio({ sitio, nombre, evento, tipo, dia, numeroDia
     ...(horas?.length ? [`<strong>La hora en tu país</strong>${tablaHoras(horas)}`] : []),
     `<strong>Cómo entrar</strong>${lista([
       'Pulsa <strong>«Entrar a la clase»</strong> en este correo (o en tu portal) unos <strong>10 minutos antes</strong>.',
-      'Si te pide iniciar sesión, usa el mismo correo con el que compraste tu cupo.',
+      'El botón es personal: entra directo a la clase, sin iniciar sesión. No lo compartas.',
       'El botón te lleva directo a la clase por Zoom (también puedes entrar desde el navegador).',
       'Usa Chrome o Edge en un computador y permite el micrófono y la cámara. Entrarás en cuanto Diana inicie la clase.',
     ])}`,

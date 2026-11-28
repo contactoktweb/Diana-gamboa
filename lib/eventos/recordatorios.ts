@@ -6,6 +6,7 @@ import { correoBienvenidaTaller, correoRecordatorio } from '@/lib/correo/plantil
 import { CORREO_ADMINISTRADORA } from '@/lib/administradora';
 import { primerNombre } from './pago';
 import { diaEnZona, diaLargo, diasEvento, fechaEvento, horarioCorreo, inicioDelDia, type Evento } from './formato';
+import { crearEnlaceClase } from './enlaceClase';
 
 const ZONA = 'America/New_York';
 
@@ -50,14 +51,21 @@ async function inscritos(admin: SupabaseClient, eventoId: string) {
   return [...vistos].map(([correo, nombre]) => ({ correo, nombre }));
 }
 
-function armar(e: Evento, r: Recordatorio, sitio: string, nombre: string) {
+/** Enlace «Entrar a la clase»: personal (entra sin iniciar sesión) y válido hasta el día siguiente a la última clase. */
+function enlaceSala(e: Evento, sitio: string, correo?: string) {
+  const ultimo = diasEvento(e).at(-1);
+  const token = correo && ultimo ? crearEnlaceClase(e.id, correo, Date.parse(ultimo + 'T23:59:59Z') + 86400000) : '';
+  return token ? `${sitio}/clase/${token}` : `${sitio}/portal/eventos/${e.slug}/sala`;
+}
+
+function armar(e: Evento, r: Recordatorio, sitio: string, nombre: string, correo?: string) {
   const { hora, horas } = horarioCorreo(e.hora_inicio && r.tipo === 'hoy' ? { ...e, hora_inicio: inicioDelDia(e, r.dia) } : e);
   if (r.tipo === 'bienvenida') {
     return correoBienvenidaTaller({ sitio, nombre, evento: e.titulo, fechas: fechaEvento(e), hora, horas, enlacePortal: `${sitio}/portal/eventos/${e.slug}` });
   }
   return correoRecordatorio({
     sitio, nombre, evento: e.titulo, tipo: r.tipo, dia: diaLargo(r.dia), numeroDia: r.numeroDia, totalDias: diasEvento(e).length,
-    hora, horas, enlaceSala: `${sitio}/portal/eventos/${e.slug}/sala`,
+    hora, horas, enlaceSala: enlaceSala(e, sitio, correo),
   });
 }
 
@@ -71,7 +79,7 @@ export async function enviarRecordatorio(e: Evento, r: Recordatorio, sitio: stri
   const lista = opciones.prueba ? [{ correo: CORREO_ADMINISTRADORA, nombre: 'Diana' }] : await inscritos(admin, e.id);
   if (!lista.length) return { enviados: 0, fallidos: [], total: 0, detalle: '', error: 'Todavía no hay inscritos con el pago aprobado.' };
   const correos = lista.map(p => {
-    const c = armar(e, r, sitio, primerNombre(p.nombre));
+    const c = armar(e, r, sitio, primerNombre(p.nombre), opciones.prueba ? undefined : p.correo);
     return { para: p.correo, ...c, asunto: opciones.prueba ? `[Prueba] ${c.asunto}` : c.asunto };
   });
   const res = await enviarCorreosLote(correos);

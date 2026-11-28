@@ -2,6 +2,7 @@ import 'server-only';
 import { getSesion } from '@/lib/sesion';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { enlaceUnirse, partesClave, zoomSdkActivo } from '@/lib/zoom';
+import { leerEnlaceClase } from './enlaceClase';
 import type { Evento } from './formato';
 
 export type AccesoSala =
@@ -14,26 +15,39 @@ export type AccesoSala =
  * ¿Puede esta persona entrar a la sala de clase del evento?
  * Solo quien tiene su cupo pagado (o la administradora, que entra como anfitriona).
  */
-export async function accesoSala(slug: string): Promise<AccesoSala> {
-  const sesion = await getSesion();
-  if (!sesion) return { ok: false, motivo: 'sesion' };
+export async function accesoSala(slug: string, token?: string): Promise<AccesoSala> {
   const admin = supabaseAdmin();
+  const sesion = await getSesion();
+  // Enlace personal del correo (solo si no hay sesión iniciada).
+  const enlace = !sesion && token ? leerEnlaceClase(token) : null;
+  if (!sesion && !enlace) return { ok: false, motivo: 'sesion' };
   if (!admin) return { ok: false, motivo: 'sin_zoom' };
   const { data: evento } = await admin.from('eventos_privados').select('*').eq('slug', slug).maybeSingle<Evento>();
-  const anfitriona = sesion.perfil?.rol === 'admin';
+  const anfitriona = sesion?.perfil?.rol === 'admin';
   if (!evento || (!evento.visible && !anfitriona)) return { ok: false, motivo: 'evento' };
-  const moderador = sesion.perfil?.rol === 'moderador';
-  if (!anfitriona && !moderador) {
-    const { data: pago } = await admin.from('inscripciones').select('id').eq('evento_id', evento.id).eq('usuario_id', sesion.id).eq('estado', 'pagada').limit(1).maybeSingle();
+  const moderador = sesion?.perfil?.rol === 'moderador';
+  let nombre = '';
+  let correo = '';
+  if (sesion) {
+    if (!anfitriona && !moderador) {
+      const { data: pago } = await admin.from('inscripciones').select('id').eq('evento_id', evento.id).eq('usuario_id', sesion.id).eq('estado', 'pagada').limit(1).maybeSingle();
+      if (!pago) return { ok: false, motivo: 'sin_pago', evento };
+    }
+    nombre = (sesion.perfil?.nombre || sesion.correo.split('@')[0]).slice(0, 60);
+    correo = sesion.correo;
+  } else if (enlace) {
+    if (enlace.eventoId !== evento.id) return { ok: false, motivo: 'evento' };
+    const { data: pago } = await admin.from('inscripciones').select('nombre').eq('evento_id', evento.id).eq('correo', enlace.correo).eq('estado', 'pagada').limit(1).maybeSingle();
     if (!pago) return { ok: false, motivo: 'sin_pago', evento };
+    nombre = (String(pago.nombre || '') || enlace.correo.split('@')[0]).slice(0, 60);
+    correo = enlace.correo;
   }
   const { data: sala } = await admin.from('eventos_zoom').select('reunion, clave').eq('evento_id', evento.id).maybeSingle();
   if (!sala) return { ok: false, motivo: 'sin_sala', evento };
-  const nombre = (sesion.perfil?.nombre || sesion.correo.split('@')[0]).slice(0, 60);
   const reunion = sala.reunion as string;
   return {
     ok: true, evento, anfitriona, reunion, clave: partesClave(sala.clave as string).codigo,
-    nombre: anfitriona ? 'Diana Gamboa' : nombre, correo: sesion.correo,
+    nombre: anfitriona ? 'Diana Gamboa' : nombre, correo,
     modo: zoomSdkActivo ? 'web' : 'enlace', enlace: enlaceUnirse(reunion, sala.clave as string),
   };
 }
