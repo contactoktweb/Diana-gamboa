@@ -1,7 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { enviarCorreosLote, envioPropio } from '@/lib/correo/enviar';
+import { enviarCorreo, enviarCorreosLote, envioPropio } from '@/lib/correo/enviar';
 import { correoBienvenidaTaller, correoRecordatorio } from '@/lib/correo/plantillas';
 import { CORREO_ADMINISTRADORA } from '@/lib/administradora';
 import { primerNombre } from './pago';
@@ -110,9 +110,22 @@ export async function ejecutarRecordatorios(sitio: string, ahora = new Date()) {
       if (r.limite && ahora.getTime() >= Date.parse(r.limite)) continue;
       // Se aparta primero: si la tarea corre dos veces, el segundo intento no vuelve a enviar.
       const { error } = await admin.from('recordatorios_enviados').insert({ evento_id: e.id, clave: r.clave });
-      if (error) continue;
+      if (error) {
+        // Ya estaba registrado: solo se reintenta si la vez anterior no salió ningún correo (por ejemplo, Resend lo rechazó).
+        const { data: previo } = await admin.from('recordatorios_enviados').select('enviados, fallidos').eq('evento_id', e.id).eq('clave', r.clave).maybeSingle();
+        if (!previo || previo.enviados > 0 || !previo.fallidos) continue;
+      }
       const res = await enviarRecordatorio(e, r, sitio);
       resultado.push({ evento: e.slug, clave: r.clave, enviados: res.enviados, fallidos: res.fallidos.length });
+      // Si no salió completo, se avisa a la administración con el motivo.
+      if (res.fallidos.length || res.error.startsWith('Falta')) {
+        await enviarCorreo({
+          para: CORREO_ADMINISTRADORA,
+          asunto: `No salió completo: ${r.titulo} · ${e.titulo}`,
+          html: `<p>El correo automático <strong>${r.titulo}</strong> de <strong>${e.titulo}</strong> no salió completo.</p><p>Enviados: ${res.enviados} de ${res.total}. Sin enviar: ${res.fallidos.length}.</p><p>Motivo: ${(res.detalle || res.error || 'sin detalle').replace(/</g, '&lt;')}</p><p>Puedes reenviarlo en Administración → Eventos → ${e.titulo} → Correos a los inscritos → «Enviar ahora». La tarea lo reintentará en su próxima ejecución del día si no salió ninguno.</p>`,
+          texto: `El correo automático «${r.titulo}» de «${e.titulo}» no salió completo. Enviados: ${res.enviados} de ${res.total}. Motivo: ${res.detalle || res.error || 'sin detalle'}.`,
+        }).catch(err => console.error('No se pudo avisar a la administración', err));
+      }
     }
   }
   return { ok: true, hoy, enviados: resultado };
