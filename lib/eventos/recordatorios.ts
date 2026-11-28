@@ -130,3 +130,25 @@ export async function ejecutarRecordatorios(sitio: string, ahora = new Date()) {
   }
   return { ok: true, hoy, enviados: resultado };
 }
+
+/** Lo que la tarea enviaría hoy (sin enviar ni registrar nada). */
+export async function simularRecordatorios(ahora = new Date()) {
+  const admin = supabaseAdmin();
+  if (!admin || !envioPropio) return { motivo: 'Falta configurar Resend o la clave secreta de Supabase.', hoy: diaEnZona(ahora, ZONA), tocan: [] };
+  const hoy = diaEnZona(ahora, ZONA);
+  const { data: eventos } = await admin.from('eventos_privados').select('*')
+    .eq('visible', true).eq('recordatorios', true).eq('fecha_tipo', 'exacta').gte('fecha', new Date(ahora.getTime() - 40 * 86400000).toISOString().slice(0, 10)).returns<Evento[]>();
+  const tocan: { evento: string; correo: string; dia: string; estado: string; inscritos: number }[] = [];
+  for (const e of eventos ?? []) {
+    const lista = await inscritos(admin, e.id);
+    const { data: hechos } = await admin.from('recordatorios_enviados').select('clave, enviados, fallidos').eq('evento_id', e.id);
+    for (const r of planRecordatorios(e)) {
+      if (!r.envio) continue;
+      const previo = (hechos ?? []).find(h => h.clave === r.clave);
+      const estado = previo ? `ya registrado: ${previo.enviados} enviados, ${previo.fallidos} sin enviar`
+        : r.envio < hoy ? 'su día ya pasó' : r.envio > hoy ? `programado para ${r.envio}` : r.limite && ahora.getTime() >= Date.parse(r.limite) ? 'la clase ya empezó' : 'SE ENVIARÍA HOY';
+      tocan.push({ evento: e.slug, correo: r.titulo, dia: r.envio, estado, inscritos: lista.length });
+    }
+  }
+  return { hoy, tocan };
+}

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ejecutarRecordatorios } from '@/lib/eventos/recordatorios';
+import { ejecutarRecordatorios, simularRecordatorios } from '@/lib/eventos/recordatorios';
 import { continuarAvisos } from '@/lib/eventos/avisos';
 import { urlDelSitio } from '@/lib/sitio';
 
@@ -14,6 +14,10 @@ export async function GET(req: Request) {
   const secreto = process.env.CRON_SECRET ?? '';
   if (!secreto || req.headers.get('authorization') !== `Bearer ${secreto}`) {
     return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
+  }
+  // Modo simulación (?simular=1): comprueba la clave y muestra lo que se enviaría hoy, sin enviar nada.
+  if (new URL(req.url).searchParams.get('simular')) {
+    return NextResponse.json({ ok: true, clave: 'correcta', ...(await simularRecordatorios()) });
   }
   const sitio = await urlDelSitio();
   const r = { ...(await ejecutarRecordatorios(sitio)), avisos: await continuarAvisos(sitio) };
