@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, UserPlus } from 'lucide-react';
 import InscribirAlumno from '@/components/admin/InscribirAlumno';
 import CopiarTexto from '@/components/admin/CopiarTexto';
 import { supabaseAdmin } from '@/lib/supabase/admin';
@@ -104,6 +104,11 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
       return <section className="admin-panel" key={g.estado}>
         <h2>{gratis && g.estado === 'pagada' ? 'Inscritos' : g.titulo} ({lista.length})</h2>
         <p className="admin-nota">{gratis && g.estado === 'pagada' ? 'Tienen su cupo, ven el acceso del evento en su portal y reciben los recordatorios.' : g.nota}</p>
+        {g.estado === 'pagada' && <details className="agregar-inscrito">
+          <summary><UserPlus size={16} aria-hidden="true" /> Agregar inscrito</summary>
+          <p className="admin-nota">Busca al alumno por nombre o correo (o escribe un correo nuevo). Queda con su cupo en este evento, ve el acceso en su portal y recibe los recordatorios. Úsalo si hubo un error con un pago o si alguien pagó por fuera de la web.</p>
+          <InscribirAlumno eventoId={e.id} alumnos={alumnos} />
+        </details>}
         {lista.length === 0 ? <p className="admin-vacio">Todavía nadie.</p> : <>
           <div className="admin-tabla-contenedor"><table className="admin-tabla">
             <thead><tr><th>Nombre</th><th>Correo</th>{g.estado === 'pagada' && <th>Teléfono</th>}<th>Fecha (hora del Este)</th>{g.estado === 'pagada' && !gratis && <th>Pago</th>}</tr></thead>
@@ -122,12 +127,6 @@ export default async function EventoAdminPage({ params }: { params: Promise<{ id
         </>}
       </section>;
     })}
-
-    <details className="admin-panel aprobar-manual">
-      <summary>Inscribir a un alumno manualmente</summary>
-      <p className="admin-nota">Los pagos con Stripe inscriben solos. Usa esto solo si hubo algún error con un pago o si alguien pagó por fuera de la web: la persona queda con su cupo pagado en este evento.</p>
-      <InscribirAlumno eventoId={e.id} alumnos={alumnos} />
-    </details>
 
     <FormEvento otros={otros} inicial={{ ...e, precio: (e.precio_centavos / 100).toFixed(2), zona: 'America/New_York', hora_local: e.hora_inicio ? horaEnZona(e.hora_inicio, 'America/New_York') : '' }} />
   </>;

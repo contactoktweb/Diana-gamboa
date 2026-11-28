@@ -1205,3 +1205,7 @@ html:has(.barra-navegacion.is-activa){cursor:progress}
 .evento-sala-pronto{margin:0 0 12px;padding:12px 14px;border-radius:12px;background:var(--green-50);color:var(--green-900);line-height:1.5}
 .evento-moderacion{border-color:var(--gold)}
 .evento-moderacion-pasos{margin:16px 0 0;padding-left:20px;display:grid;gap:8px;color:var(--ink);line-height:1.55}
+.agregar-inscrito{margin:0 0 16px;border:1px dashed var(--line);border-radius:14px;padding:10px 14px}
+.agregar-inscrito summary{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;color:var(--green-900);list-style:none}
+.agregar-inscrito summary::-webkit-details-marker{display:none}
+.agregar-inscrito[open]{display:grid;gap:10px}
